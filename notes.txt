@@ -1,0 +1,7 @@
+Daftar Konten Landing Page
+1. Jadwal Dokter
+2. Datar Poli
+3. Layanan Penunjang
+4. Daftar Dokter
+5. Tarif Penunjang
+6. Paket Operasi
