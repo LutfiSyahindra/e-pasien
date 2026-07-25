@@ -43,8 +43,7 @@
 
 ==============================================  */
 /* Default  */
-@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400..800&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800;900&display=swap");
 :root {
   --color-primary: #615EFC;
   --color-secondary: #1F1F25;
@@ -82,8 +81,8 @@
   --s-extra-bold: 800;
   --s-black: 900;
   --transition: 0.3s;
-  --font-primary: "Syne", sans-serif;
-  --font-secondary: "Rubik", sans-serif;
+  --font-primary: "Roboto", sans-serif;
+  --font-secondary: "Roboto", sans-serif;
   --font-3: "fontawesome";
   --font-size-b1: 16px;
   --font-size-b2: 16px;
@@ -117,7 +116,7 @@ body {
   line-height: var(--line-height-b1);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-family: "Rubik", sans-serif;
+  font-family: "Roboto", sans-serif;
   color: var(--color-body);
   font-weight: var(--p-regular);
   position: relative;
@@ -188,7 +187,7 @@ h6,
 .h5,
 .h6 {
   word-break: break-word;
-  font-family: "Syne", sans-serif;
+  font-family: "Roboto", sans-serif;
   line-height: 1.4074;
   color: var(--color-heading-1);
 }
@@ -427,7 +426,7 @@ cite,
 }
 
 var {
-  font-family: "Syne", sans-serif;
+  font-family: "Roboto", sans-serif;
 }
 
 /*---------------------------
@@ -7321,7 +7320,7 @@ ins {
 }
 
 pre {
-  font-family: "Raleway", sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: var(--font-size-b3);
   margin: 10px 0;
   overflow: auto;
@@ -17765,7 +17764,7 @@ li.has-dropdown:hover .submenu {
 .after-before-main-wrapper-one body {
   position: relative;
   background-color: #DDDDDD;
-  font-family: "helvetica", sans-serif;
+  font-family: "Roboto", sans-serif;
   font-weight: lighter;
   font-size: 14px;
   color: #555;

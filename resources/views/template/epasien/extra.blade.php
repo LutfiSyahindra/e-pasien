@@ -6,7 +6,7 @@
 <a href="javaScript:;" class="back-to-top"><i class='bx bxs-up-arrow-alt'></i></a>
 <!--End Back To Top Button-->
 
-<!--start switcher-->
+{{-- <!--start switcher-->
 <div class="switcher-body">
     <button class="btn btn-primary btn-switcher shadow-sm" type="button" data-bs-toggle="offcanvas"
         data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling"><i
@@ -74,4 +74,4 @@
         </div>
     </div>
 </div>
-<!--end switcher-->
+<!--end switcher--> --}}

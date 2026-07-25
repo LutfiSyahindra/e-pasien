@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400..800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800;900&display=swap');
 
 * {
     box-sizing: border-box;
@@ -19,7 +18,7 @@ body {
     line-height: var(--line-height-b1);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-family: "Rubik", sans-serif;
+    font-family: "Roboto", sans-serif;
     color: var(--color-body);
     font-weight: var(--p-regular);
     position: relative;
@@ -91,7 +90,7 @@ h6,
 .h5,
 .h6 {
     word-break: break-word;
-    font-family: "Syne", sans-serif;
+    font-family: "Roboto", sans-serif;
     line-height: 1.4074;
     color: var(--color-heading-1);
 }
@@ -365,7 +364,7 @@ cite,
 }
 
 var {
-    font-family: "Syne", sans-serif;
+    font-family: "Roboto", sans-serif;
 }
 
 /*---------------------------

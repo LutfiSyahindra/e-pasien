@@ -1,19 +1,17 @@
         <!--start sidebar -->
         <aside class="sidebar-wrapper" data-simplebar="true">
             <div class="sidebar-header">
-                <div>
-                    <img src="{{ asset("epasien/assets/images/logo-icon.png") }}" class="logo-icon" alt="logo icon">
-                </div>
-                <div>
-                    <h4 class="logo-text">Skodash</h4>
-                </div>
+                <a href="{{ route("dashboard") }}" class="ep-sidebar-brand">
+                    <img src="{{ asset("landing/assets/imagesArsy/epasien.png") }}" class="ep-sidebar-logo ep-sidebar-logo-full" alt="E-Pasien">
+                    <img src="{{ asset("landing/assets/imagesArsy/logoarsy.png") }}" class="ep-sidebar-logo ep-sidebar-logo-compact" alt="RS-Arsy">
+                </a>
                 <div class="toggle-icon ms-auto"><i class="bi bi-chevron-double-left"></i>
                 </div>
             </div>
             <!--navigation-->
             <ul class="metismenu" id="menu">
                 <li>
-                    <a href="#">
+                    <a href="{{ route("dashboard") }}">
                         <div class="parent-icon"><i class="bi bi-house-door"></i>
                         </div>
                         <div class="menu-title">Dashboard</div>
@@ -23,15 +21,29 @@
                 <li class="menu-label">Settings</li>
                 <li>
                     <a href="javascript:;" class="has-arrow">
-                        <div class="parent-icon"><i class="bi bi-award"></i>
+                        <div class="parent-icon">
+                            <i class="bi bi-shield-lock"></i>
                         </div>
-                        <div class="menu-title">Widgets</div>
+                        <div class="menu-title">Authentication</div>
                     </a>
                     <ul>
-                        <li> <a href="widgets-static-widgets.html"><i class="bi bi-arrow-right-short"></i>Static
-                                Widgets</a>
+                        <li>
+                            <a href="{{ route("users.users") }}">
+                                <i class="bi bi-people"></i>
+                                Users
+                            </a>
                         </li>
-                        <li> <a href="widgets-data-widgets.html"><i class="bi bi-arrow-right-short"></i>Data Widgets</a>
+                        <li>
+                            <a href="{{ route("roles.roles") }}">
+                                <i class="bi bi-person-badge"></i>
+                                Roles
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route("permissions.permissions") }}">
+                                <i class="bi bi-key"></i>
+                                Permissions
+                            </a>
                         </li>
                     </ul>
                 </li>

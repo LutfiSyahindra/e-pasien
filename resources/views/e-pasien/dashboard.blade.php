@@ -945,3 +945,12 @@
         </div>
     </div>
 @endsection
+
+@push("script")
+    <script src="{{ asset("epasien/assets/plugins/apexcharts-bundle/js/apexcharts.min.js") }}"></script>
+    <script src="{{ asset("epasien/assets/js/index.js") }}"></script>
+    <script>
+        new PerfectScrollbar(".best-product")
+        new PerfectScrollbar(".top-sellers-list")
+    </script>
+@endpush

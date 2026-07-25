@@ -9,12 +9,14 @@
     <link href="{{ asset("epasien/assets/plugins/metismenu/css/metisMenu.min.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/plugins/vectormap/jquery-jvectormap-2.0.2.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/plugins/datatable/css/dataTables.bootstrap5.min.css") }}" rel="stylesheet" />
+    <link href="{{ asset("epasien/assets/plugins/select2/css/select2.min.css") }}" rel="stylesheet" />
+    <link href="{{ asset("epasien/assets/plugins/select2/css/select2-bootstrap4.css") }}" rel="stylesheet" />
     <!-- Bootstrap CSS -->
     <link href="{{ asset("epasien/assets/css/bootstrap.min.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/css/bootstrap-extended.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/css/style.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/css/icons.css") }}" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
 
     <!-- loader-->
