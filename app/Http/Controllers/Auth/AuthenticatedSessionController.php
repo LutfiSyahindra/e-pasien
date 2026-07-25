@@ -14,9 +14,13 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
-        return view('auth.login');
+        $this->setLoginCaptcha($request);
+
+        return view('auth.login', [
+            'captchaQuestion' => $request->session()->get('login_captcha_question'),
+        ]);
     }
 
     /**
@@ -26,9 +30,28 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        $request->session()->forget(['login_captcha_question', 'login_captcha_answer']);
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard', absolute: false));
+    }
+
+    /**
+     * Generate a simple session-backed captcha for the login form.
+     */
+    private function setLoginCaptcha(Request $request): void
+    {
+        $characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        $captcha = '';
+
+        for ($index = 0; $index < 5; $index++) {
+            $captcha .= $characters[random_int(0, strlen($characters) - 1)];
+        }
+
+        $request->session()->put([
+            'login_captcha_question' => $captcha,
+            'login_captcha_answer' => $captcha,
+        ]);
     }
 
     /**

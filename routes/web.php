@@ -10,10 +10,6 @@ Route::get('/', function () {
     return view('landingPage.landingPage');
 });
 
-Route::get('/login', function () {
-    return view('auth.login');
-});
-
 Route::get('/dashboard', function () {
     return view('e-pasien.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');

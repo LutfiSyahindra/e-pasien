@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use Closure;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -30,6 +31,32 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'captcha_answer' => [
+                'required',
+                'string',
+                'size:5',
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    $expectedAnswer = $this->session()->get('login_captcha_answer');
+
+                    if ($expectedAnswer === null || Str::upper(trim((string) $value)) !== $expectedAnswer) {
+                        $fail('Captcha tidak sesuai. Silakan coba lagi.');
+                    }
+                },
+            ],
+        ];
+    }
+
+    /**
+     * Get custom validation messages for login.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'captcha_answer.required' => 'Captcha wajib diisi.',
+            'captcha_answer.string' => 'Captcha harus berupa huruf dan angka.',
+            'captcha_answer.size' => 'Captcha harus 5 karakter.',
         ];
     }
 
