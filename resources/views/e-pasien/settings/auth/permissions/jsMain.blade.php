@@ -59,7 +59,8 @@
         $('#permissionsModal').on('show.bs.modal', function() {
             let form = $('#permissionForm');
             $('#permissionsModalLabel').text('Tambah Permission');
-            $('#submitPermissionForm').html('<i class="bi bi-check2"></i><span>Submit</span>');
+            $('#submitPermissionForm').html(
+                '<i class="bi bi-check2"></i><span>Simpan Permission</span>');
             form.trigger('reset');
             clearValidation(form);
             $('#permissionId').val('');
@@ -221,7 +222,8 @@
                 method: 'GET',
                 success: function(response) {
                     $('#permissionsModalLabel').text('Edit Permission');
-                    $('#submitPermissionForm').html('<i class="bi bi-check2"></i><span>Update</span>');
+                    $('#submitPermissionForm').html(
+                        '<i class="bi bi-check2"></i><span>Perbarui Permission</span>');
 
                     $('#name').val(response.name);
                 },

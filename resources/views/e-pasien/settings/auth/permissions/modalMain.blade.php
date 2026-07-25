@@ -1,4 +1,5 @@
-<div class="modal fade access-crud-modal" id="permissionsModal" tabindex="-1"
+<div class="modal fade access-crud-modal auth-premium-modal auth-permissions-modal" id="permissionsModal"
+    tabindex="-1"
     aria-labelledby="permissionsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -9,16 +10,24 @@
                         <span class="access-modal-mark"><i class="bi bi-key"></i></span>
                         <div>
                             <h5 class="modal-title" id="permissionsModalLabel"></h5>
-                            <small>Permission identity</small>
+                            <small>Identitas kapabilitas akses</small>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <label for="name" class="form-label">Permission Name</label>
+                    <div class="auth-modal-context">
+                        <span><i class="bi bi-key"></i></span>
+                        <div>
+                            <strong>Identitas permission</strong>
+                            <small>Nama kapabilitas yang akan dipetakan ke role.</small>
+                        </div>
+                    </div>
+                    <label for="name" class="form-label">Nama Permission</label>
                     <div class="access-input-icon">
                         <i class="bi bi-key"></i>
-                        <input id="name" class="form-control" name="name" type="text">
+                        <input id="name" class="form-control" name="name" type="text"
+                            placeholder="Contoh: users.create" autocomplete="off">
                     </div>
                     <div class="invalid-feedback" id="error-name"></div>
                     <input id="permissionId" class="form-control" name="permissionId" type="hidden">
@@ -26,11 +35,11 @@
                 <div class="modal-footer">
                     <button type="button" class="btn-access-muted" data-bs-dismiss="modal">
                         <i class="bi bi-x-lg"></i>
-                        <span>Close</span>
+                        <span>Batal</span>
                     </button>
                     <button type="submit" id="submitPermissionForm" class="btn-access-primary">
                         <i class="bi bi-check2"></i>
-                        <span>Submit</span>
+                        <span>Simpan Permission</span>
                     </button>
                 </div>
             </form>

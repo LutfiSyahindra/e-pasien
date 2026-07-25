@@ -60,10 +60,15 @@
             $('#userStatWithRoles').text(stats.with_roles ?? 0);
         }
 
+        function updateSelectedRolesCount() {
+            const selectedRoles = $('#rolesSelect').val() || [];
+            $('#selectedRolesCount').text(`${selectedRoles.length} dipilih`);
+        }
+
         $('#usersModal').on('show.bs.modal', function() {
             let form = $('#signupForm');
             $('#usersModalLabel').text('Tambah User');
-            $('#submitForm').html('<i class="bi bi-check2"></i><span>Submit</span>');
+            $('#submitForm').html('<i class="bi bi-check2"></i><span>Simpan User</span>');
             form.trigger('reset');
             clearValidation(form);
             $('#userId').val('');
@@ -282,7 +287,7 @@
                 success: function(response) {
                     // ubah judul dan tombol
                     $('#usersModalLabel').text('Edit User');
-                    $('#submitForm').html('<i class="bi bi-check2"></i><span>Update</span>');
+                    $('#submitForm').html('<i class="bi bi-check2"></i><span>Perbarui User</span>');
 
                     // isi field form
                     $('#name').val(response.name);
@@ -385,6 +390,7 @@
                     });
 
                     rolesSelect.val(normalizedSelectedIds).trigger('change');
+                    updateSelectedRolesCount();
                 },
                 error: function() {
                     alertAction({
@@ -399,12 +405,13 @@
         window.assignRoles = function(UsersId) {
             const modal = $('#assignRolesModal');
             modal.modal('show');
-            $('#assignRolesModalLabel').text('Assign Roles');
+            $('#assignRolesModalLabel').text('Atur Role User');
             $('#userssId').val(UsersId);
             clearValidation($('#assignRolesForm'));
 
             // Reset select dulu
             $('#rolesSelect').val(null).trigger('change');
+            updateSelectedRolesCount();
 
             // Ambil roles yang sudah dimiliki user, lalu load opsi roles.
             $.ajax({
@@ -425,6 +432,8 @@
             });
         }
 
+        $('#rolesSelect').on('change', updateSelectedRolesCount);
+
         $('#assignRolesForm').on('submit', function(e) {
             e.preventDefault();
 
@@ -440,6 +449,7 @@
                         $('#assignRolesModal').modal('hide'); // perbaikan typo
                         $('#assignRolesForm')[0].reset(); // perbaikan typo
                         $('#rolesSelect').val(null).trigger('change');
+                        updateSelectedRolesCount();
                         $('#tableUsers').DataTable().ajax.reload(null, false);
 
                         alertAction({

@@ -59,10 +59,15 @@
             $('#roleStatAssignments').text(stats.assignments ?? 0);
         }
 
+        function updateSelectedPermissionsCount() {
+            const selectedPermissions = $('#permissionsSelect').val() || [];
+            $('#selectedPermissionsCount').text(`${selectedPermissions.length} dipilih`);
+        }
+
         $('#rolesModal').on('show.bs.modal', function() {
             let form = $('#roleForm');
             $('#rolesModalLabel').text('Tambah Role');
-            $('#submitRoleForm').html('<i class="bi bi-check2"></i><span>Submit</span>');
+            $('#submitRoleForm').html('<i class="bi bi-check2"></i><span>Simpan Role</span>');
             form.trigger('reset');
             clearValidation(form);
             $('#roleId').val('');
@@ -224,7 +229,7 @@
                 method: 'GET',
                 success: function(response) {
                     $('#rolesModalLabel').text('Edit Role');
-                    $('#submitRoleForm').html('<i class="bi bi-check2"></i><span>Update</span>');
+                    $('#submitRoleForm').html('<i class="bi bi-check2"></i><span>Perbarui Role</span>');
 
                     $('#name').val(response.name);
                 },
@@ -314,6 +319,7 @@
                     });
 
                     permissionsSelect.val(normalizedSelectedIds).trigger('change');
+                    updateSelectedPermissionsCount();
                 },
                 error: function() {
                     alertAction({
@@ -328,11 +334,12 @@
         window.assignPermissions = function(roleId) {
             const modal = $('#assignPermissionsModal');
             modal.modal('show');
-            $('#assignPermissionsModalLabel').text('Assign Permissions');
+            $('#assignPermissionsModalLabel').text('Atur Permission Role');
             $('#assignRoleId').val(roleId);
             clearValidation($('#assignPermissionsForm'));
 
             $('#permissionsSelect').val(null).trigger('change');
+            updateSelectedPermissionsCount();
 
             $.ajax({
                 url: "{{ route("roles.getRolePermissions", ":id") }}".replace(':id', roleId),
@@ -352,6 +359,8 @@
             });
         }
 
+        $('#permissionsSelect').on('change', updateSelectedPermissionsCount);
+
         $('#assignPermissionsForm').on('submit', function(e) {
             e.preventDefault();
 
@@ -367,6 +376,7 @@
                         $('#assignPermissionsModal').modal('hide');
                         $('#assignPermissionsForm')[0].reset();
                         $('#permissionsSelect').val(null).trigger('change');
+                        updateSelectedPermissionsCount();
                         $('#tableRoles').DataTable().ajax.reload(null, false);
 
                         alertAction({
