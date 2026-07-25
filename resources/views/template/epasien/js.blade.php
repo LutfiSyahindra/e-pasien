@@ -19,6 +19,7 @@
              customClass: {
                  container: "ep-swal-container",
                  popup: "ep-swal-popup",
+                 icon: "ep-swal-icon",
                  title: "ep-swal-title",
                  htmlContainer: "ep-swal-text",
                  actions: "ep-swal-actions",
@@ -30,14 +31,40 @@
              }
          };
 
+         const toastDefaults = {
+             backdrop: false,
+             position: "top-end",
+             width: "min(360px, calc(100vw - 24px))"
+         };
+
+         const toastClasses = {
+             container: "ep-swal-toast-container",
+             popup: "ep-swal-toast-popup",
+             icon: "ep-swal-toast-icon"
+         };
+
+         const iconHtml = {
+             success: '<i class="bi bi-check2"></i>',
+             error: '<i class="bi bi-x-lg"></i>',
+             warning: '<i class="bi bi-exclamation-triangle"></i>',
+             question: '<i class="bi bi-question-lg"></i>',
+             info: '<i class="bi bi-info-lg"></i>'
+         };
+
          const originalFire = Swal.fire.bind(Swal);
 
          function mergeClassValue(baseValue, customValue) {
              return [baseValue, customValue].filter(Boolean).join(" ");
          }
 
-         function mergeCustomClass(customClass) {
+         function mergeCustomClass(customClass, isToast) {
              const merged = Object.assign({}, defaults.customClass);
+
+             if (isToast) {
+                 Object.keys(toastClasses).forEach(function(key) {
+                     merged[key] = mergeClassValue(merged[key], toastClasses[key]);
+                 });
+             }
 
              if (typeof customClass === "string") {
                  merged.popup = mergeClassValue(merged.popup, customClass);
@@ -51,13 +78,31 @@
              return merged;
          }
 
+         function buildOptions(options) {
+             const isToast = options.toast === true;
+             const normalized = Object.assign({}, defaults, isToast ? toastDefaults : {}, options, {
+                 customClass: mergeCustomClass(options.customClass, isToast)
+             });
+
+             if (isToast) {
+                 normalized.backdrop = false;
+                 normalized.position = options.position || toastDefaults.position;
+             }
+
+             if (
+                 normalized.icon &&
+                 iconHtml[normalized.icon] &&
+                 !Object.prototype.hasOwnProperty.call(options, "iconHtml")
+             ) {
+                 normalized.iconHtml = iconHtml[normalized.icon];
+             }
+
+             return normalized;
+         }
+
          Swal.fire = function() {
              if (arguments.length === 1 && typeof arguments[0] === "object") {
-                 const options = arguments[0] || {};
-
-                 return originalFire(Object.assign({}, defaults, options, {
-                     customClass: mergeCustomClass(options.customClass)
-                 }));
+                 return originalFire(buildOptions(arguments[0] || {}));
              }
 
              return originalFire.apply(Swal, arguments);
