@@ -23,6 +23,7 @@ class AccessControlSeeder extends Seeder
 
         $superAdmin = Role::findOrCreate(config('access-control.super_admin_role'), 'web');
         $administrator = Role::findOrCreate('Administrator', 'web');
+        Role::findOrCreate(config('access-control.patient_role'), 'web');
 
         // Ini untuk memberi Administrator seluruh permission eksplisit yang tersedia.
         $administrator->syncPermissions($permissions);

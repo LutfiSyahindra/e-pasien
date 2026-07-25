@@ -43,6 +43,15 @@
                             <div class="invalid-feedback" id="error-email"></div>
                         </div>
                         <div class="col-md-6">
+                            <label for="username" class="form-label">Username / No RM</label>
+                            <div class="access-input-icon">
+                                <i class="bi bi-person-vcard"></i>
+                                <input id="username" class="form-control" name="username" type="text"
+                                    placeholder="Opsional" autocomplete="username">
+                            </div>
+                            <div class="invalid-feedback" id="error-username"></div>
+                        </div>
+                        <div class="col-md-6">
                             <label for="password" class="form-label">Password</label>
                             <div class="access-input-icon">
                                 <i class="bi bi-lock"></i>

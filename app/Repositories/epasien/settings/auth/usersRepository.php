@@ -14,6 +14,24 @@ class usersRepository
             ->get();
     }
 
+    public function queryWithRoles()
+    {
+        return User::query()
+            ->with('roles:id,name')
+            ->select('users.*')
+            ->latest();
+    }
+
+    public function getStats(): array
+    {
+        return [
+            'total' => User::query()->count(),
+            'active' => User::query()->where('status', true)->count(),
+            'inactive' => User::query()->where('status', false)->count(),
+            'with_roles' => User::query()->whereHas('roles')->count(),
+        ];
+    }
+
     public function updateStatus($id, $status)
     {
         $user = User::find($id);

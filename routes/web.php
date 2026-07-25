@@ -25,6 +25,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/users/tableUsers', [usersController::class, 'table'])->name('users.table');
         Route::put('/users/updateStatus', [usersController::class, 'updateStatus'])->name('users.updateStatus');
         Route::get('/users/getBranches', [usersController::class, 'getBranches'])->name('users.getBranches');
+        Route::post('/users/sync-pasien', [usersController::class, 'syncPasienUsers'])->name('users.syncPasien');
+        Route::post('/users/sync-pasien/stop', [usersController::class, 'stopSyncPasienUsers'])->name('users.stopSyncPasien');
+        Route::get('/users/sync-pasien/status', [usersController::class, 'syncPasienUsersStatus'])->name('users.syncPasienStatus');
         Route::post('/users/store', [usersController::class, 'store'])->name('users.store');
         Route::get('/users/{id}/edit', [usersController::class, 'edit'])->name('users.edit');
         Route::put('/users/{id}/update', [usersController::class, 'update'])->name('users.update');

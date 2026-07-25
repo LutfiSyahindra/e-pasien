@@ -22,7 +22,7 @@ class AuthenticationTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->withSession(['login_captcha_answer' => 'A7B2C'])->post('/login', [
-            'email' => $user->email,
+            'login' => $user->email,
             'password' => 'password',
             'captcha_answer' => 'a7b2c',
         ]);
@@ -36,7 +36,7 @@ class AuthenticationTest extends TestCase
         $user = User::factory()->create();
 
         $this->withSession(['login_captcha_answer' => 'A7B2C'])->post('/login', [
-            'email' => $user->email,
+            'login' => $user->email,
             'password' => 'wrong-password',
             'captcha_answer' => 'A7B2C',
         ]);
@@ -49,7 +49,7 @@ class AuthenticationTest extends TestCase
         $user = User::factory()->create();
 
         $this->withSession(['login_captcha_answer' => 'A7B2C'])->post('/login', [
-            'email' => $user->email,
+            'login' => $user->email,
             'password' => 'password',
             'captcha_answer' => 'X9Y8Z',
         ]);

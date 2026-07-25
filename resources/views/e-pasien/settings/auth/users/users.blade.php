@@ -10,6 +10,53 @@
     @include("e-pasien.settings.auth.users.modalMain")
     @include("e-pasien.settings.auth.users.modalAssignRoles")
 
+    <div class="modal fade access-crud-modal auth-premium-modal auth-users-modal" id="syncPatientUsersModal"
+        tabindex="-1"
+        aria-labelledby="syncPatientUsersModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="syncPatientUsersForm" class="access-form">
+                    @csrf
+                    <div class="modal-header">
+                        <div class="access-modal-title">
+                            <span class="access-modal-mark"><i class="bi bi-cloud-arrow-down"></i></span>
+                            <div>
+                                <h5 class="modal-title" id="syncPatientUsersModalLabel">Sync Users Pasien</h5>
+                                <small>Pemetaan role akun pasien</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="auth-modal-context">
+                            <span><i class="bi bi-person-badge"></i></span>
+                            <div>
+                                <strong>Role tujuan</strong>
+                                <small>Role ini akan diberikan pada user hasil sync dari tabel pasien.</small>
+                            </div>
+                        </div>
+                        <label for="syncRoleId" class="form-label">Role</label>
+                        <div class="auth-select-shell">
+                            <select id="syncRoleId" name="role_id" class="form-select"></select>
+                        </div>
+                        <div class="invalid-feedback" id="error-role_id"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-access-muted" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg"></i>
+                            <span>Batal</span>
+                        </button>
+                        <button type="submit" id="startPatientUsersSync" class="btn-access-primary btn-access-sync">
+                            <i class="bi bi-play-fill"></i>
+                            <span>Mulai Sync</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div class="access-page auth-premium-page auth-users-page">
         <div class="access-breadcrumb">
             <a href="{{ route("dashboard") }}"><i class="bi bi-house-door"></i></a>
@@ -57,6 +104,14 @@
                     <i class="bi bi-shield-check"></i>
                     Role-based access
                 </span>
+                <span id="syncPatientUsersStatus" class="auth-sync-state d-none">
+                    <i class="bi bi-hourglass-split"></i>
+                    <span>Menunggu</span>
+                </span>
+                <button type="button" id="syncPatientUsers" class="btn-access-primary btn-access-sync">
+                    <i class="bi bi-cloud-arrow-down"></i>
+                    <span>Sync Users</span>
+                </button>
                 <button type="button" class="btn-access-primary" data-bs-toggle="modal"
                     data-bs-target="#usersModal">
                     <i class="bi bi-person-plus"></i>
@@ -119,7 +174,7 @@
                     <div class="access-search">
                         <i class="bi bi-search"></i>
                         <input id="searchUser" class="form-control" type="search"
-                            placeholder="Cari nama atau email..." aria-label="Cari user">
+                            placeholder="Cari nama, username, atau email..." aria-label="Cari user">
                     </div>
                     <select id="filterUserStatus" class="form-select" aria-label="Filter status user">
                         <option value="">Semua Status</option>
@@ -152,6 +207,49 @@
                 </table>
             </div>
         </section>
+    </div>
+
+    <div id="syncPatientUsersFloat" class="auth-sync-float d-none" role="status" aria-live="polite">
+        <div class="auth-sync-float-head">
+            <span class="auth-sync-float-mark"><i class="bi bi-cloud-arrow-down"></i></span>
+            <span>
+                <strong id="syncFloatTitle">Sync Users Pasien</strong>
+                <small id="syncFloatRole">Role: -</small>
+            </span>
+            <button type="button" id="syncFloatStop" class="auth-sync-float-toggle danger d-none"
+                title="Stop sync" aria-label="Stop sync">
+                <i class="bi bi-stop-circle"></i>
+            </button>
+            <button type="button" id="syncFloatToggle" class="auth-sync-float-toggle"
+                title="Minimize progress sync" aria-label="Minimize progress sync" aria-expanded="true">
+                <i class="bi bi-dash-lg"></i>
+            </button>
+        </div>
+        <div class="auth-sync-float-progress">
+            <span id="syncFloatPercent">0%</span>
+            <div class="auth-sync-progress-track">
+                <span id="syncFloatBar"></span>
+            </div>
+        </div>
+        <div class="auth-sync-float-grid">
+            <span>
+                <small>Diproses</small>
+                <strong id="syncFloatProcessed">0</strong>
+            </span>
+            <span>
+                <small>Baru</small>
+                <strong id="syncFloatInserted">0</strong>
+            </span>
+            <span>
+                <small>Sudah Ada</small>
+                <strong id="syncFloatExisting">0</strong>
+            </span>
+            <span>
+                <small>Role</small>
+                <strong id="syncFloatRoleAttached">0</strong>
+            </span>
+        </div>
+        <p id="syncFloatMessage">Menunggu sync.</p>
     </div>
 @endsection
 

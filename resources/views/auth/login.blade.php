@@ -535,17 +535,17 @@
                                     @csrf
 
                                     <div class="login-field">
-                                        <label for="email">Alamat Email</label>
+                                        <label for="login">Email / No Rekam Medis</label>
                                         <div class="login-input-wrap">
                                             <span class="login-input-icon" aria-hidden="true">
-                                                <i class="bi bi-envelope-fill"></i>
+                                                <i class="bi bi-person-vcard-fill"></i>
                                             </span>
-                                            <input id="email" type="email" name="email" value="{{ old("email") }}"
-                                                class="form-control premium-input ps-5 @error("email") is-invalid @enderror"
-                                                placeholder="nama@email.com" required autofocus autocomplete="username">
+                                            <input id="login" type="text" name="login" value="{{ old("login") }}"
+                                                class="form-control premium-input ps-5 @error("login") is-invalid @enderror"
+                                                placeholder="email atau no RM" required autofocus autocomplete="username">
                                         </div>
 
-                                        @error("email")
+                                        @error("login")
                                             <div class="login-error">
                                                 {{ $message }}
                                             </div>

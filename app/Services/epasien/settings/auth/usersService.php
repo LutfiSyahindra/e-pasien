@@ -18,6 +18,16 @@ class usersService
         return $this->userRepository->getData();
     }
 
+    public function queryWithRoles()
+    {
+        return $this->userRepository->queryWithRoles();
+    }
+
+    public function getStats(): array
+    {
+        return $this->userRepository->getStats();
+    }
+
     public function updateStatus($id, $status)
     {
         return $this->userRepository->updateStatus($id, $status);

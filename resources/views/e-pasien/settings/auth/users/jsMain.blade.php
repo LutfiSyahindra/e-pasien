@@ -20,7 +20,7 @@
         }
 
         function clearValidation(form) {
-            form.find('.invalid-feedback').text('');
+            form.find('.invalid-feedback').text('').removeClass('d-block');
             form.find('.form-control, .form-select').removeClass('is-invalid');
         }
 
@@ -29,12 +29,13 @@
                 const normalizedKey = key.split('.')[0];
                 const fieldMap = {
                     password_confirmation: '#confirm_password',
-                    roles_id: '#rolesSelect'
+                    roles_id: '#rolesSelect',
+                    role_id: '#syncRoleId'
                 };
                 const field = $(fieldMap[normalizedKey] || `#${normalizedKey}`);
 
                 field.addClass('is-invalid');
-                $(`#error-${normalizedKey}`).text(errors[key][0]);
+                $(`#error-${normalizedKey}`).text(errors[key][0]).addClass('d-block');
             });
         }
 
@@ -60,9 +61,229 @@
             $('#userStatWithRoles').text(stats.with_roles ?? 0);
         }
 
+        function formatNumber(value) {
+            return new Intl.NumberFormat('id-ID').format(Number(value || 0));
+        }
+
+        function syncStatusText(sync = {}) {
+            const summary = sync.summary || {};
+
+            if (sync.state === 'queued') {
+                return 'Sync antre';
+            }
+
+            if (sync.state === 'running') {
+                return `Sync ${formatNumber(summary.processed)} / ${formatNumber(summary.total)}`;
+            }
+
+            if (sync.state === 'stopping') {
+                return 'Menghentikan sync';
+            }
+
+            if (sync.state === 'stopped') {
+                return 'Sync dihentikan';
+            }
+
+            if (sync.state === 'completed') {
+                return `Selesai: ${formatNumber(summary.inserted)} baru`;
+            }
+
+            if (sync.state === 'failed') {
+                return 'Sync gagal';
+            }
+
+            return 'Siap sync';
+        }
+
+        function updateSyncStatus(sync = {}) {
+            const state = sync.state || 'idle';
+            const status = $('#syncPatientUsersStatus');
+            const button = $('#syncPatientUsers');
+            const floating = $('#syncPatientUsersFloat');
+            const stopButton = $('#syncFloatStop');
+            const summary = sync.summary || {};
+            const total = Number(summary.total || 0);
+            const processed = Number(summary.processed || 0);
+            const percent = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) :
+                (state === 'completed' ? 100 : 0);
+            const roleName = sync.role?.name || '-';
+            const active = ['queued', 'running', 'stopping'].includes(state);
+            const icons = {
+                queued: 'bi bi-hourglass-split',
+                running: 'bi bi-arrow-repeat',
+                stopping: 'bi bi-stop-circle',
+                stopped: 'bi bi-stop-circle',
+                completed: 'bi bi-check2-circle',
+                failed: 'bi bi-exclamation-triangle',
+                idle: 'bi bi-cloud-arrow-down'
+            };
+
+            status
+                .removeClass('d-none is-completed is-failed is-stopping is-stopped')
+                .toggleClass('is-completed', state === 'completed')
+                .toggleClass('is-failed', state === 'failed')
+                .toggleClass('is-stopping', state === 'stopping')
+                .toggleClass('is-stopped', state === 'stopped');
+            status.find('i').attr('class', icons[state] || icons.idle);
+            status.find('span').text(syncStatusText(sync));
+
+            if (state === 'idle') {
+                status.addClass('d-none');
+            }
+
+            button.prop('disabled', active);
+            button.find('i').attr('class', active ? 'bi bi-arrow-repeat' : 'bi bi-cloud-arrow-down');
+            button.find('span').text(active ? 'Sync Berjalan' : 'Sync Users');
+            stopButton.toggleClass('d-none', !['queued', 'running', 'stopping'].includes(state));
+            stopButton.prop('disabled', state === 'stopping');
+
+            floating
+                .removeClass('d-none is-running is-completed is-failed is-stopping is-stopped')
+                .toggleClass('is-running', active)
+                .toggleClass('is-completed', state === 'completed')
+                .toggleClass('is-failed', state === 'failed')
+                .toggleClass('is-stopping', state === 'stopping')
+                .toggleClass('is-stopped', state === 'stopped');
+
+            if (['idle', 'completed', 'stopped'].includes(state)) {
+                floating.addClass('d-none');
+            }
+
+            $('#syncFloatTitle').text(syncStatusText(sync));
+            $('#syncFloatRole').text(`Role: ${roleName}`);
+            $('#syncFloatPercent').text(`${percent}%`);
+            $('#syncFloatBar').css('width', `${percent}%`);
+            $('#syncFloatProcessed').text(`${formatNumber(processed)} / ${formatNumber(total)}`);
+            $('#syncFloatInserted').text(formatNumber(summary.inserted));
+            $('#syncFloatExisting').text(formatNumber(summary.existing));
+            $('#syncFloatRoleAttached').text(formatNumber(summary.role_attached));
+            $('#syncFloatMessage').text(sync.message || 'Menunggu sync.');
+            applySyncFloatMode();
+        }
+
+        let syncStatusTimer = null;
+        let lastSyncState = null;
+        let syncFloatMinimized = readSyncFloatMinimized();
+
+        function readSyncFloatMinimized() {
+            try {
+                return localStorage.getItem('syncPatientUsersFloatMinimized') === '1';
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function saveSyncFloatMinimized() {
+            try {
+                localStorage.setItem('syncPatientUsersFloatMinimized', syncFloatMinimized ? '1' : '0');
+            } catch (error) {
+                // Storage can be unavailable in some browser privacy modes.
+            }
+        }
+
+        function applySyncFloatMode() {
+            const floating = $('#syncPatientUsersFloat');
+            const toggle = $('#syncFloatToggle');
+
+            floating.toggleClass('is-minimized', syncFloatMinimized);
+            toggle.attr({
+                'aria-expanded': syncFloatMinimized ? 'false' : 'true',
+                'aria-label': syncFloatMinimized ? 'Expand progress sync' : 'Minimize progress sync',
+                'title': syncFloatMinimized ? 'Expand progress sync' : 'Minimize progress sync'
+            });
+            toggle.find('i').attr('class', syncFloatMinimized ? 'bi bi-arrows-angle-expand' :
+                'bi bi-dash-lg');
+        }
+
+        function stopSyncPolling() {
+            if (syncStatusTimer) {
+                clearInterval(syncStatusTimer);
+                syncStatusTimer = null;
+            }
+        }
+
+        function startSyncPolling() {
+            stopSyncPolling();
+            syncStatusTimer = setInterval(fetchSyncStatus, 5000);
+        }
+
+        function fetchSyncStatus() {
+            $.ajax({
+                url: "{{ route("users.syncPasienStatus") }}",
+                method: 'GET',
+                success: function(response) {
+                    const sync = response.sync || {};
+                    updateSyncStatus(sync);
+
+                    if (sync.state === 'completed' && ['queued', 'running'].includes(lastSyncState)) {
+                        userTable.ajax.reload(null, false);
+                    }
+
+                    lastSyncState = sync.state || 'idle';
+
+                    if (['queued', 'running', 'stopping'].includes(sync.state)) {
+                        if (!syncStatusTimer) {
+                            startSyncPolling();
+                        }
+                        return;
+                    }
+
+                    stopSyncPolling();
+                }
+            });
+        }
+
         function updateSelectedRolesCount() {
             const selectedRoles = $('#rolesSelect').val() || [];
             $('#selectedRolesCount').text(`${selectedRoles.length} dipilih`);
+        }
+
+        function loadSyncRoleOptions() {
+            const syncRoleSelect = $('#syncRoleId');
+            const startButton = $('#startPatientUsersSync');
+
+            syncRoleSelect.prop('disabled', true).html('<option value="">Memuat role...</option>');
+            startButton.prop('disabled', true);
+
+            return $.ajax({
+                url: '{{ route("users.dataRoles") }}',
+                type: 'GET',
+                success: function(response) {
+                    syncRoleSelect.empty();
+
+                    if (!Array.isArray(response) || response.length === 0) {
+                        syncRoleSelect.append('<option value="">Belum ada role</option>');
+                        return;
+                    }
+
+                    syncRoleSelect.append('<option value="">Pilih role</option>');
+
+                    response.forEach(function(role) {
+                        syncRoleSelect.append(
+                            `<option value="${role.id}">${role.name}</option>`
+                        );
+                    });
+
+                    const patientRole = response.find(function(role) {
+                        return role.name === 'Patient';
+                    });
+
+                    if (patientRole) {
+                        syncRoleSelect.val(patientRole.id);
+                    }
+
+                    syncRoleSelect.prop('disabled', false);
+                    startButton.prop('disabled', false);
+                },
+                error: function() {
+                    syncRoleSelect.html('<option value="">Gagal memuat role</option>');
+                    alertAction({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: 'Gagal memuat data roles!'
+                    });
+                }
+            });
         }
 
         $('#usersModal').on('show.bs.modal', function() {
@@ -107,7 +328,8 @@
                 {
                     data: 'roles',
                     name: 'roles',
-                    orderable: false
+                    orderable: false,
+                    searchable: false
                 },
                 {
                     data: 'status',
@@ -140,6 +362,9 @@
             ]
         });
 
+        fetchSyncStatus();
+        applySyncFloatMode();
+
         userTable.on('draw.dt', function() {
             userTable.columns.adjust();
         });
@@ -168,6 +393,137 @@
 
         $('#refreshUsers').on('click', function() {
             userTable.ajax.reload(null, false);
+        });
+
+        $('#syncFloatToggle').on('click', function() {
+            syncFloatMinimized = !syncFloatMinimized;
+            saveSyncFloatMinimized();
+            applySyncFloatMode();
+        });
+
+        $('#syncFloatStop').on('click', function() {
+            const stopButton = $(this);
+
+            confirmAction({
+                title: 'Hentikan sync users?',
+                text: 'Sync akan berhenti setelah chunk yang sedang diproses selesai.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, stop',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (!result.isConfirmed) {
+                    return;
+                }
+
+                stopButton.prop('disabled', true);
+
+                $.ajax({
+                    url: "{{ route("users.stopSyncPasien") }}",
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        updateSyncStatus(response.sync || {});
+                        startSyncPolling();
+
+                        alertAction({
+                            icon: 'success',
+                            title: 'Stop dikirim',
+                            text: response.message ||
+                                'Permintaan stop sync sudah dikirim.',
+                            timer: 1800,
+                            showConfirmButton: false
+                        });
+                    },
+                    error: function(xhr) {
+                        updateSyncStatus(xhr.responseJSON?.sync || {});
+
+                        alertAction({
+                            icon: xhr.status === 409 ? 'warning' : 'error',
+                            title: xhr.status === 409 ? 'Tidak ada sync' : 'Gagal',
+                            text: xhr.responseJSON?.message ||
+                                'Terjadi kesalahan saat menghentikan sync.'
+                        });
+                    }
+                });
+            });
+        });
+
+        $('#syncPatientUsers').on('click', function() {
+            const modal = $('#syncPatientUsersModal');
+            const form = $('#syncPatientUsersForm');
+
+            clearValidation(form);
+            form[0].reset();
+            modal.modal('show');
+            loadSyncRoleOptions();
+        });
+
+        $('#syncPatientUsersForm').on('submit', function(e) {
+            e.preventDefault();
+
+            const form = $(this);
+            const startButton = $('#startPatientUsersSync');
+
+            clearValidation(form);
+
+            if (!$('#syncRoleId').val()) {
+                showValidationErrors({
+                    role_id: ['Role wajib dipilih.']
+                });
+                return;
+            }
+
+            startButton.prop('disabled', true);
+            startButton.find('i').attr('class', 'bi bi-arrow-repeat');
+            startButton.find('span').text('Mengantrekan');
+
+            $.ajax({
+                url: "{{ route("users.syncPasien") }}",
+                method: 'POST',
+                data: form.serialize(),
+                success: function(response) {
+                    $('#syncPatientUsersModal').modal('hide');
+                    updateSyncStatus(response.sync || {});
+                    startSyncPolling();
+
+                    alertAction({
+                        icon: 'success',
+                        title: 'Sync dimulai',
+                        text: response.message ||
+                            'Sync users pasien sudah masuk antrean.',
+                        timer: 2200,
+                        showConfirmButton: false
+                    });
+                },
+                error: function(xhr) {
+                    if (xhr.status === 422) {
+                        showValidationErrors(xhr.responseJSON.errors || {});
+                    } else {
+                        updateSyncStatus(xhr.responseJSON?.sync || {});
+
+                        if (xhr.status === 409) {
+                            $('#syncPatientUsersModal').modal('hide');
+                            startSyncPolling();
+                        }
+
+                        alertAction({
+                            icon: xhr.status === 409 ? 'warning' : 'error',
+                            title: xhr.status === 409 ? 'Masih berjalan' : 'Gagal',
+                            text: xhr.responseJSON?.message ||
+                                'Terjadi kesalahan saat memulai sync users pasien.'
+                        });
+                    }
+                },
+                complete: function() {
+                    startButton.prop('disabled', false);
+                    startButton.find('i').attr('class', 'bi bi-play-fill');
+                    startButton.find('span').text('Mulai Sync');
+                }
+            });
         });
 
         $('#tableUsers').on('change', '.toggle-status', function() {
@@ -291,6 +647,7 @@
 
                     // isi field form
                     $('#name').val(response.name);
+                    $('#username').val(response.username || '');
                     $('#email').val(response.email);
 
                     // kalau memang ada address & phone di response,

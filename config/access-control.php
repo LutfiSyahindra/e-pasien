@@ -13,6 +13,8 @@ return [
 
     'super_admin_role' => 'Super Admin',
 
+    'patient_role' => 'Patient',
+
     'protected_permissions' => [
         'users.view',
         'users.create',
