@@ -8,6 +8,7 @@ use App\Services\epasien\settings\RegistrationRoleConfigurationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -154,6 +155,17 @@ class DaftarOnlineController extends Controller
             'kd_dokter' => ['required', 'string', 'max:20'],
             'kd_poli' => ['required', 'string', 'max:15'],
             'kd_pj' => ['required', 'string', 'max:10'],
+            'no_peserta' => [
+                Rule::requiredIf(
+                    fn (): bool => strtoupper(trim((string) $request->input('kd_pj'))) === 'BPJ'
+                ),
+                'nullable',
+                'string',
+                'max:25',
+            ],
+        ], [
+            'no_peserta.required' => 'No. kartu wajib diisi untuk penjamin BPJ.',
+            'no_peserta.max' => 'No. kartu tidak boleh lebih dari 25 karakter.',
         ]);
 
         try {
@@ -173,7 +185,7 @@ class DaftarOnlineController extends Controller
         } catch (Throwable $exception) {
             Log::error('Gagal menyimpan pendaftaran online.', [
                 'user_id' => $request->user()?->id,
-                'payload' => $validated,
+                'payload' => Arr::except($validated, ['no_peserta']),
                 'message' => $exception->getMessage(),
             ]);
 

@@ -65,6 +65,7 @@ class RegistrationRoleConfigurationTest extends TestCase
             'alamat' => 'Jl. Sehat',
             'keluarga' => 'AYAH',
             'namakeluarga' => 'Santoso',
+            'no_peserta' => '0001112223334',
         ];
         $schedule = (object) [
             'nm_dokter' => 'dr. Budi',
@@ -105,6 +106,7 @@ class RegistrationRoleConfigurationTest extends TestCase
             'kd_dokter' => 'D001',
             'kd_poli' => 'POL01',
             'kd_pj' => 'BPJ',
+            'no_peserta' => '0009998887776',
         ], true);
 
         $audit = OnlineRegistrationAudit::query()->sole();

@@ -316,6 +316,21 @@
                                     </select>
                                 </div>
                                 <span class="invalid-feedback d-block" id="error-kd_pj"></span>
+
+                                <div id="bpjsCardNumberField" class="online-bpjs-card-number" hidden>
+                                    <div>
+                                        <label for="no_peserta">No. Kartu BPJS</label>
+                                        <small id="bpjsCardNumberHelp">Nomor tersimpan dapat diperbarui sebelum pendaftaran disimpan.</small>
+                                    </div>
+                                    <div class="online-field-control">
+                                        <i class="bi bi-credit-card-2-front"></i>
+                                        <input type="text" id="no_peserta" name="no_peserta"
+                                            class="form-control" maxlength="25" autocomplete="off"
+                                            value="{{ $patient->no_peserta ?? "" }}"
+                                            aria-describedby="bpjsCardNumberHelp error-no_peserta" disabled>
+                                    </div>
+                                    <span class="invalid-feedback d-block" id="error-no_peserta"></span>
+                                </div>
                             </div>
                         </div>
 

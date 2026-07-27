@@ -482,6 +482,40 @@
     margin-top: 2px;
 }
 
+.online-bpjs-card-number {
+    border-top: 1px dashed var(--online-border-strong);
+    display: grid;
+    gap: 9px;
+    padding-top: 13px;
+}
+
+.online-bpjs-card-number[hidden] {
+    display: none !important;
+}
+
+.online-bpjs-card-number label {
+    color: var(--online-ink);
+    display: block;
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1.25;
+    margin: 0;
+}
+
+.online-bpjs-card-number small {
+    color: var(--online-muted);
+    display: block;
+    font-size: 11px;
+    font-weight: 650;
+    line-height: 1.35;
+    margin-top: 2px;
+}
+
+.online-bpjs-card-number > .invalid-feedback {
+    line-height: 1.35;
+    margin-top: -4px;
+}
+
 .online-section-header {
     align-items: center;
     display: flex;

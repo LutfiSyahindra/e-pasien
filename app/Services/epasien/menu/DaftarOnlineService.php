@@ -247,29 +247,50 @@ class DaftarOnlineService
             ]);
         }
 
-        try {
-            $row = $this->daftarOnlineRepository->createRegistration([
-                'tgl_registrasi' => $registrationDate,
-                'jam_reg' => now()->format('H:i:s'),
-                'kd_dokter' => $doctorCode,
-                'no_rkm_medis' => trim((string) $patient->no_rkm_medis),
-                'kd_poli' => $clinicCode,
-                'p_jawab' => $this->limitValue($this->firstFilled([
-                    $patient->namakeluarga ?? null,
-                    $patient->nm_pasien ?? null,
-                ]), 100),
-                'almt_pj' => $this->limitValue($patient->alamat ?? '-', 200),
-                'hubunganpj' => $this->limitValue($patient->keluarga ?? '-', 20),
-                'biaya_reg' => 0,
-                'stts' => 'Belum',
-                'stts_daftar' => 'Lama',
-                'status_lanjut' => 'Ralan',
-                'kd_pj' => $guarantorCode,
-                'umurdaftar' => (int) $birthDate->diffInYears(Carbon::parse($registrationDate)),
-                'sttsumur' => 'Th',
-                'status_bayar' => 'Belum Bayar',
-                'status_poli' => 'Lama',
+        $isBpjsGuarantor = strtoupper($guarantorCode) === 'BPJ';
+        $patientCardNumber = $isBpjsGuarantor
+            ? trim((string) ($data['no_peserta'] ?? ''))
+            : null;
+
+        if ($isBpjsGuarantor && $patientCardNumber === '') {
+            throw ValidationException::withMessages([
+                'no_peserta' => 'No. kartu wajib diisi untuk penjamin BPJ.',
             ]);
+        }
+
+        if ($patientCardNumber !== null && Str::length($patientCardNumber) > 25) {
+            throw ValidationException::withMessages([
+                'no_peserta' => 'No. kartu tidak boleh lebih dari 25 karakter.',
+            ]);
+        }
+
+        $registration = [
+            'tgl_registrasi' => $registrationDate,
+            'jam_reg' => now()->format('H:i:s'),
+            'kd_dokter' => $doctorCode,
+            'no_rkm_medis' => trim((string) $patient->no_rkm_medis),
+            'kd_poli' => $clinicCode,
+            'p_jawab' => $this->limitValue($this->firstFilled([
+                $patient->namakeluarga ?? null,
+                $patient->nm_pasien ?? null,
+            ]), 100),
+            'almt_pj' => $this->limitValue($patient->alamat ?? '-', 200),
+            'hubunganpj' => $this->limitValue($patient->keluarga ?? '-', 20),
+            'biaya_reg' => 0,
+            'stts' => 'Belum',
+            'stts_daftar' => 'Lama',
+            'status_lanjut' => 'Ralan',
+            'kd_pj' => $guarantorCode,
+            'umurdaftar' => (int) $birthDate->diffInYears(Carbon::parse($registrationDate)),
+            'sttsumur' => 'Th',
+            'status_bayar' => 'Belum Bayar',
+            'status_poli' => 'Lama',
+        ];
+
+        try {
+            $row = $patientCardNumber !== null
+                ? $this->daftarOnlineRepository->createRegistration($registration, $patientCardNumber)
+                : $this->daftarOnlineRepository->createRegistration($registration);
         } catch (RegistrationLockException) {
             throw ValidationException::withMessages([
                 'pendaftaran' => 'Nomor registrasi sedang diproses. Silakan coba beberapa saat lagi.',
@@ -328,6 +349,7 @@ class DaftarOnlineService
                 'kd_poli' => $row['kd_poli'],
                 'penjamin' => trim((string) $penjamin->png_jawab),
                 'kd_pj' => $row['kd_pj'],
+                'no_peserta' => $patientCardNumber,
                 'status' => $row['stts'],
                 'status_bayar' => $row['status_bayar'],
                 'umurdaftar' => $row['umurdaftar'],

@@ -59,6 +59,7 @@ class DaftarOnlinePageTest extends TestCase
             'nm_pasien' => 'Siti',
             'no_tlp' => '08120000000',
             'alamat' => 'Jl. Mawar',
+            'no_peserta' => '0001234567890',
         ];
 
         $this->mock(RegistrationRoleConfigurationService::class, function (MockInterface $mock): void {
@@ -89,6 +90,9 @@ class DaftarOnlinePageTest extends TestCase
             ->assertSeeText('Role Anda dapat mendaftarkan pasien lain')
             ->assertSeeText('BPJS Kesehatan tersedia untuk role Anda.')
             ->assertSee('value="000456"', false)
+            ->assertSee('id="no_peserta"', false)
+            ->assertSee('value="0001234567890"', false)
+            ->assertSeeText('Nomor tersimpan dapat diperbarui')
             ->assertSeeText('Siti');
     }
 
@@ -123,5 +127,35 @@ class DaftarOnlinePageTest extends TestCase
             ->assertSee('name="kd_pj"', false)
             ->assertSeeText('Semua Penjamin')
             ->assertSeeText('BPJS Kesehatan');
+    }
+
+    public function test_bpjs_registration_requires_card_number(): void
+    {
+        $this->mock(RegistrationRoleConfigurationService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('isConfigured')->once()->andReturnTrue();
+        });
+        $this->mock(DaftarOnlineService::class, function (MockInterface $mock): void {
+            $mock->shouldNotReceive('register');
+        });
+
+        $user = new User([
+            'name' => 'Petugas',
+            'username' => 'PETUGAS01',
+            'email' => 'petugas@example.test',
+            'status' => true,
+        ]);
+        $user->setRelation('roles', collect());
+
+        $response = $this->actingAs($user)->postJson(route('daftarOnline.store'), [
+            'no_rkm_medis' => '000456',
+            'tgl_registrasi' => now()->toDateString(),
+            'kd_dokter' => 'D001',
+            'kd_poli' => 'POL01',
+            'kd_pj' => 'BPJ',
+        ]);
+
+        $response
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('no_peserta');
     }
 }

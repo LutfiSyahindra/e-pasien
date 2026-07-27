@@ -151,6 +151,99 @@ class DaftarOnlineServiceTest extends TestCase
         $this->assertSame('Poli Umum', $result['registration']['poli']);
     }
 
+    public function test_bpjs_registration_sends_changed_card_number_with_registration(): void
+    {
+        $patient = (object) [
+            'no_rkm_medis' => '000123',
+            'nm_pasien' => 'Budi',
+            'tgl_lahir' => '1990-01-01',
+            'alamat' => 'Jl. Sehat',
+            'keluarga' => 'AYAH',
+            'namakeluarga' => 'Santoso',
+            'no_peserta' => '0001112223334',
+        ];
+        $schedule = (object) [
+            'nm_dokter' => 'dr. Budi',
+            'nm_poli' => 'Poli Umum',
+        ];
+        $penjamin = (object) [
+            'kd_pj' => 'BPJ',
+            'png_jawab' => 'BPJS Kesehatan',
+        ];
+        $repository = $this->createMock(DaftarOnlineRepository::class);
+        $repository->method('findPatient')->with('000123')->willReturn($patient);
+        $repository->method('findPendingRegistration')->with('000123')->willReturn(null);
+        $repository->method('findSchedule')->willReturn($schedule);
+        $repository->method('findEligiblePenjamin')->with('BPJ', false)->willReturn($penjamin);
+        $repository
+            ->expects($this->once())
+            ->method('createRegistration')
+            ->with(
+                $this->callback(fn (array $registration): bool => $registration['kd_pj'] === 'BPJ'),
+                '0009998887776'
+            )
+            ->willReturn([
+                'no_reg' => '001',
+                'no_rawat' => '2026/07/27/000001',
+                'tgl_registrasi' => '2026-07-27',
+                'jam_reg' => '08:00:00',
+                'kd_dokter' => 'D001',
+                'kd_poli' => 'POL01',
+                'kd_pj' => 'BPJ',
+                'stts' => 'Belum',
+                'status_bayar' => 'Belum Bayar',
+                'umurdaftar' => 36,
+                'sttsumur' => 'Th',
+            ]);
+
+        $service = new DaftarOnlineService($repository);
+        $result = $service->register(new User(['username' => '000123']), [
+            'tgl_registrasi' => '2026-07-27',
+            'kd_dokter' => 'D001',
+            'kd_poli' => 'POL01',
+            'kd_pj' => 'BPJ',
+            'no_peserta' => ' 0009998887776 ',
+        ]);
+
+        $this->assertSame('0009998887776', $result['registration']['no_peserta']);
+    }
+
+    public function test_bpjs_registration_requires_card_number(): void
+    {
+        $patient = (object) [
+            'no_rkm_medis' => '000123',
+            'nm_pasien' => 'Budi',
+            'tgl_lahir' => '1990-01-01',
+            'alamat' => 'Jl. Sehat',
+            'keluarga' => 'AYAH',
+            'namakeluarga' => 'Santoso',
+        ];
+        $repository = $this->createMock(DaftarOnlineRepository::class);
+        $repository->method('findPatient')->willReturn($patient);
+        $repository->method('findPendingRegistration')->willReturn(null);
+        $repository->method('findSchedule')->willReturn((object) [
+            'nm_dokter' => 'dr. Budi',
+            'nm_poli' => 'Poli Umum',
+        ]);
+        $repository->method('findEligiblePenjamin')->willReturn((object) [
+            'kd_pj' => 'BPJ',
+            'png_jawab' => 'BPJS Kesehatan',
+        ]);
+        $repository->expects($this->never())->method('createRegistration');
+
+        $service = new DaftarOnlineService($repository);
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('No. kartu wajib diisi');
+
+        $service->register(new User(['username' => '000123']), [
+            'tgl_registrasi' => '2026-07-27',
+            'kd_dokter' => 'D001',
+            'kd_poli' => 'POL01',
+            'kd_pj' => 'BPJ',
+        ]);
+    }
+
     public function test_configured_registration_role_must_choose_patient_medical_record_number(): void
     {
         $repository = $this->createMock(DaftarOnlineRepository::class);

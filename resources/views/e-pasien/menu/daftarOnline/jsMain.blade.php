@@ -20,6 +20,8 @@
             doctorCode: $('#kd_dokter'),
             clinicCode: $('#kd_poli'),
             guarantorCode: $('#kd_pj'),
+            cardNumberField: $('#bpjsCardNumberField'),
+            cardNumber: $('#no_peserta'),
             summaryState: $('#summaryState'),
             summaryDate: $('#summaryDate'),
             summaryClinic: $('#summaryClinic'),
@@ -112,6 +114,28 @@
             const selected = $select.find('option:selected');
 
             return selected.data('name') || $.trim(selected.text()) || '-';
+        }
+
+        function isBpjsSelected() {
+            return String(state.selectedGuarantor?.kd_pj || '').toUpperCase() === 'BPJ';
+        }
+
+        function hasRequiredCardNumber() {
+            return !isBpjsSelected() || Boolean($.trim(elements.cardNumber.val()));
+        }
+
+        function syncBpjsCardNumberField() {
+            const showCardNumber = isBpjsSelected();
+
+            elements.cardNumberField.prop('hidden', !showCardNumber);
+            elements.cardNumber
+                .prop('disabled', !showCardNumber || !config.patientReady)
+                .prop('required', showCardNumber);
+
+            if (!showCardNumber) {
+                elements.cardNumber.removeClass('is-invalid');
+                $('#error-no_peserta').text('');
+            }
         }
 
         function initializeSelects() {
@@ -269,6 +293,7 @@
             setSelectEnabled(elements.clinicCode, false);
             setSelectEnabled(elements.doctorCode, false);
             setSelectEnabled(elements.guarantorCode, false);
+            syncBpjsCardNumberField();
         }
 
         function renderSelectedSchedule(schedule) {
@@ -365,19 +390,20 @@
             const hasClinic = Boolean(elements.clinicCode.val());
             const hasDoctor = Boolean(state.selectedSchedule);
             const hasGuarantor = Boolean(state.selectedGuarantor);
+            const hasGuarantorDetails = hasGuarantor && hasRequiredCardNumber();
 
             $('.online-step').removeClass('active done');
             $('.online-step[data-step="date"]').toggleClass('active', !hasDate).toggleClass('done', hasDate);
             $('.online-step[data-step="clinic"]').toggleClass('active', hasDate && !hasClinic).toggleClass('done', hasClinic);
             $('.online-step[data-step="doctor"]').toggleClass('active', hasClinic && !hasDoctor).toggleClass('done', hasDoctor);
-            $('.online-step[data-step="guarantor"]').toggleClass('active', hasDoctor && !hasGuarantor).toggleClass('done', hasGuarantor);
-            $('.online-step[data-step="confirm"]').toggleClass('active', hasDoctor && hasGuarantor);
+            $('.online-step[data-step="guarantor"]').toggleClass('active', hasDoctor && !hasGuarantorDetails).toggleClass('done', hasGuarantorDetails);
+            $('.online-step[data-step="confirm"]').toggleClass('active', hasDoctor && hasGuarantorDetails);
 
             $('.online-choice-card').removeClass('active done');
             $('.online-choice-card[data-choice="date"]').toggleClass('done', hasDate).toggleClass('active', !hasDate);
             $('.online-choice-card[data-choice="clinic"]').toggleClass('done', hasClinic).toggleClass('active', hasDate && !hasClinic);
             $('.online-choice-card[data-choice="doctor"]').toggleClass('done', hasDoctor).toggleClass('active', hasClinic && !hasDoctor);
-            $('.online-choice-card[data-choice="guarantor"]').toggleClass('done', hasGuarantor).toggleClass('active', hasDoctor && !hasGuarantor);
+            $('.online-choice-card[data-choice="guarantor"]').toggleClass('done', hasGuarantorDetails).toggleClass('active', hasDoctor && !hasGuarantorDetails);
         }
 
         function updateSubmitState() {
@@ -385,6 +411,7 @@
                 Boolean(elements.date.val()) &&
                 Boolean(state.selectedSchedule) &&
                 Boolean(state.selectedGuarantor) &&
+                hasRequiredCardNumber() &&
                 !state.submitting;
 
             elements.submit.prop('disabled', !ready);
@@ -403,7 +430,9 @@
             elements.summaryGuarantor.text(guarantor?.name || '-');
             elements.summaryQueue.text(schedule?.estimasi_no_reg ? `No. ${schedule.estimasi_no_reg}` : '-');
 
-            if (schedule && guarantor) {
+            if (schedule && guarantor && !hasRequiredCardNumber()) {
+                elements.summaryState.text('Lengkapi no. kartu BPJS.');
+            } else if (schedule && guarantor) {
                 elements.summaryState.text('Siap disimpan.');
             } else if (schedule) {
                 elements.summaryState.text('Menunggu penjamin.');
@@ -444,6 +473,7 @@
             clearSelect(elements.guarantorCode);
             setSelectEnabled(elements.doctorCode, Boolean(clinicCode) && doctors.length > 0);
             setSelectEnabled(elements.guarantorCode, false);
+            syncBpjsCardNumberField();
             clearValidation();
 
             if (!clinicCode) {
@@ -467,6 +497,7 @@
             state.selectedGuarantor = null;
             clearSelect(elements.guarantorCode);
             setSelectEnabled(elements.guarantorCode, Boolean(state.selectedSchedule) && hasGuarantorOptions());
+            syncBpjsCardNumberField();
             clearValidation();
 
             if (state.selectedSchedule) {
@@ -487,6 +518,13 @@
             } : null;
 
             clearValidation();
+            syncBpjsCardNumberField();
+            updateSummary();
+        });
+
+        elements.cardNumber.on('input', function() {
+            elements.cardNumber.removeClass('is-invalid');
+            $('#error-no_peserta').text('');
             updateSummary();
         });
 
@@ -501,6 +539,7 @@
             rebuildSelect(elements.doctorCode, []);
             clearSelect(elements.guarantorCode);
             clearValidation();
+            syncBpjsCardNumberField();
             updateSummary();
             loadSchedules();
         });
@@ -509,11 +548,18 @@
             event.preventDefault();
             clearValidation();
 
-            if (!state.selectedSchedule || !state.selectedGuarantor) {
+            if (!state.selectedSchedule || !state.selectedGuarantor || !hasRequiredCardNumber()) {
+                if (isBpjsSelected() && !hasRequiredCardNumber()) {
+                    markInvalid('no_peserta');
+                    $('#error-no_peserta').text('No. kartu wajib diisi untuk penjamin BPJ.');
+                }
+
                 alertAction({
                     icon: 'warning',
                     title: 'Lengkapi pilihan',
-                    text: 'Tanggal, poli, dokter, dan penjamin harus dipilih.'
+                    text: isBpjsSelected()
+                        ? 'Tanggal, poli, dokter, penjamin, dan no. kartu harus diisi.'
+                        : 'Tanggal, poli, dokter, dan penjamin harus dipilih.'
                 });
                 return;
             }
@@ -526,6 +572,9 @@
                         <strong>${escapeHtml(state.selectedSchedule.nm_poli)}</strong>
                         <span>${escapeHtml(state.selectedSchedule.nm_dokter)}</span>
                         <small>${escapeHtml(state.selectedGuarantor.name)}</small>
+                        ${isBpjsSelected()
+                            ? `<small>No. Kartu: ${escapeHtml($.trim(elements.cardNumber.val()))}</small>`
+                            : ''}
                     </div>
                 `,
                 showCancelButton: true,
@@ -551,6 +600,7 @@
                         kd_dokter: elements.doctorCode.val(),
                         kd_poli: elements.clinicCode.val(),
                         kd_pj: elements.guarantorCode.val(),
+                        no_peserta: isBpjsSelected() ? $.trim(elements.cardNumber.val()) : null,
                     },
                     success: function(response) {
                         const registration = response.data?.registration || {};
@@ -616,6 +666,7 @@
         setSelectEnabled(elements.clinicCode, false);
         setSelectEnabled(elements.doctorCode, false);
         setSelectEnabled(elements.guarantorCode, false);
+        syncBpjsCardNumberField();
         updateSummary();
 
         if (config.patientReady && elements.date.val()) {

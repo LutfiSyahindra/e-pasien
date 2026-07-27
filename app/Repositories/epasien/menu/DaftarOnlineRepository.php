@@ -24,7 +24,8 @@ class DaftarOnlineRepository
                 'keluarga',
                 'namakeluarga',
                 'no_tlp',
-                'kd_pj'
+                'kd_pj',
+                'no_peserta'
             )
             ->where('no_rkm_medis', $medicalRecordNumber)
             ->first();
@@ -180,8 +181,10 @@ class DaftarOnlineRepository
             ->first();
     }
 
-    public function createRegistration(array $registration): ?array
-    {
+    public function createRegistration(
+        array $registration,
+        ?string $patientCardNumber = null
+    ): ?array {
         $connection = $this->connection();
         $registrationDate = (string) $registration['tgl_registrasi'];
         $doctorCode = (string) $registration['kd_dokter'];
@@ -196,7 +199,8 @@ class DaftarOnlineRepository
                 $registration,
                 $registrationDate,
                 $doctorCode,
-                $clinicCode
+                $clinicCode,
+                $patientCardNumber
             ): ?array {
                 $existingRegistration = $connection
                     ->table('reg_periksa')
@@ -209,6 +213,13 @@ class DaftarOnlineRepository
 
                 if ($existingRegistration) {
                     return null;
+                }
+
+                if ($patientCardNumber !== null) {
+                    $connection
+                        ->table('pasien')
+                        ->where('no_rkm_medis', $registration['no_rkm_medis'])
+                        ->update(['no_peserta' => $patientCardNumber]);
                 }
 
                 $row = array_merge($registration, [
