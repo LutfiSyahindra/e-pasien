@@ -114,6 +114,25 @@ body {
     margin: 3px 10px;
 }
 
+.sidebar-wrapper .metismenu a.has-arrow {
+    padding-right: 44px;
+}
+
+.sidebar-wrapper .metismenu a .menu-title {
+    flex: 1 1 auto;
+    line-height: 1.35;
+    min-width: 0;
+    overflow: visible;
+    overflow-wrap: break-word;
+    text-overflow: clip;
+    white-space: normal;
+}
+
+.sidebar-wrapper .metismenu a.has-arrow::after {
+    pointer-events: none;
+    right: 17px;
+}
+
 .sidebar-wrapper .metismenu .mm-active > a {
     background: var(--ep-primary-soft);
     color: var(--ep-primary);
@@ -2165,6 +2184,11 @@ body.swal2-toast-shown .swal2-container.ep-swal-container.swal2-backdrop-show,
 }
 
 @media screen and (min-width: 1025px) {
+    .wrapper.toggled:not(.sidebar-hovered) .sidebar-wrapper .metismenu a.has-arrow {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
     .wrapper.toggled:not(.sidebar-hovered) .sidebar-wrapper .sidebar-header .ep-sidebar-brand {
         justify-content: center;
         overflow: visible;

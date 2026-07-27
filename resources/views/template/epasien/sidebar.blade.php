@@ -2,8 +2,10 @@
         <aside class="sidebar-wrapper" data-simplebar="true">
             <div class="sidebar-header">
                 <a href="{{ route("dashboard") }}" class="ep-sidebar-brand">
-                    <img src="{{ asset("landing/assets/imagesArsy/epasien.png") }}" class="ep-sidebar-logo ep-sidebar-logo-full" alt="E-Pasien">
-                    <img src="{{ asset("landing/assets/imagesArsy/logoarsy.png") }}" class="ep-sidebar-logo ep-sidebar-logo-compact" alt="RS-Arsy">
+                    <img src="{{ asset("landing/assets/imagesArsy/epasien.png") }}"
+                        class="ep-sidebar-logo ep-sidebar-logo-full" alt="E-Pasien">
+                    <img src="{{ asset("landing/assets/imagesArsy/logoarsy.png") }}"
+                        class="ep-sidebar-logo ep-sidebar-logo-compact" alt="RS-Arsy">
                 </a>
                 <div class="toggle-icon ms-auto"><i class="bi bi-chevron-double-left"></i>
                 </div>
@@ -47,6 +49,30 @@
                         </li>
                     </ul>
                 </li>
+
+                <li class="menu-label">Menu</li>
+                <li>
+                    <a href="javascript:;" class="has-arrow">
+                        <div class="parent-icon"><i class="bi bi-calendar2-plus"></i>
+                        </div>
+                        <div class="menu-title">Pendaftaran Online</div>
+                    </a>
+                    <ul>
+                        <li>
+                            <a href="{{ route("daftarOnline.index") }}">
+                                <i class="bi bi-calendar2-plus"></i>
+                                Daftar Baru
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route("daftarOnline.history") }}">
+                                <i class="bi bi-clock-history"></i>
+                                Riwayat Pendaftaran
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
             </ul>
             <!--end navigation-->
         </aside>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Epasien\menu\DaftarOnlineController;
 use App\Http\Controllers\Epasien\settings\auth\permissionsController;
 use App\Http\Controllers\Epasien\settings\auth\rolesController;
 use App\Http\Controllers\Epasien\settings\auth\usersController;
@@ -56,6 +57,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/permissions/{id}/edit', [permissionsController::class, 'edit'])->name('permissions.edit');
         Route::put('/permissions/{id}/update', [permissionsController::class, 'update'])->name('permissions.update');
         Route::delete('/permissions/{id}/delete', [permissionsController::class, 'destroy'])->name('permissions.delete');
+    });
+
+    Route::prefix('e-pasien/menu')->group(function () {
+        Route::get('/daftar-online', [DaftarOnlineController::class, 'index'])->name('daftarOnline.index');
+        Route::get('/daftar-online/riwayat', [DaftarOnlineController::class, 'history'])->name('daftarOnline.history');
+        Route::get('/daftar-online/jadwal', [DaftarOnlineController::class, 'schedules'])->name('daftarOnline.schedules');
+        Route::post('/daftar-online/store', [DaftarOnlineController::class, 'store'])->name('daftarOnline.store');
     });
 });
 
