@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -26,6 +27,7 @@ class User extends Authenticatable
         'email',
         'password',
         'status',
+        'profile_photo_path',
     ];
 
     /**
@@ -64,5 +66,27 @@ class User extends Authenticatable
             ->take(2)
             ->map(fn (string $part): string => Str::upper(Str::substr($part, 0, 1)))
             ->implode('');
+    }
+
+    public function getProfilePhotoUrlAttribute(): string
+    {
+        if ($this->profile_photo_path) {
+            $path = ltrim($this->profile_photo_path, '/');
+
+            if (Str::startsWith($path, ['http://', 'https://'])) {
+                return $path;
+            }
+
+            $path = Str::replaceStart('public/', '', $path);
+            $path = Str::replaceStart('storage/', '', $path);
+
+            if (config('filesystems.disks.public.driver') !== 'local') {
+                return Storage::disk('public')->url($path);
+            }
+
+            return asset('storage/'.$path);
+        }
+
+        return asset('epasien/assets/images/avatars/avatar-1.png');
     }
 }
