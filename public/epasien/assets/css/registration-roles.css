@@ -1,0 +1,752 @@
+/*
+ * Registration role configuration
+ * Extends the shared Access Suite visual language.
+ */
+
+.auth-registration-roles-page {
+    --auth-accent: #0f7f87;
+    --auth-accent-hover: #0b6970;
+    --auth-accent-soft: #eaf7f8;
+    --auth-accent-border: #c9e7ea;
+}
+
+.registration-header-actions {
+    gap: 8px;
+}
+
+.registration-live-state,
+.registration-manage-link {
+    align-items: center;
+    border-radius: 7px;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 700;
+    gap: 7px;
+    min-height: 44px;
+    padding: 0 13px;
+}
+
+.registration-live-state {
+    background: #ecf8f5;
+    border: 1px solid #cfe9e2;
+    color: #176f5e;
+}
+
+.registration-live-state strong {
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.registration-live-dot {
+    background: #20a779;
+    border: 3px solid #ccefe4;
+    border-radius: 50%;
+    height: 10px;
+    width: 10px;
+}
+
+.registration-manage-link {
+    background: #fff;
+    border: 1px solid var(--auth-border-strong);
+    color: #4a566a;
+    text-decoration: none;
+    transition: border-color 160ms ease, box-shadow 160ms ease, color 160ms ease;
+}
+
+.registration-manage-link:hover {
+    border-color: var(--auth-accent-border);
+    box-shadow: 0 7px 18px rgba(30, 49, 70, 0.08);
+    color: var(--auth-accent);
+}
+
+.registration-alert-success {
+    align-items: center;
+    background: #effbf6;
+    border: 1px solid #c6ead9;
+    border-radius: 8px;
+    color: #17684f;
+    display: flex;
+    gap: 12px;
+    margin-bottom: 17px;
+    padding: 12px 14px;
+}
+
+.registration-alert-success > span {
+    align-items: center;
+    background: #1a9a70;
+    border-radius: 50%;
+    color: #fff;
+    display: inline-flex;
+    flex: 0 0 32px;
+    font-size: 17px;
+    height: 32px;
+    justify-content: center;
+    width: 32px;
+}
+
+.registration-alert-success strong,
+.registration-alert-success small {
+    display: block;
+}
+
+.registration-alert-success strong {
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.registration-alert-success small {
+    color: #4a796b;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.registration-config-panel {
+    overflow: visible !important;
+}
+
+.registration-config-panel .access-panel-header {
+    border-radius: 8px 8px 0 0;
+}
+
+.registration-selection-summary {
+    align-items: center;
+    background: #f5f8fb;
+    border: 1px solid #dfe5ec;
+    border-radius: 7px;
+    display: flex;
+    flex: 0 0 auto;
+    gap: 10px;
+    min-width: 154px;
+    padding: 9px 12px;
+}
+
+.registration-summary-icon {
+    align-items: center;
+    background: var(--auth-accent-soft);
+    border: 1px solid var(--auth-accent-border);
+    border-radius: 6px;
+    color: var(--auth-accent);
+    display: inline-flex;
+    flex: 0 0 34px;
+    height: 34px;
+    justify-content: center;
+    width: 34px;
+}
+
+.registration-selection-summary small,
+.registration-selection-summary strong {
+    display: block;
+}
+
+.registration-selection-summary small {
+    color: var(--auth-muted);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.registration-selection-summary strong {
+    color: var(--auth-ink);
+    font-size: 13px;
+    font-weight: 800;
+    margin-top: 2px;
+}
+
+.registration-panel-body {
+    padding: 20px;
+}
+
+.registration-scope-card {
+    align-items: start;
+    background: linear-gradient(135deg, #f1fafb 0%, #f8fbff 100%);
+    border: 1px solid #cfe7e9;
+    border-radius: 8px;
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 42px minmax(0, 1fr);
+    margin-bottom: 22px;
+    padding: 16px;
+    position: relative;
+}
+
+.registration-scope-card::after {
+    background: var(--auth-accent);
+    border-radius: 0 8px 8px 0;
+    bottom: 13px;
+    content: "";
+    position: absolute;
+    left: -1px;
+    top: 13px;
+    width: 3px;
+}
+
+.registration-scope-mark {
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--auth-accent-border);
+    border-radius: 7px;
+    box-shadow: 0 6px 14px rgba(15, 127, 135, 0.09);
+    color: var(--auth-accent);
+    display: inline-flex;
+    font-size: 18px;
+    height: 42px;
+    justify-content: center;
+    width: 42px;
+}
+
+.registration-scope-copy > strong {
+    color: #1f3745;
+    display: block;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.registration-scope-copy > p {
+    color: #627586;
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 3px 0 12px;
+}
+
+.registration-capabilities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.registration-capabilities span {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid #d8e9eb;
+    border-radius: 999px;
+    color: #426270;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 700;
+    gap: 6px;
+    min-height: 29px;
+    padding: 0 10px;
+}
+
+.registration-capabilities i {
+    color: var(--auth-accent);
+    font-size: 12px;
+}
+
+.registration-alert-error {
+    align-items: center;
+    background: #fff4f4;
+    border: 1px solid #f4cece;
+    border-radius: 7px;
+    color: #a64040;
+    display: flex;
+    font-size: 12px;
+    font-weight: 700;
+    gap: 9px;
+    margin-bottom: 18px;
+    padding: 12px 13px;
+}
+
+.registration-role-list-heading {
+    align-items: flex-end;
+    display: flex;
+    gap: 18px;
+    justify-content: space-between;
+    margin-bottom: 13px;
+}
+
+.registration-role-list-heading h3 {
+    color: var(--auth-ink);
+    font-size: 14px;
+    font-weight: 800;
+    margin: 0;
+}
+
+.registration-role-list-heading p {
+    color: var(--auth-muted);
+    font-size: 11px;
+    margin: 4px 0 0;
+}
+
+.registration-active-legend {
+    align-items: center;
+    color: #68768a;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 700;
+    gap: 7px;
+}
+
+.registration-active-legend i {
+    background: #169c78;
+    border: 3px solid #d5f0e8;
+    border-radius: 50%;
+    height: 10px;
+    width: 10px;
+}
+
+.registration-role-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.registration-role-card {
+    cursor: pointer;
+    display: block;
+    margin: 0;
+    min-width: 0;
+    position: relative;
+}
+
+.registration-role-checkbox {
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    width: 1px;
+}
+
+.registration-role-card-content {
+    background: #fff;
+    border: 1px solid #dfe4eb;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(30, 42, 62, 0.035);
+    display: flex;
+    min-height: 204px;
+    overflow: hidden;
+    padding: 15px;
+    position: relative;
+    flex-direction: column;
+    transition: border-color 170ms ease, box-shadow 170ms ease, transform 170ms ease;
+}
+
+.registration-role-card-content::before {
+    background: #cfd6df;
+    bottom: 13px;
+    content: "";
+    left: 0;
+    position: absolute;
+    top: 13px;
+    width: 3px;
+}
+
+.registration-role-card:hover .registration-role-card-content {
+    border-color: #cbd3de;
+    box-shadow: 0 11px 26px rgba(30, 42, 62, 0.075);
+    transform: translateY(-2px);
+}
+
+.registration-role-checkbox:focus-visible + .registration-role-card-content {
+    outline: 3px solid color-mix(in srgb, var(--auth-accent) 22%, transparent);
+    outline-offset: 2px;
+}
+
+.registration-role-checkbox:checked + .registration-role-card-content {
+    background: linear-gradient(145deg, #fff 0%, #f4fbfb 100%);
+    border-color: #91cdd1;
+    box-shadow: 0 8px 22px rgba(15, 127, 135, 0.09);
+}
+
+.registration-role-checkbox:checked + .registration-role-card-content::before {
+    background: var(--auth-accent);
+}
+
+.registration-role-card-top {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.registration-role-icon {
+    align-items: center;
+    background: #f3f5f8;
+    border: 1px solid #e0e5eb;
+    border-radius: 7px;
+    color: #7b8798;
+    display: inline-flex;
+    flex: 0 0 39px;
+    font-size: 17px;
+    height: 39px;
+    justify-content: center;
+    transition: background 170ms ease, border-color 170ms ease, color 170ms ease;
+    width: 39px;
+}
+
+.registration-role-checkbox:checked + .registration-role-card-content .registration-role-icon {
+    background: var(--auth-accent-soft);
+    border-color: var(--auth-accent-border);
+    color: var(--auth-accent);
+}
+
+.registration-role-control {
+    align-items: center;
+    display: inline-flex;
+    gap: 9px;
+}
+
+.registration-role-state {
+    color: #8a94a4;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.registration-role-state.is-active {
+    color: #158366;
+}
+
+.registration-switch {
+    background: #cfd5de;
+    border: 1px solid #bec6d1;
+    border-radius: 999px;
+    display: inline-flex;
+    height: 24px;
+    padding: 2px;
+    transition: background 170ms ease, border-color 170ms ease, box-shadow 170ms ease;
+    width: 43px;
+}
+
+.registration-switch > span {
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(33, 43, 58, 0.2);
+    display: block;
+    height: 18px;
+    transform: translateX(0);
+    transition: transform 170ms ease;
+    width: 18px;
+}
+
+.registration-role-checkbox:checked + .registration-role-card-content .registration-switch {
+    background: var(--auth-accent);
+    border-color: var(--auth-accent);
+    box-shadow: 0 0 0 3px rgba(15, 127, 135, 0.1);
+}
+
+.registration-role-checkbox:checked + .registration-role-card-content .registration-switch > span {
+    transform: translateX(18px);
+}
+
+.registration-role-name,
+.registration-role-description {
+    display: block;
+}
+
+.registration-role-name {
+    color: #202a3b;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.registration-role-description {
+    color: #7a8596;
+    font-size: 11px;
+    line-height: 1.5;
+    margin-top: 4px;
+}
+
+.registration-role-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 13px;
+}
+
+.registration-role-meta > span {
+    align-items: center;
+    background: #f6f7f9;
+    border: 1px solid #e6e9ee;
+    border-radius: 5px;
+    color: #657185;
+    display: inline-flex;
+    font-size: 10px;
+    font-weight: 700;
+    gap: 5px;
+    min-height: 26px;
+    padding: 0 8px;
+}
+
+.registration-role-meta i {
+    color: #8490a1;
+}
+
+.registration-role-access {
+    align-items: center;
+    border-top: 1px solid #edf0f3;
+    color: #8a94a4;
+    display: flex;
+    font-size: 10px;
+    font-weight: 700;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 11px;
+}
+
+.registration-role-access i {
+    color: #b4bbc5;
+}
+
+.registration-role-checkbox:checked + .registration-role-card-content .registration-role-access {
+    color: #327767;
+}
+
+.registration-role-checkbox:checked + .registration-role-card-content .registration-role-access i {
+    color: #189a75;
+}
+
+.registration-empty-state {
+    align-items: center;
+    background: #fafbfc;
+    border: 1px dashed #cfd6df;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    grid-column: 1 / -1;
+    justify-content: center;
+    min-height: 250px;
+    padding: 30px;
+    text-align: center;
+}
+
+.registration-empty-state > span {
+    align-items: center;
+    background: #eef2f6;
+    border-radius: 8px;
+    color: #758296;
+    display: inline-flex;
+    font-size: 22px;
+    height: 50px;
+    justify-content: center;
+    width: 50px;
+}
+
+.registration-empty-state strong {
+    color: var(--auth-ink);
+    font-size: 14px;
+    margin-top: 13px;
+}
+
+.registration-empty-state p {
+    color: var(--auth-muted);
+    font-size: 12px;
+    margin: 5px 0 14px;
+}
+
+.registration-empty-state a {
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--auth-border-strong);
+    border-radius: 6px;
+    color: var(--auth-accent);
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 800;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 12px;
+    text-decoration: none;
+}
+
+.registration-action-bar {
+    align-items: center;
+    background: #f8f9fb;
+    border-radius: 0 0 8px 8px;
+    border-top: 1px solid #e6e9ee;
+    bottom: 0;
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+    padding: 14px 20px;
+    position: sticky;
+    z-index: 5;
+}
+
+.registration-change-state {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    min-width: 0;
+}
+
+.registration-change-state > span:first-child {
+    align-items: center;
+    background: #eaf8f3;
+    border: 1px solid #d0ebe1;
+    border-radius: 6px;
+    color: #198164;
+    display: inline-flex;
+    flex: 0 0 34px;
+    height: 34px;
+    justify-content: center;
+    width: 34px;
+}
+
+.registration-change-state > span:first-child.is-dirty {
+    background: #fff6e8;
+    border-color: #f1ddba;
+    color: #ad6a18;
+}
+
+.registration-change-state strong,
+.registration-change-state small {
+    display: block;
+}
+
+.registration-change-state strong {
+    color: #344054;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.registration-change-state small {
+    color: #7c8798;
+    font-size: 10px;
+    margin-top: 2px;
+}
+
+.registration-form-actions {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    gap: 8px;
+}
+
+.registration-reset-button {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #d5dbe4;
+    border-radius: 6px;
+    color: #596679;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 800;
+    gap: 7px;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0 13px;
+    transition: border-color 160ms ease, color 160ms ease;
+}
+
+.registration-reset-button:hover {
+    border-color: #b8c1ce;
+    color: #344054;
+}
+
+.auth-registration-roles-page .btn-access-primary.is-loading i {
+    animation: registration-role-spin 750ms linear infinite;
+}
+
+@keyframes registration-role-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.dark-theme .auth-registration-roles-page .registration-role-card-content,
+.dark-theme .auth-registration-roles-page .registration-panel-body,
+.dark-theme .auth-registration-roles-page .registration-manage-link {
+    background-color: #fff !important;
+    color: var(--auth-ink) !important;
+}
+
+@media (max-width: 991.98px) {
+    .registration-role-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .registration-header-actions,
+    .registration-manage-link {
+        width: 100%;
+    }
+
+    .registration-live-state,
+    .registration-manage-link {
+        justify-content: center;
+    }
+
+    .registration-config-panel .access-panel-header {
+        align-items: stretch;
+    }
+
+    .registration-selection-summary {
+        width: 100%;
+    }
+
+    .registration-panel-body {
+        padding: 16px;
+    }
+
+    .registration-scope-card {
+        grid-template-columns: 36px minmax(0, 1fr);
+        padding: 14px;
+    }
+
+    .registration-scope-mark {
+        font-size: 16px;
+        height: 36px;
+        width: 36px;
+    }
+
+    .registration-role-list-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .registration-action-bar {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 13px 16px;
+    }
+
+    .registration-form-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .registration-form-actions > button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 479.98px) {
+    .registration-stats > [class*="col-"] {
+        width: 100%;
+    }
+
+    .registration-stats .access-stat-card {
+        align-items: center;
+        flex-direction: row;
+        min-height: 96px;
+    }
+
+    .registration-stats .access-stat-card::before {
+        top: 31px;
+    }
+
+    .registration-role-card-content {
+        min-height: 214px;
+    }
+
+    .registration-capabilities span {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .registration-form-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .auth-registration-roles-page .btn-access-primary.is-loading i {
+        animation: none;
+    }
+}

@@ -4,30 +4,50 @@ namespace App\Http\Controllers\Epasien\menu;
 
 use App\Http\Controllers\Controller;
 use App\Services\epasien\menu\DaftarOnlineService;
+use App\Services\epasien\settings\RegistrationRoleConfigurationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class DaftarOnlineController extends Controller
 {
-    public function __construct(private readonly DaftarOnlineService $daftarOnlineService) {}
+    public function __construct(
+        private readonly DaftarOnlineService $daftarOnlineService,
+        private readonly RegistrationRoleConfigurationService $roleConfigurationService
+    ) {}
 
     public function index(Request $request)
     {
+        $validated = $request->validate([
+            'no_rkm_medis' => ['nullable', 'string', 'max:20'],
+        ]);
+
         $patient = null;
         $penjaminOptions = [];
         $pendingRegistration = null;
         $connectionError = null;
+        $isRegistrationStaff = $this->roleConfigurationService->isConfigured($request->user());
+        $selectedMedicalRecordNumber = trim((string) ($validated['no_rkm_medis'] ?? ''));
+        $patientSearchPerformed = $isRegistrationStaff && $selectedMedicalRecordNumber !== '';
 
         try {
-            $patient = $this->daftarOnlineService->patientForUser($request->user());
-            $pendingRegistration = $this->daftarOnlineService->pendingRegistration($request->user());
+            $patient = $isRegistrationStaff
+                ? ($patientSearchPerformed
+                    ? $this->daftarOnlineService->patientForMedicalRecord($selectedMedicalRecordNumber)
+                    : null)
+                : $this->daftarOnlineService->patientForUser($request->user());
+
+            if ($patient) {
+                $pendingRegistration = $this->daftarOnlineService
+                    ->pendingRegistrationForMedicalRecord((string) $patient->no_rkm_medis);
+            }
 
             if (! $pendingRegistration) {
-                $penjaminOptions = $this->daftarOnlineService->penjaminOptions();
+                $penjaminOptions = $this->daftarOnlineService->penjaminOptions($isRegistrationStaff);
             }
 
         } catch (Throwable $exception) {
@@ -44,6 +64,9 @@ class DaftarOnlineController extends Controller
             'penjaminOptions' => $penjaminOptions,
             'pendingRegistration' => $pendingRegistration,
             'connectionError' => $connectionError,
+            'isRegistrationStaff' => $isRegistrationStaff,
+            'selectedMedicalRecordNumber' => $selectedMedicalRecordNumber,
+            'patientSearchPerformed' => $patientSearchPerformed,
         ]);
     }
 
@@ -51,16 +74,29 @@ class DaftarOnlineController extends Controller
     {
         $validated = $request->validate([
             'q' => ['nullable', 'string', 'max:80'],
+            'kd_pj' => ['nullable', 'string', 'max:10'],
         ]);
 
         $patient = null;
         $registrations = $this->emptyRegistrationHistory();
+        $penjaminOptions = [];
         $connectionError = null;
         $searchQuery = trim((string) ($validated['q'] ?? ''));
+        $guarantorCode = trim((string) ($validated['kd_pj'] ?? ''));
+        $viewAllPatients = $this->roleConfigurationService->isConfigured($request->user());
 
         try {
-            $patient = $this->daftarOnlineService->patientForUser($request->user());
-            $registrations = $this->daftarOnlineService->registrationHistory($request->user(), $searchQuery);
+            if (! $viewAllPatients) {
+                $patient = $this->daftarOnlineService->patientForUser($request->user());
+            }
+
+            $registrations = $this->daftarOnlineService->registrationHistory(
+                user: $request->user(),
+                searchQuery: $searchQuery,
+                guarantorCode: $guarantorCode,
+                viewAllPatients: $viewAllPatients,
+            );
+            $penjaminOptions = $this->daftarOnlineService->penjaminOptions(true);
         } catch (Throwable $exception) {
             Log::warning('Gagal memuat riwayat pendaftaran online.', [
                 'user_id' => $request->user()?->id,
@@ -75,6 +111,9 @@ class DaftarOnlineController extends Controller
             'registrations' => $registrations,
             'connectionError' => $connectionError,
             'searchQuery' => $searchQuery,
+            'guarantorCode' => $guarantorCode,
+            'penjaminOptions' => $penjaminOptions,
+            'viewAllPatients' => $viewAllPatients,
         ]);
     }
 
@@ -102,7 +141,15 @@ class DaftarOnlineController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $isRegistrationStaff = $this->roleConfigurationService->isConfigured($request->user());
+
         $validated = $request->validate([
+            'no_rkm_medis' => [
+                Rule::requiredIf($isRegistrationStaff),
+                'nullable',
+                'string',
+                'max:20',
+            ],
             'tgl_registrasi' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
             'kd_dokter' => ['required', 'string', 'max:20'],
             'kd_poli' => ['required', 'string', 'max:15'],
@@ -110,7 +157,11 @@ class DaftarOnlineController extends Controller
         ]);
 
         try {
-            $data = $this->daftarOnlineService->register($request->user(), $validated);
+            $data = $this->daftarOnlineService->register(
+                $request->user(),
+                $validated,
+                $isRegistrationStaff
+            );
 
             return response()->json([
                 'status' => 'success',

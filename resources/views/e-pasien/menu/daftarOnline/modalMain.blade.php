@@ -12,7 +12,7 @@
             </div>
             <div class="modal-body">
                 <p id="onlineRegistrationNoticeDescription" class="online-notice-lead">
-                    Pendaftaran ini hanya tersedia untuk pasien dengan jenis penjamin berikut:
+                    Pendaftaran ini tersedia untuk pasien dengan jenis penjamin berikut:
                 </p>
 
                 <div class="online-notice-eligibility" aria-label="Penjamin yang dapat didaftarkan">
@@ -32,13 +32,23 @@
                     </div>
                 </div>
 
-                <div class="online-notice-bpjs">
-                    <span><i class="bi bi-phone"></i></span>
-                    <div>
-                        <strong>Pendaftaran BPJS Kesehatan</strong>
-                        <p>Silakan lakukan pendaftaran melalui aplikasi <b>Mobile JKN</b>.</p>
+                @if ($isRegistrationStaff)
+                    <div class="online-notice-bpjs">
+                        <span><i class="bi bi-shield-check"></i></span>
+                        <div>
+                            <strong>Pendaftaran BPJS Kesehatan</strong>
+                            <p>Role Anda telah diizinkan untuk memilih penjamin BPJS.</p>
+                        </div>
                     </div>
-                </div>
+                @else
+                    <div class="online-notice-bpjs">
+                        <span><i class="bi bi-phone"></i></span>
+                        <div>
+                            <strong>Pendaftaran BPJS Kesehatan</strong>
+                            <p>Silakan lakukan pendaftaran melalui aplikasi <b>Mobile JKN</b>.</p>
+                        </div>
+                    </div>
+                @endif
             </div>
             <div class="modal-footer">
                 <button type="button" class="online-button primary w-100" data-bs-dismiss="modal">

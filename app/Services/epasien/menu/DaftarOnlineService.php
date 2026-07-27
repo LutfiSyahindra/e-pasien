@@ -3,10 +3,12 @@
 namespace App\Services\epasien\menu;
 
 use App\Exceptions\RegistrationLockException;
+use App\Models\OnlineRegistrationAudit;
 use App\Models\User;
 use App\Repositories\epasien\menu\DaftarOnlineRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -34,7 +36,12 @@ class DaftarOnlineService
 
     public function patientForUser(User $user): ?object
     {
-        $medicalRecordNumber = trim((string) $user->username);
+        return $this->patientForMedicalRecord((string) $user->username);
+    }
+
+    public function patientForMedicalRecord(string $medicalRecordNumber): ?object
+    {
+        $medicalRecordNumber = trim($medicalRecordNumber);
 
         if ($medicalRecordNumber === '') {
             return null;
@@ -43,10 +50,10 @@ class DaftarOnlineService
         return $this->daftarOnlineRepository->findPatient($medicalRecordNumber);
     }
 
-    public function penjaminOptions(): array
+    public function penjaminOptions(bool $includeBpjs = false): array
     {
         return $this->daftarOnlineRepository
-            ->getPenjaminOptions()
+            ->getPenjaminOptions($includeBpjs)
             ->map(fn (object $penjamin): array => [
                 'kd_pj' => trim((string) $penjamin->kd_pj),
                 'png_jawab' => trim((string) $penjamin->png_jawab),
@@ -106,7 +113,12 @@ class DaftarOnlineService
 
     public function pendingRegistration(User $user): ?array
     {
-        $medicalRecordNumber = trim((string) $user->username);
+        return $this->pendingRegistrationForMedicalRecord((string) $user->username);
+    }
+
+    public function pendingRegistrationForMedicalRecord(string $medicalRecordNumber): ?array
+    {
+        $medicalRecordNumber = trim($medicalRecordNumber);
 
         if ($medicalRecordNumber === '') {
             return null;
@@ -121,38 +133,76 @@ class DaftarOnlineService
     public function registrationHistory(
         User $user,
         string $searchQuery = '',
-        int $perPage = 8
+        int $perPage = 8,
+        string $guarantorCode = '',
+        bool $viewAllPatients = false
     ): LengthAwarePaginator {
-        $medicalRecordNumber = trim((string) $user->username);
+        $medicalRecordNumber = $viewAllPatients
+            ? null
+            : trim((string) $user->username);
         $perPage = max(4, min($perPage, 20));
 
-        if ($medicalRecordNumber === '') {
+        if (! $viewAllPatients && $medicalRecordNumber === '') {
             return $this->emptyPaginator($perPage);
         }
 
         $registrations = $this->daftarOnlineRepository->paginateRegistrationHistory(
             $medicalRecordNumber,
             trim($searchQuery),
-            $perPage
+            $perPage,
+            trim($guarantorCode)
         );
+
+        $audits = OnlineRegistrationAudit::query()
+            ->whereIn(
+                'no_rawat',
+                $registrations->getCollection()->pluck('no_rawat')->filter()->all()
+            )
+            ->get()
+            ->keyBy('no_rawat');
 
         $registrations->setCollection(
             $registrations->getCollection()->map(
-                fn (object $registration): array => $this->formatRegistration($registration)
+                fn (object $registration): array => $this->formatRegistration(
+                    $registration,
+                    $audits->get(trim((string) $registration->no_rawat))
+                )
             )
         );
 
         return $registrations;
     }
 
-    public function register(User $user, array $data): array
+    public function register(User $user, array $data, bool $configuredRegistrationRole = false): array
     {
         $registrationDate = Carbon::createFromFormat('Y-m-d', $data['tgl_registrasi'])->toDateString();
         $doctorCode = trim((string) $data['kd_dokter']);
         $clinicCode = trim((string) $data['kd_poli']);
         $guarantorCode = trim((string) $data['kd_pj']);
+        $requestedMedicalRecordNumber = trim((string) ($data['no_rkm_medis'] ?? ''));
+        $userMedicalRecordNumber = trim((string) $user->username);
 
-        $patient = $this->patientForUser($user);
+        if ($configuredRegistrationRole && $requestedMedicalRecordNumber === '') {
+            throw ValidationException::withMessages([
+                'no_rkm_medis' => 'Nomor rekam medis pasien wajib dipilih oleh petugas pendaftaran.',
+            ]);
+        }
+
+        if (
+            ! $configuredRegistrationRole
+            && $requestedMedicalRecordNumber !== ''
+            && $requestedMedicalRecordNumber !== $userMedicalRecordNumber
+        ) {
+            throw ValidationException::withMessages([
+                'no_rkm_medis' => 'Anda tidak memiliki akses untuk mendaftarkan pasien lain.',
+            ]);
+        }
+
+        $medicalRecordNumber = $configuredRegistrationRole
+            ? $requestedMedicalRecordNumber
+            : $userMedicalRecordNumber;
+
+        $patient = $this->patientForMedicalRecord($medicalRecordNumber);
 
         if (! $patient) {
             throw ValidationException::withMessages([
@@ -160,7 +210,7 @@ class DaftarOnlineService
             ]);
         }
 
-        $pendingRegistration = $this->pendingRegistration($user);
+        $pendingRegistration = $this->pendingRegistrationForMedicalRecord($medicalRecordNumber);
 
         if ($pendingRegistration) {
             throw ValidationException::withMessages([
@@ -184,11 +234,16 @@ class DaftarOnlineService
             ]);
         }
 
-        $penjamin = $this->daftarOnlineRepository->findEligiblePenjamin($guarantorCode);
+        $penjamin = $this->daftarOnlineRepository->findEligiblePenjamin(
+            $guarantorCode,
+            $configuredRegistrationRole
+        );
 
         if (! $penjamin) {
             throw ValidationException::withMessages([
-                'kd_pj' => 'Penjamin tidak tersedia atau termasuk BPJS Kesehatan.',
+                'kd_pj' => $configuredRegistrationRole
+                    ? 'Penjamin tidak tersedia.'
+                    : 'Penjamin tidak tersedia atau termasuk BPJS Kesehatan.',
             ]);
         }
 
@@ -227,6 +282,39 @@ class DaftarOnlineService
             ]);
         }
 
+        if ($configuredRegistrationRole) {
+            try {
+                OnlineRegistrationAudit::query()->create([
+                    'no_rawat' => $row['no_rawat'],
+                    'no_reg' => $row['no_reg'],
+                    'registration_date' => $row['tgl_registrasi'],
+                    'registration_time' => $row['jam_reg'],
+                    'patient_medical_record_number' => trim((string) $patient->no_rkm_medis),
+                    'patient_name' => $this->limitValue($patient->nm_pasien, 100),
+                    'doctor_code' => $row['kd_dokter'],
+                    'doctor_name' => $this->limitValue($schedule->nm_dokter, 100),
+                    'clinic_code' => $row['kd_poli'],
+                    'clinic_name' => $this->limitValue($schedule->nm_poli, 100),
+                    'guarantor_code' => $row['kd_pj'],
+                    'guarantor_name' => $this->limitValue($penjamin->png_jawab, 100),
+                    'registered_by_user_id' => $user->getKey(),
+                    'registered_by_name' => $this->limitValue($user->name, 100),
+                    'registered_by_username' => Str::limit(
+                        trim((string) $user->username),
+                        100,
+                        ''
+                    ) ?: null,
+                    'registered_by_roles' => $user->getRoleNames()->values()->all(),
+                ]);
+            } catch (Throwable $exception) {
+                Log::critical('Pendaftaran Khanza tersimpan tetapi audit E-Pasien gagal dibuat.', [
+                    'no_rawat' => $row['no_rawat'],
+                    'registered_by_user_id' => $user->getKey(),
+                    'message' => $exception->getMessage(),
+                ]);
+            }
+        }
+
         return [
             'registration' => [
                 'no_reg' => $row['no_reg'],
@@ -248,8 +336,10 @@ class DaftarOnlineService
         ];
     }
 
-    private function formatRegistration(object $registration): array
-    {
+    private function formatRegistration(
+        object $registration,
+        ?OnlineRegistrationAudit $audit = null
+    ): array {
         $registrationDate = Carbon::parse($registration->tgl_registrasi)->startOfDay();
         $status = trim((string) ($registration->stts ?: '-'));
         $age = trim((string) ($registration->umurdaftar ?? ''));
@@ -260,6 +350,9 @@ class DaftarOnlineService
             'id' => md5(trim((string) $registration->no_rawat).'|'.trim((string) $registration->no_reg)),
             'no_reg' => trim((string) $registration->no_reg),
             'no_rawat' => trim((string) $registration->no_rawat),
+            'no_rkm_medis' => trim((string) ($registration->no_rkm_medis ?? '')),
+            'nama_pasien' => trim((string) ($registration->nm_pasien ?? '-')),
+            'telepon_pasien' => trim((string) ($registration->no_tlp ?? '-')),
             'tanggal' => $registrationDate->toDateString(),
             'tanggal_label' => $this->dateLabel($registrationDate),
             'tanggal_lengkap' => $this->dayLabel($registrationDate).', '.$this->dateLabel($registrationDate),
@@ -286,6 +379,8 @@ class DaftarOnlineService
             'penanggung_jawab' => trim((string) ($registration->p_jawab ?: '-')),
             'alamat_penanggung_jawab' => trim((string) ($registration->almt_pj ?: '-')),
             'hubungan_penanggung_jawab' => trim((string) ($registration->hubunganpj ?: '-')),
+            'didaftarkan_oleh' => trim((string) ($audit?->registered_by_name ?: '-')),
+            'role_pendaftar' => collect($audit?->registered_by_roles ?? [])->implode(', ') ?: '-',
         ];
     }
 

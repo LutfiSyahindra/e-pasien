@@ -9,8 +9,8 @@
 @section("content")
     @php
         $user = auth()->user();
-        $patientName = trim((string) ($patient->nm_pasien ?? $user->name ?? "-"));
-        $medicalRecordNumber = trim((string) ($patient->no_rkm_medis ?? $user->username ?? "-"));
+        $patientName = trim((string) ($patient->nm_pasien ?? ($isRegistrationStaff ? "Belum dipilih" : ($user->name ?? "-"))));
+        $medicalRecordNumber = trim((string) ($patient->no_rkm_medis ?? ($isRegistrationStaff ? $selectedMedicalRecordNumber : ($user->username ?? "-"))));
         $patientPhone = trim((string) ($patient->no_tlp ?? "-"));
         $patientAddress = trim((string) ($patient->alamat ?? "-"));
         $today = now()->toDateString();
@@ -67,10 +67,42 @@
             </div>
         </section>
 
+        @if ($isRegistrationStaff)
+            <section class="online-history-panel mb-3">
+                <form class="online-history-filter" method="GET" action="{{ route("daftarOnline.index") }}">
+                    <div class="online-field-control">
+                        <i class="bi bi-upc-scan"></i>
+                        <input type="search" name="no_rkm_medis" class="form-control"
+                            value="{{ $selectedMedicalRecordNumber }}" maxlength="20"
+                            placeholder="Masukkan nomor rekam medis pasien"
+                            aria-label="Nomor rekam medis pasien" @disabled($connectionError)>
+                    </div>
+                    <button type="submit" class="online-button primary" @disabled($connectionError)>
+                        <i class="bi bi-search"></i>
+                        <span>Pilih Pasien</span>
+                    </button>
+                    @if ($patientSearchPerformed)
+                        <a href="{{ route("daftarOnline.index") }}" class="online-button secondary">
+                            <i class="bi bi-x-lg"></i>
+                            <span>Ganti</span>
+                        </a>
+                    @endif
+                </form>
+                <small class="text-muted">
+                    Role Anda dapat mendaftarkan pasien lain, termasuk dengan penjamin BPJS Kesehatan.
+                </small>
+            </section>
+        @endif
+
         @if ($connectionError)
             <div class="online-alert danger">
                 <i class="bi bi-exclamation-triangle"></i>
                 <span>{{ $connectionError }}</span>
+            </div>
+        @elseif ($isRegistrationStaff && ! $patientSearchPerformed)
+            <div class="online-alert warning">
+                <i class="bi bi-person-vcard"></i>
+                <span>Masukkan nomor rekam medis untuk memilih pasien yang akan didaftarkan.</span>
             </div>
         @elseif (! $patient)
             <div class="online-alert warning">
@@ -179,6 +211,10 @@
                     </div>
 
                     <form id="onlineRegistrationForm" class="online-form" autocomplete="off">
+                        @if ($isRegistrationStaff)
+                            <input type="hidden" id="no_rkm_medis" name="no_rkm_medis"
+                                value="{{ $patient->no_rkm_medis ?? "" }}">
+                        @endif
                         <div class="online-form-heading">
                             <div class="online-section-header">
                                 <span class="online-section-icon tone-blue"><i class="bi bi-calendar-date"></i></span>
@@ -189,7 +225,7 @@
                             </div>
                             <span class="online-required-note">
                                 <i class="bi bi-asterisk"></i>
-                                4 data wajib
+                                {{ $isRegistrationStaff ? "5" : "4" }} data wajib
                             </span>
                         </div>
 
@@ -259,7 +295,11 @@
                                     <span>4</span>
                                     <div>
                                         <label for="kd_pj">Penjamin</label>
-                                        <small>BPJS Kesehatan tidak ditampilkan.</small>
+                                        <small>
+                                            {{ $isRegistrationStaff
+                                                ? "BPJS Kesehatan tersedia untuk role Anda."
+                                                : "BPJS Kesehatan tidak ditampilkan." }}
+                                        </small>
                                     </div>
                                 </div>
                                 <div class="online-field-control">
@@ -390,6 +430,8 @@
             patientReady: @json((bool) $patient && ! $connectionError),
             hasPendingRegistration: @json($hasPendingRegistration),
             pendingRegistration: @json($pendingRegistration),
+            selectedMedicalRecordNumber: @json($patient->no_rkm_medis ?? null),
+            showNotice: @json(! $isRegistrationStaff),
         };
     </script>
     @include("e-pasien.menu.daftarOnline.jsMain")

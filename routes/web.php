@@ -4,6 +4,7 @@ use App\Http\Controllers\Epasien\menu\DaftarOnlineController;
 use App\Http\Controllers\Epasien\settings\auth\permissionsController;
 use App\Http\Controllers\Epasien\settings\auth\rolesController;
 use App\Http\Controllers\Epasien\settings\auth\usersController;
+use App\Http\Controllers\Epasien\settings\RegistrationRoleConfigurationController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -57,6 +58,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/permissions/{id}/edit', [permissionsController::class, 'edit'])->name('permissions.edit');
         Route::put('/permissions/{id}/update', [permissionsController::class, 'update'])->name('permissions.update');
         Route::delete('/permissions/{id}/delete', [permissionsController::class, 'destroy'])->name('permissions.delete');
+
+        // Konfigurasi role pendaftaran BPJS
+        Route::get('/registration-roles', [RegistrationRoleConfigurationController::class, 'index'])
+            ->middleware('role_or_permission:Super Admin|roles.update')
+            ->name('registrationRoleConfiguration.index');
+        Route::put('/registration-roles', [RegistrationRoleConfigurationController::class, 'update'])
+            ->middleware('role_or_permission:Super Admin|roles.update')
+            ->name('registrationRoleConfiguration.update');
     });
 
     Route::prefix('e-pasien/menu')->group(function () {

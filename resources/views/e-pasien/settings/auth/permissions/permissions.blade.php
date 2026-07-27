@@ -39,6 +39,10 @@
                     <i class="bi bi-key"></i>
                     <span>Permissions</span>
                 </a>
+                <a class="auth-suite-tab" href="{{ route("registrationRoleConfiguration.index") }}">
+                    <i class="bi bi-person-check"></i>
+                    <span>Role Pendaftaran</span>
+                </a>
             </nav>
         </div>
 

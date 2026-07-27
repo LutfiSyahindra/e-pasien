@@ -5,7 +5,8 @@ namespace Tests\Unit\Services\Epasien\Menu;
 use App\Models\User;
 use App\Repositories\epasien\menu\DaftarOnlineRepository;
 use App\Services\epasien\menu\DaftarOnlineService;
-use PHPUnit\Framework\TestCase;
+use Illuminate\Validation\ValidationException;
+use Tests\TestCase;
 
 class DaftarOnlineServiceTest extends TestCase
 {
@@ -105,7 +106,7 @@ class DaftarOnlineServiceTest extends TestCase
             ->method('findSchedule')
             ->with('D001', 'POL01', ['SENIN'])
             ->willReturn($schedule);
-        $repository->method('findEligiblePenjamin')->with('UMU')->willReturn($penjamin);
+        $repository->method('findEligiblePenjamin')->with('UMU', false)->willReturn($penjamin);
         $repository
             ->expects($this->once())
             ->method('createRegistration')
@@ -148,5 +149,44 @@ class DaftarOnlineServiceTest extends TestCase
         $this->assertSame('2026/07/27/000001', $result['registration']['no_rawat']);
         $this->assertSame('dr. Budi', $result['registration']['dokter']);
         $this->assertSame('Poli Umum', $result['registration']['poli']);
+    }
+
+    public function test_configured_registration_role_must_choose_patient_medical_record_number(): void
+    {
+        $repository = $this->createMock(DaftarOnlineRepository::class);
+        $repository->expects($this->never())->method('findPatient');
+
+        $service = new DaftarOnlineService($repository);
+        $user = new User(['username' => 'PETUGAS01']);
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Nomor rekam medis pasien wajib dipilih');
+
+        $service->register($user, [
+            'tgl_registrasi' => '2026-07-27',
+            'kd_dokter' => 'D001',
+            'kd_poli' => 'POL01',
+            'kd_pj' => 'BPJ',
+        ], true);
+    }
+
+    public function test_regular_user_cannot_register_another_patient(): void
+    {
+        $repository = $this->createMock(DaftarOnlineRepository::class);
+        $repository->expects($this->never())->method('findPatient');
+
+        $service = new DaftarOnlineService($repository);
+        $user = new User(['username' => '000123']);
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('tidak memiliki akses untuk mendaftarkan pasien lain');
+
+        $service->register($user, [
+            'no_rkm_medis' => '000999',
+            'tgl_registrasi' => '2026-07-27',
+            'kd_dokter' => 'D001',
+            'kd_poli' => 'POL01',
+            'kd_pj' => 'UMU',
+        ]);
     }
 }

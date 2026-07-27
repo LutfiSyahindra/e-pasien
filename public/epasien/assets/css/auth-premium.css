@@ -1,6 +1,6 @@
 /*
  * Access Suite
- * Scoped to the Users, Roles, and Permissions screens.
+ * Scoped to the Users, Roles, Permissions, and Registration Roles screens.
  */
 
 .page-content:has(.auth-premium-page) {
@@ -254,6 +254,12 @@
     background: #e9f8f4;
     border-color: #ccebe2;
     color: #16846f;
+}
+
+.auth-suite-tab:nth-child(4) i {
+    background: #eaf7f8;
+    border-color: #cae8eb;
+    color: #0f7f87;
 }
 
 .auth-suite-tab:hover {
@@ -1737,7 +1743,7 @@
 
     .auth-suite-tabs {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         width: 100%;
     }
 

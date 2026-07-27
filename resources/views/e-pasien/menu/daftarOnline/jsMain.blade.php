@@ -546,6 +546,7 @@
                         'X-CSRF-TOKEN': config.csrfToken
                     },
                     data: {
+                        no_rkm_medis: config.selectedMedicalRecordNumber,
                         tgl_registrasi: elements.date.val(),
                         kd_dokter: elements.doctorCode.val(),
                         kd_poli: elements.clinicCode.val(),
@@ -602,7 +603,9 @@
             showBootstrapModal(document.getElementById('onlineRegistrationResultModal'));
         });
 
-        showBootstrapModal(elements.noticeModal);
+        if (config.showNotice) {
+            showBootstrapModal(elements.noticeModal);
+        }
 
         if (config.hasPendingRegistration) {
             fillResultModal(config.pendingRegistration || {});

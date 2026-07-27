@@ -9,11 +9,16 @@
 @section("content")
     @php
         $user = auth()->user();
-        $patientName = trim((string) ($patient->nm_pasien ?? $user->name ?? "-"));
-        $medicalRecordNumber = trim((string) ($patient->no_rkm_medis ?? $user->username ?? "-"));
-        $patientPhone = trim((string) ($patient->no_tlp ?? "-"));
+        $patientName = $viewAllPatients
+            ? "Semua Pasien"
+            : trim((string) ($patient->nm_pasien ?? $user->name ?? "-"));
+        $medicalRecordNumber = $viewAllPatients
+            ? "Akses role pendaftaran"
+            : trim((string) ($patient->no_rkm_medis ?? $user->username ?? "-"));
+        $patientPhone = $viewAllPatients ? "Seluruh penjamin" : trim((string) ($patient->no_tlp ?? "-"));
         $historyItems = collect($registrations->items())->values();
-        $hasSearch = $searchQuery !== "";
+        $hasFilter = $searchQuery !== "" || $guarantorCode !== "";
+        $historyReady = $viewAllPatients || (bool) $patient;
     @endphp
 
     <div class="online-registration-page online-history-page">
@@ -69,7 +74,7 @@
                 <i class="bi bi-exclamation-triangle"></i>
                 <span>{{ $connectionError }}</span>
             </div>
-        @elseif (! $patient)
+        @elseif (! $historyReady)
             <div class="online-alert warning">
                 <i class="bi bi-person-x"></i>
                 <span>Data pasien belum ditemukan untuk nomor rekam medis {{ $medicalRecordNumber }}.</span>
@@ -81,13 +86,26 @@
                 <div class="online-field-control">
                     <i class="bi bi-search"></i>
                     <input type="search" name="q" class="form-control" value="{{ $searchQuery }}"
-                        placeholder="Cari no. rawat, poli, dokter, status" @disabled($connectionError || ! $patient)>
+                        placeholder="{{ $viewAllPatients ? "Cari pasien, no. RM, no. rawat, poli, dokter" : "Cari no. rawat, poli, dokter, status" }}"
+                        @disabled($connectionError || ! $historyReady)>
                 </div>
-                <button type="submit" class="online-button primary" @disabled($connectionError || ! $patient)>
-                    <i class="bi bi-search"></i>
-                    <span>Cari</span>
+                <div class="online-field-control">
+                    <i class="bi bi-shield-check"></i>
+                    <select name="kd_pj" class="form-select" aria-label="Filter penjamin"
+                        @disabled($connectionError || ! $historyReady)>
+                        <option value="">Semua Penjamin</option>
+                        @foreach ($penjaminOptions as $penjamin)
+                            <option value="{{ $penjamin["kd_pj"] }}" @selected($guarantorCode === $penjamin["kd_pj"])>
+                                {{ $penjamin["png_jawab"] }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="submit" class="online-button primary" @disabled($connectionError || ! $historyReady)>
+                    <i class="bi bi-funnel"></i>
+                    <span>Filter</span>
                 </button>
-                @if ($hasSearch)
+                @if ($hasFilter)
                     <a href="{{ route("daftarOnline.history") }}" class="online-button secondary">
                         <i class="bi bi-x-lg"></i>
                         <span>Reset</span>
@@ -95,7 +113,7 @@
                 @endif
             </form>
 
-            @if ($connectionError || ! $patient)
+            @if ($connectionError || ! $historyReady)
                 <div class="online-empty-state">
                     <i class="bi bi-inbox"></i>
                     <strong>Riwayat belum dapat ditampilkan</strong>
@@ -104,8 +122,8 @@
             @elseif ($registrations->count() === 0)
                 <div class="online-empty-state">
                     <i class="bi bi-calendar-x"></i>
-                    <strong>{{ $hasSearch ? "Riwayat tidak ditemukan" : "Belum ada riwayat pendaftaran" }}</strong>
-                    <small>{{ $hasSearch ? "Coba gunakan kata kunci lain." : "Pendaftaran yang sudah dibuat akan tampil di sini." }}</small>
+                    <strong>{{ $hasFilter ? "Riwayat tidak ditemukan" : "Belum ada riwayat pendaftaran" }}</strong>
+                    <small>{{ $hasFilter ? "Coba gunakan kata kunci atau penjamin lain." : "Pendaftaran yang sudah dibuat akan tampil di sini." }}</small>
                 </div>
             @else
                 <div class="online-history-list">
@@ -130,9 +148,15 @@
                                 <h2>{{ $registration["poli"] }}</h2>
                                 <p>{{ $registration["dokter"] }}</p>
                                 <div class="online-history-meta">
+                                    @if ($viewAllPatients)
+                                        <span><i class="bi bi-person-vcard"></i>{{ $registration["nama_pasien"] }} · {{ $registration["no_rkm_medis"] }}</span>
+                                    @endif
                                     <span><i class="bi bi-calendar3"></i>{{ $registration["tanggal_lengkap"] }}</span>
                                     <span><i class="bi bi-clock"></i>{{ $registration["jam"] }}</span>
                                     <span><i class="bi bi-shield-check"></i>{{ $registration["penjamin"] }}</span>
+                                    @if ($registration["didaftarkan_oleh"] !== "-")
+                                        <span><i class="bi bi-person-check"></i>{{ $registration["didaftarkan_oleh"] }}</span>
+                                    @endif
                                 </div>
                             </div>
                             <div class="online-history-action">
@@ -206,6 +230,10 @@
                     </div>
                     <dl class="online-result-list online-history-detail-list">
                         <div>
+                            <dt>Pasien</dt>
+                            <dd id="historyDetailPatient">-</dd>
+                        </div>
+                        <div>
                             <dt>Tanggal</dt>
                             <dd id="historyDetailDate">-</dd>
                         </div>
@@ -257,6 +285,10 @@
                             <dt>Alamat Penanggung Jawab</dt>
                             <dd id="historyDetailAddress">-</dd>
                         </div>
+                        <div class="wide">
+                            <dt>Didaftarkan Oleh</dt>
+                            <dd id="historyDetailRegisteredBy">-</dd>
+                        </div>
                     </dl>
                 </div>
                 <div class="modal-footer">
@@ -286,6 +318,9 @@
                 $('#historyDetailSubtitle').text(`${valueOrDash(registration.poli)} - ${valueOrDash(registration.tanggal_lengkap)}`);
                 $('#historyDetailNoReg').text(valueOrDash(registration.no_reg));
                 $('#historyDetailNoRawat').text(valueOrDash(registration.no_rawat));
+                $('#historyDetailPatient').text(
+                    `${valueOrDash(registration.nama_pasien)} (${valueOrDash(registration.no_rkm_medis)})`
+                );
                 $('#historyDetailDate').text(`${valueOrDash(registration.tanggal_lengkap)} ${valueOrDash(registration.jam)}`);
                 $('#historyDetailClinic').text(valueOrDash(registration.poli));
                 $('#historyDetailDoctor').text(valueOrDash(registration.dokter));
@@ -301,6 +336,11 @@
                     `${valueOrDash(registration.penanggung_jawab)} (${valueOrDash(registration.hubungan_penanggung_jawab)})`
                 );
                 $('#historyDetailAddress').text(valueOrDash(registration.alamat_penanggung_jawab));
+                $('#historyDetailRegisteredBy').text(
+                    registration.didaftarkan_oleh === '-'
+                        ? '-'
+                        : `${valueOrDash(registration.didaftarkan_oleh)} · ${valueOrDash(registration.role_pendaftar)}`
+                );
             }
 
             $('.online-history-detail-button').on('click', function() {

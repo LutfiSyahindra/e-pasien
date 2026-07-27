@@ -30,12 +30,15 @@ class DaftarOnlineRepository
             ->first();
     }
 
-    public function getPenjaminOptions(): Collection
+    public function getPenjaminOptions(bool $includeBpjs = false): Collection
     {
         return $this->connection()
             ->table('penjab')
             ->select('kd_pj', 'png_jawab')
-            ->whereRaw('UPPER(kd_pj) <> ?', ['BPJ'])
+            ->when(
+                ! $includeBpjs,
+                fn (Builder $query) => $query->whereRaw('UPPER(kd_pj) <> ?', ['BPJ'])
+            )
             ->orderBy('png_jawab')
             ->get();
     }
@@ -103,11 +106,16 @@ class DaftarOnlineRepository
     }
 
     public function paginateRegistrationHistory(
-        string $medicalRecordNumber,
+        ?string $medicalRecordNumber,
         string $searchQuery,
-        int $perPage
+        int $perPage,
+        string $guarantorCode = ''
     ): LengthAwarePaginator {
         $query = $this->registrationQuery($medicalRecordNumber);
+
+        if ($guarantorCode !== '') {
+            $query->where('reg_periksa.kd_pj', $guarantorCode);
+        }
 
         if ($searchQuery !== '') {
             $likeSearch = '%'.$searchQuery.'%';
@@ -120,7 +128,9 @@ class DaftarOnlineRepository
                     ->orWhere('reg_periksa.status_bayar', 'like', $likeSearch)
                     ->orWhere('dokter.nm_dokter', 'like', $likeSearch)
                     ->orWhere('poliklinik.nm_poli', 'like', $likeSearch)
-                    ->orWhere('penjab.png_jawab', 'like', $likeSearch);
+                    ->orWhere('penjab.png_jawab', 'like', $likeSearch)
+                    ->orWhere('reg_periksa.no_rkm_medis', 'like', $likeSearch)
+                    ->orWhere('pasien.nm_pasien', 'like', $likeSearch);
             });
         }
 
@@ -157,13 +167,16 @@ class DaftarOnlineRepository
             ->first();
     }
 
-    public function findEligiblePenjamin(string $guarantorCode): ?object
+    public function findEligiblePenjamin(string $guarantorCode, bool $includeBpjs = false): ?object
     {
         return $this->connection()
             ->table('penjab')
             ->select('kd_pj', 'png_jawab')
             ->where('kd_pj', $guarantorCode)
-            ->whereRaw('UPPER(kd_pj) <> ?', ['BPJ'])
+            ->when(
+                ! $includeBpjs,
+                fn (Builder $query) => $query->whereRaw('UPPER(kd_pj) <> ?', ['BPJ'])
+            )
             ->first();
     }
 
@@ -222,16 +235,18 @@ class DaftarOnlineRepository
         return DB::connection('mysql_khanza');
     }
 
-    private function registrationQuery(string $medicalRecordNumber): Builder
+    private function registrationQuery(?string $medicalRecordNumber): Builder
     {
         return $this->connection()
             ->table('reg_periksa')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis', '=', 'reg_periksa.no_rkm_medis')
             ->leftJoin('dokter', 'dokter.kd_dokter', '=', 'reg_periksa.kd_dokter')
             ->leftJoin('poliklinik', 'poliklinik.kd_poli', '=', 'reg_periksa.kd_poli')
             ->leftJoin('penjab', 'penjab.kd_pj', '=', 'reg_periksa.kd_pj')
             ->select(
                 'reg_periksa.no_reg',
                 'reg_periksa.no_rawat',
+                'reg_periksa.no_rkm_medis',
                 'reg_periksa.tgl_registrasi',
                 'reg_periksa.jam_reg',
                 'reg_periksa.kd_dokter',
@@ -248,11 +263,16 @@ class DaftarOnlineRepository
                 'reg_periksa.p_jawab',
                 'reg_periksa.almt_pj',
                 'reg_periksa.hubunganpj',
+                'pasien.nm_pasien',
+                'pasien.no_tlp',
                 'dokter.nm_dokter',
                 'poliklinik.nm_poli',
                 'penjab.png_jawab'
             )
-            ->where('reg_periksa.no_rkm_medis', $medicalRecordNumber);
+            ->when(
+                $medicalRecordNumber !== null,
+                fn (Builder $query) => $query->where('reg_periksa.no_rkm_medis', $medicalRecordNumber)
+            );
     }
 
     private function nextRegistrationNumber(
