@@ -12,6 +12,14 @@ use Illuminate\Support\Facades\DB;
 
 class DaftarOnlineRepository
 {
+    public const CANCELLATION_CANCELLED = 'cancelled';
+
+    public const CANCELLATION_CHECKED_IN = 'checked_in';
+
+    public const CANCELLATION_NOT_FOUND = 'not_found';
+
+    public const CANCELLATION_NOT_PENDING = 'not_pending';
+
     public function findPatient(string $medicalRecordNumber): ?object
     {
         return $this->connection()
@@ -19,7 +27,9 @@ class DaftarOnlineRepository
             ->select(
                 'no_rkm_medis',
                 'nm_pasien',
+                'no_ktp',
                 'tgl_lahir',
+                'tgl_daftar',
                 'alamat',
                 'keluarga',
                 'namakeluarga',
@@ -29,6 +39,46 @@ class DaftarOnlineRepository
             )
             ->where('no_rkm_medis', $medicalRecordNumber)
             ->first();
+    }
+
+    public function searchPatients(
+        string $searchQuery,
+        ?string $birthDate = null,
+        int $limit = 10
+    ): Collection {
+        $likeSearch = '%'.$searchQuery.'%';
+
+        return $this->connection()
+            ->table('pasien')
+            ->select(
+                'no_rkm_medis',
+                'nm_pasien',
+                'no_ktp',
+                'tgl_lahir',
+                'tgl_daftar',
+                'alamat',
+                'keluarga',
+                'namakeluarga',
+                'no_tlp',
+                'kd_pj',
+                'no_peserta'
+            )
+            ->where(function (Builder $query) use ($searchQuery, $likeSearch, $birthDate): void {
+                $query->where('no_rkm_medis', $searchQuery);
+
+                if ($birthDate !== null) {
+                    $query->orWhere(function (Builder $nameQuery) use ($likeSearch, $birthDate): void {
+                        $nameQuery
+                            ->where('nm_pasien', 'like', $likeSearch)
+                            ->where('tgl_lahir', $birthDate);
+                    });
+                }
+            })
+            ->orderByRaw('CASE WHEN no_rkm_medis = ? THEN 0 ELSE 1 END', [$searchQuery])
+            ->orderBy('nm_pasien')
+            ->orderBy('no_rkm_medis')
+            ->limit($limit)
+            ->get();
     }
 
     public function getPenjaminOptions(bool $includeBpjs = false): Collection
@@ -50,6 +100,18 @@ class DaftarOnlineRepository
             ->table('jadwal')
             ->join('dokter', 'dokter.kd_dokter', '=', 'jadwal.kd_dokter')
             ->join('poliklinik', 'poliklinik.kd_poli', '=', 'jadwal.kd_poli')
+            ->leftJoin(
+                'maping_dokter_dpjpvclaim as dokter_bpjs',
+                'dokter_bpjs.kd_dokter',
+                '=',
+                'jadwal.kd_dokter'
+            )
+            ->join(
+                'maping_poli_bpjs as poli_bpjs',
+                'poli_bpjs.kd_poli_rs',
+                '=',
+                'jadwal.kd_poli'
+            )
             ->select(
                 'jadwal.kd_dokter',
                 'dokter.nm_dokter',
@@ -58,10 +120,14 @@ class DaftarOnlineRepository
                 'jadwal.hari_kerja',
                 'jadwal.jam_mulai',
                 'jadwal.jam_selesai',
-                'jadwal.kuota'
+                'jadwal.kuota',
+                'dokter_bpjs.kd_dokter_bpjs',
+                'dokter_bpjs.nm_dokter_bpjs',
+                'poli_bpjs.kd_poli_bpjs',
+                'poli_bpjs.nm_poli_bpjs'
             )
             ->whereIn(DB::raw('UPPER(jadwal.hari_kerja)'), $workdayAliases)
-            ->orderBy('poliklinik.nm_poli')
+            ->orderBy('poli_bpjs.nm_poli_bpjs')
             ->orderBy('dokter.nm_dokter')
             ->orderBy('jadwal.jam_mulai')
             ->get();
@@ -97,13 +163,82 @@ class DaftarOnlineRepository
         return $this->nextSequence((string) $lastRegistrationNumber, 3);
     }
 
+    public function previewNextTreatmentNumber(string $date): string
+    {
+        $prefix = Carbon::parse($date)->format('Y/m/d').'/';
+        $lastTreatmentNumber = $this->connection()
+            ->table('reg_periksa')
+            ->where('tgl_registrasi', $date)
+            ->orderByRaw("CAST(SUBSTRING_INDEX(no_rawat, '/', -1) AS UNSIGNED) DESC")
+            ->value('no_rawat');
+
+        $nextNumber = $this->lastSequenceNumber((string) $lastTreatmentNumber) + 1;
+
+        return $prefix.str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
+    }
+
     public function findPendingRegistration(string $medicalRecordNumber): ?object
     {
         return $this->registrationQuery($medicalRecordNumber)
+            ->selectRaw(
+                'EXISTS (
+                    SELECT 1
+                    FROM checkin_poli
+                    WHERE checkin_poli.no_rawat = reg_periksa.no_rawat
+                ) AS sudah_checkin'
+            )
             ->where('reg_periksa.stts', 'Belum')
             ->orderByDesc('reg_periksa.tgl_registrasi')
             ->orderByDesc('reg_periksa.jam_reg')
             ->first();
+    }
+
+    public function cancelPendingRegistration(
+        string $treatmentNumber,
+        string $medicalRecordNumber
+    ): string {
+        return $this->connection()->transaction(function (Connection $connection) use (
+            $treatmentNumber,
+            $medicalRecordNumber
+        ): string {
+            $registration = $connection
+                ->table('reg_periksa')
+                ->select('no_rawat', 'stts')
+                ->where('no_rawat', $treatmentNumber)
+                ->where('no_rkm_medis', $medicalRecordNumber)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $registration) {
+                return self::CANCELLATION_NOT_FOUND;
+            }
+
+            if (strtoupper(trim((string) $registration->stts)) !== 'BELUM') {
+                return self::CANCELLATION_NOT_PENDING;
+            }
+
+            $checkin = $connection
+                ->table('checkin_poli')
+                ->select('no_rawat')
+                ->where('no_rawat', $treatmentNumber)
+                ->lockForUpdate()
+                ->first();
+
+            if ($checkin) {
+                return self::CANCELLATION_CHECKED_IN;
+            }
+
+            $affectedRows = $connection
+                ->table('reg_periksa')
+                ->where('no_rawat', $treatmentNumber)
+                ->where('no_rkm_medis', $medicalRecordNumber)
+                ->where('stts', 'Belum')
+                ->update(['stts' => 'Batal']);
+
+            return $affectedRows === 1
+                ? self::CANCELLATION_CANCELLED
+                : self::CANCELLATION_NOT_PENDING;
+        });
     }
 
     public function paginateRegistrationHistory(
@@ -151,6 +286,18 @@ class DaftarOnlineRepository
             ->table('jadwal')
             ->join('dokter', 'dokter.kd_dokter', '=', 'jadwal.kd_dokter')
             ->join('poliklinik', 'poliklinik.kd_poli', '=', 'jadwal.kd_poli')
+            ->leftJoin(
+                'maping_dokter_dpjpvclaim as dokter_bpjs',
+                'dokter_bpjs.kd_dokter',
+                '=',
+                'jadwal.kd_dokter'
+            )
+            ->leftJoin(
+                'maping_poli_bpjs as poli_bpjs',
+                'poli_bpjs.kd_poli_rs',
+                '=',
+                'jadwal.kd_poli'
+            )
             ->select(
                 'jadwal.kd_dokter',
                 'dokter.nm_dokter',
@@ -159,7 +306,11 @@ class DaftarOnlineRepository
                 'jadwal.hari_kerja',
                 'jadwal.jam_mulai',
                 'jadwal.jam_selesai',
-                'jadwal.kuota'
+                'jadwal.kuota',
+                'dokter_bpjs.kd_dokter_bpjs',
+                'dokter_bpjs.nm_dokter_bpjs',
+                'poli_bpjs.kd_poli_bpjs',
+                'poli_bpjs.nm_poli_bpjs'
             )
             ->where('jadwal.kd_dokter', $doctorCode)
             ->where('jadwal.kd_poli', $clinicCode)

@@ -13,6 +13,26 @@
         $medicalRecordNumber = trim((string) ($patient->no_rkm_medis ?? ($isRegistrationStaff ? $selectedMedicalRecordNumber : ($user->username ?? "-"))));
         $patientPhone = trim((string) ($patient->no_tlp ?? "-"));
         $patientAddress = trim((string) ($patient->alamat ?? "-"));
+        $formatPatientBirthDate = static function ($birthDate): string {
+            $rawBirthDate = trim((string) $birthDate);
+
+            if ($rawBirthDate === "" || $rawBirthDate === "0000-00-00") {
+                return "-";
+            }
+
+            try {
+                return \Illuminate\Support\Carbon::parse($rawBirthDate)
+                    ->locale("id")
+                    ->translatedFormat("d F Y");
+            } catch (\Throwable) {
+                return $rawBirthDate;
+            }
+        };
+        $patientBirthDate = $formatPatientBirthDate($patient->tgl_lahir ?? null);
+        $patientSearchSummary = $patientSearchResults->count()." hasil ditemukan untuk “".$patientSearchQuery."”";
+        if ($patientSearchBirthDate !== "") {
+            $patientSearchSummary .= " dengan tanggal lahir ".$formatPatientBirthDate($patientSearchBirthDate);
+        }
         $today = now()->toDateString();
         $hasPendingRegistration = ! empty($pendingRegistration);
     @endphp
@@ -71,11 +91,19 @@
             <section class="online-history-panel mb-3">
                 <form class="online-history-filter" method="GET" action="{{ route("daftarOnline.index") }}">
                     <div class="online-field-control">
-                        <i class="bi bi-upc-scan"></i>
-                        <input type="search" name="no_rkm_medis" class="form-control"
-                            value="{{ $selectedMedicalRecordNumber }}" maxlength="20"
-                            placeholder="Masukkan nomor rekam medis pasien"
-                            aria-label="Nomor rekam medis pasien" @disabled($connectionError)>
+                        <i class="bi bi-search"></i>
+                        <input type="search" name="patient_search" class="form-control"
+                            value="{{ $patientSearchQuery }}" maxlength="100"
+                            placeholder="Masukkan No. RM atau nama pasien"
+                            aria-label="Nomor rekam medis atau nama pasien" @disabled($connectionError)>
+                    </div>
+                    <div class="online-field-control">
+                        <i class="bi bi-calendar3"></i>
+                        <input type="date" name="patient_birth_date" class="form-control"
+                            value="{{ $patientSearchBirthDate }}" max="{{ $today }}"
+                            aria-label="Tanggal lahir pasien untuk pencarian berdasarkan nama"
+                            title="Tanggal lahir wajib diisi saat mencari berdasarkan nama"
+                            @disabled($connectionError)>
                     </div>
                     <button type="submit" class="online-button primary" @disabled($connectionError)>
                         <i class="bi bi-search"></i>
@@ -88,9 +116,40 @@
                         </a>
                     @endif
                 </form>
-                <small class="text-muted">
-                    Role Anda dapat mendaftarkan pasien lain, termasuk dengan penjamin BPJS Kesehatan.
-                </small>
+                <div class="online-patient-search-help">
+                    <small>
+                        <i class="bi bi-info-circle"></i>
+                        No. RM dapat dicari langsung. Pencarian nama wajib disertai tanggal lahir.
+                    </small>
+                    <small>Role Anda dapat mendaftarkan pasien lain, termasuk dengan penjamin BPJS Kesehatan.</small>
+                </div>
+                @if ($patientSearchResults->isNotEmpty())
+                    <div class="online-patient-search-results" aria-label="Hasil pencarian pasien">
+                        <div class="online-patient-search-heading">
+                            <strong>Pilih pasien</strong>
+                            <small>{{ $patientSearchSummary }}.</small>
+                        </div>
+                        <div class="online-patient-search-list">
+                            @foreach ($patientSearchResults as $patientResult)
+                                <a href="{{ route("daftarOnline.index", ["no_rkm_medis" => $patientResult->no_rkm_medis]) }}"
+                                    class="online-patient-search-item">
+                                    <div class="online-patient-search-identity">
+                                        <strong>{{ trim((string) $patientResult->nm_pasien) }}</strong>
+                                        <small>No. RM {{ trim((string) $patientResult->no_rkm_medis) }}</small>
+                                    </div>
+                                    <div class="online-patient-search-birth">
+                                        <i class="bi bi-calendar3"></i>
+                                        <span>
+                                            <small>Tanggal lahir</small>
+                                            <strong>{{ $formatPatientBirthDate($patientResult->tgl_lahir ?? null) }}</strong>
+                                        </span>
+                                    </div>
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </section>
         @endif
 
@@ -102,16 +161,31 @@
         @elseif ($isRegistrationStaff && ! $patientSearchPerformed)
             <div class="online-alert warning">
                 <i class="bi bi-person-vcard"></i>
-                <span>Masukkan nomor rekam medis untuk memilih pasien yang akan didaftarkan.</span>
+                <span>Masukkan nomor rekam medis atau nama untuk memilih pasien yang akan didaftarkan.</span>
+            </div>
+        @elseif ($isRegistrationStaff && $patientSearchResults->isNotEmpty())
+            <div class="online-alert warning">
+                <i class="bi bi-people"></i>
+                <span>Pilih salah satu pasien dari hasil pencarian di atas.</span>
             </div>
         @elseif (! $patient)
             <div class="online-alert warning">
                 <i class="bi bi-person-x"></i>
-                <span>Data pasien belum ditemukan untuk nomor rekam medis {{ $medicalRecordNumber }}.</span>
+                @if ($patientSearchBirthDate === "")
+                    <span>
+                        No. RM “{{ $patientSearchQuery ?: $medicalRecordNumber }}” tidak ditemukan.
+                        Jika mencari berdasarkan nama, pilih tanggal lahir pasien.
+                    </span>
+                @else
+                    <span>
+                        Data pasien belum ditemukan untuk “{{ $patientSearchQuery }}” dengan tanggal lahir
+                        {{ $formatPatientBirthDate($patientSearchBirthDate) }}.
+                    </span>
+                @endif
             </div>
         @endif
 
-        <div class="online-layout">
+        <div @class(["online-layout", "single-panel" => $hasPendingRegistration])>
             <section class="online-main-panel">
                 @if ($hasPendingRegistration)
                     <div class="online-active-visit">
@@ -195,6 +269,12 @@
                         </div>
 
                         <div class="online-visit-actions">
+                            @if ($pendingRegistration["can_cancel"] ?? false)
+                                <button type="button" id="cancelPendingRegistration" class="online-button danger">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span>Batal Pendaftaran</span>
+                                </button>
+                            @endif
                             <button type="button" id="showPendingRegistrationModal" class="online-button primary">
                                 <i class="bi bi-qr-code-scan"></i>
                                 <span>Tampilkan Bukti Pendaftaran</span>
@@ -202,14 +282,6 @@
                         </div>
                     </div>
                 @else
-                    <div class="online-stepper" aria-label="Tahap pendaftaran">
-                        <span class="online-step active" data-step="date"><i class="bi bi-calendar3"></i><strong>Tanggal</strong></span>
-                        <span class="online-step" data-step="clinic"><i class="bi bi-hospital"></i><strong>Poli</strong></span>
-                        <span class="online-step" data-step="doctor"><i class="bi bi-person-heart"></i><strong>Dokter</strong></span>
-                        <span class="online-step" data-step="guarantor"><i class="bi bi-credit-card-2-front"></i><strong>Penjamin</strong></span>
-                        <span class="online-step" data-step="confirm"><i class="bi bi-check2-circle"></i><strong>Simpan</strong></span>
-                    </div>
-
                     <form id="onlineRegistrationForm" class="online-form" autocomplete="off">
                         @if ($isRegistrationStaff)
                             <input type="hidden" id="no_rkm_medis" name="no_rkm_medis"
@@ -256,13 +328,13 @@
                                     <span>2</span>
                                     <div>
                                         <label for="kd_poli">Poli tujuan</label>
-                                        <small>Pilih poli sebelum memilih dokter.</small>
+                                        <small>Pilih poliklinik sebelum memilih dokter.</small>
                                     </div>
                                 </div>
                                 <div class="online-field-control">
                                     <i class="bi bi-hospital"></i>
                                     <select id="kd_poli" name="kd_poli" class="form-select online-select"
-                                        data-placeholder="Pilih poli" aria-describedby="error-kd_poli" required
+                                        data-placeholder="Pilih poliklinik" aria-describedby="error-kd_poli" required
                                         @disabled($connectionError || ! $patient)>
                                         <option></option>
                                     </select>
@@ -320,13 +392,13 @@
                                 <div id="bpjsCardNumberField" class="online-bpjs-card-number" hidden>
                                     <div>
                                         <label for="no_peserta">No. Kartu BPJS</label>
-                                        <small id="bpjsCardNumberHelp">Nomor tersimpan dapat diperbarui sebelum pendaftaran disimpan.</small>
+                                        <small id="bpjsCardNumberHelp">Digunakan untuk mencari surat kontrol, lalu rujukan PCare dan RS.</small>
                                     </div>
                                     <div class="online-field-control">
                                         <i class="bi bi-credit-card-2-front"></i>
                                         <input type="text" id="no_peserta" name="no_peserta"
-                                            class="form-control" maxlength="25" autocomplete="off"
-                                            value="{{ $patient->no_peserta ?? "" }}"
+                                            class="form-control" maxlength="25" inputmode="numeric" pattern="[0-9]*"
+                                            autocomplete="off" value="{{ $patient->no_peserta ?? "" }}"
                                             aria-describedby="bpjsCardNumberHelp error-no_peserta" disabled>
                                     </div>
                                     <span class="invalid-feedback d-block" id="error-no_peserta"></span>
@@ -367,7 +439,54 @@
                 @endif
             </section>
 
-            <aside class="online-side-panel">
+            @unless ($hasPendingRegistration)
+                <aside class="online-side-panel">
+                <section class="online-patient-panel">
+                    <div class="online-panel-title">
+                        <i class="bi bi-person-lines-fill"></i>
+                        <div class="online-panel-title-copy">
+                            <h2>Data Pasien</h2>
+                            <small>Identitas pasien yang akan didaftarkan</small>
+                        </div>
+                        <span @class([
+                            "online-patient-selection-status",
+                            "selected" => $patient,
+                        ])>
+                            <i class="bi {{ $patient ? "bi-check-circle-fill" : "bi-hourglass-split" }}"></i>
+                            {{ $patient ? "Terpilih" : "Belum dipilih" }}
+                        </span>
+                    </div>
+
+                    <div @class(["online-patient-profile", "empty" => ! $patient])>
+                        <span class="online-patient-avatar">
+                            <i class="bi bi-person-fill"></i>
+                        </span>
+                        <div class="online-patient-identity">
+                            <small>Nama pasien</small>
+                            <strong>{{ $patientName }}</strong>
+                            <span>
+                                <i class="bi bi-upc-scan"></i>
+                                No. RM {{ $medicalRecordNumber ?: "-" }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <dl class="online-patient-meta">
+                        <div>
+                            <dt><i class="bi bi-calendar3"></i>Tanggal lahir</dt>
+                            <dd>{{ $patientBirthDate }}</dd>
+                        </div>
+                        <div>
+                            <dt><i class="bi bi-telephone"></i>Telepon</dt>
+                            <dd>{{ $patientPhone }}</dd>
+                        </div>
+                        <div class="wide">
+                            <dt><i class="bi bi-geo-alt"></i>Alamat</dt>
+                            <dd>{{ $patientAddress }}</dd>
+                        </div>
+                    </dl>
+                </section>
+
                 <section class="online-summary">
                     <div class="online-summary-header">
                         <span><i class="bi bi-clipboard2-pulse"></i></span>
@@ -405,32 +524,8 @@
                         </div>
                     </dl>
                 </section>
-
-                <section class="online-patient-panel">
-                    <div class="online-panel-title">
-                        <i class="bi bi-person-lines-fill"></i>
-                        <h2>Data Pasien</h2>
-                    </div>
-                    <div class="online-patient-detail">
-                        <span>
-                            <small>Nama</small>
-                            <strong>{{ $patientName }}</strong>
-                        </span>
-                        <span>
-                            <small>No. RM</small>
-                            <strong>{{ $medicalRecordNumber }}</strong>
-                        </span>
-                        <span>
-                            <small>Telepon</small>
-                            <strong>{{ $patientPhone }}</strong>
-                        </span>
-                        <span>
-                            <small>Alamat</small>
-                            <strong>{{ $patientAddress }}</strong>
-                        </span>
-                    </div>
-                </section>
-            </aside>
+                </aside>
+            @endunless
         </div>
     </div>
 @endsection
@@ -439,14 +534,19 @@
     <script>
         window.daftarOnlineConfig = {
             schedulesUrl: @json(route("daftarOnline.schedules")),
+            controlLettersUrl: @json(route("daftarOnline.suratKontrol")),
+            controlLetterDetailUrl: @json(route("daftarOnline.suratKontrol.show", ["controlLetterNumber" => "__NUMBER__"])),
+            antrolPreviewUrl: @json(route("daftarOnline.antrol.preview")),
             storeUrl: @json(route("daftarOnline.store")),
+            cancelUrl: @json(route("daftarOnline.cancel")),
             csrfToken: @json(csrf_token()),
             today: @json($today),
             patientReady: @json((bool) $patient && ! $connectionError),
+            isRegistrationStaff: @json($isRegistrationStaff),
             hasPendingRegistration: @json($hasPendingRegistration),
             pendingRegistration: @json($pendingRegistration),
             selectedMedicalRecordNumber: @json($patient->no_rkm_medis ?? null),
-            showNotice: @json(! $isRegistrationStaff),
+            showNotice: @json(! $isRegistrationStaff && ! $hasPendingRegistration),
         };
     </script>
     @include("e-pasien.menu.daftarOnline.jsMain")

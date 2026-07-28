@@ -35,4 +35,17 @@ return [
         ],
     ],
 
+    'bpjs' => [
+        'consumer_id' => env('BPJS_CONS_ID'),
+        'secret_key' => env('BPJS_SECRET_KEY'),
+
+        'vclaim' => [
+            'base_url' => env('BPJS_BASE_URL_VCLAIM'),
+            'user_key' => env('BPJS_USERKEY_VCLAIM'),
+            'connect_timeout' => (int) env('BPJS_VCLAIM_CONNECT_TIMEOUT', 10),
+            'timeout' => (int) env('BPJS_VCLAIM_TIMEOUT', 30),
+            'database_logging' => (bool) env('BPJS_DATABASE_LOGGING', true),
+        ],
+    ],
+
 ];

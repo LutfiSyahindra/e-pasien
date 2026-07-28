@@ -25,22 +25,45 @@ class DaftarOnlineController extends Controller
     {
         $validated = $request->validate([
             'no_rkm_medis' => ['nullable', 'string', 'max:20'],
+            'patient_search' => ['nullable', 'string', 'max:100'],
+            'patient_birth_date' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:today'],
         ]);
 
         $patient = null;
+        $patientSearchResults = collect();
         $penjaminOptions = [];
         $pendingRegistration = null;
         $connectionError = null;
         $isRegistrationStaff = $this->roleConfigurationService->isConfigured($request->user());
         $selectedMedicalRecordNumber = trim((string) ($validated['no_rkm_medis'] ?? ''));
-        $patientSearchPerformed = $isRegistrationStaff && $selectedMedicalRecordNumber !== '';
+        $patientSearchQuery = trim((string) ($validated['patient_search'] ?? $selectedMedicalRecordNumber));
+        $patientSearchBirthDate = trim((string) ($validated['patient_birth_date'] ?? ''));
+        $patientSearchPerformed = $isRegistrationStaff && $patientSearchQuery !== '';
 
         try {
-            $patient = $isRegistrationStaff
-                ? ($patientSearchPerformed
-                    ? $this->daftarOnlineService->patientForMedicalRecord($selectedMedicalRecordNumber)
-                    : null)
-                : $this->daftarOnlineService->patientForUser($request->user());
+            if ($isRegistrationStaff) {
+                if ($selectedMedicalRecordNumber !== '') {
+                    $patient = $this->daftarOnlineService
+                        ->patientForMedicalRecord($selectedMedicalRecordNumber);
+                } elseif ($patientSearchQuery !== '') {
+                    $patientSearchResults = $this->daftarOnlineService
+                        ->searchPatients(
+                            $patientSearchQuery,
+                            $patientSearchBirthDate !== '' ? $patientSearchBirthDate : null
+                        );
+                    $exactMedicalRecordMatch = $patientSearchResults->first(
+                        fn (object $result): bool => trim((string) $result->no_rkm_medis) === $patientSearchQuery
+                    );
+
+                    if ($exactMedicalRecordMatch || $patientSearchResults->count() === 1) {
+                        $patient = $exactMedicalRecordMatch ?? $patientSearchResults->first();
+                        $selectedMedicalRecordNumber = trim((string) $patient->no_rkm_medis);
+                        $patientSearchResults = collect();
+                    }
+                }
+            } else {
+                $patient = $this->daftarOnlineService->patientForUser($request->user());
+            }
 
             if ($patient) {
                 $pendingRegistration = $this->daftarOnlineService
@@ -67,7 +90,10 @@ class DaftarOnlineController extends Controller
             'connectionError' => $connectionError,
             'isRegistrationStaff' => $isRegistrationStaff,
             'selectedMedicalRecordNumber' => $selectedMedicalRecordNumber,
+            'patientSearchQuery' => $patientSearchQuery,
+            'patientSearchBirthDate' => $patientSearchBirthDate,
             'patientSearchPerformed' => $patientSearchPerformed,
+            'patientSearchResults' => $patientSearchResults,
         ]);
     }
 
@@ -140,6 +166,93 @@ class DaftarOnlineController extends Controller
         }
     }
 
+    public function previewAntrol(Request $request): JsonResponse
+    {
+        if (! $this->roleConfigurationService->isConfigured($request->user())) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Anda tidak memiliki akses untuk menampilkan payload Antrol BPJS.',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'no_rkm_medis' => ['required', 'string', 'max:20'],
+            'tgl_registrasi' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
+            'kd_dokter' => ['required', 'string', 'max:20'],
+            'kd_poli' => ['required', 'string', 'max:15'],
+            'kd_pj' => ['required', Rule::in(['BPJ'])],
+            'no_peserta' => ['required', 'string', 'max:25', 'regex:/^\d+$/'],
+            'bpjs_document_type' => [
+                'required',
+                Rule::in(['surat_kontrol', 'rujukan']),
+            ],
+            'bpjs_document_source' => [
+                'required',
+                Rule::in([
+                    'surat_kontrol',
+                    'rujukan_pcare',
+                    'rujukan_internal',
+                    'rujukan_rumah_sakit',
+                    'rujukan_rs',
+                ]),
+            ],
+            'bpjs_document_number' => [
+                'required',
+                'string',
+                'max:50',
+                'regex:/^[A-Za-z0-9-]+$/',
+            ],
+            'bpjs_document_date' => ['nullable', 'date_format:Y-m-d'],
+            'bpjs_document_card_number' => ['nullable', 'string', 'max:25', 'regex:/^\d+$/'],
+            'bpjs_document_nik' => ['nullable', 'string', 'max:30', 'regex:/^\d+$/'],
+            'bpjs_document_phone' => ['nullable', 'string', 'max:20', 'regex:/^\d+$/'],
+            'bpjs_document_medical_record' => ['nullable', 'string', 'max:20'],
+            'bpjs_document_clinic_code' => ['nullable', 'string', 'max:15'],
+            'bpjs_document_clinic_name' => ['nullable', 'string', 'max:100'],
+            'bpjs_document_doctor_code' => ['nullable', 'string', 'max:20', 'regex:/^\d+$/'],
+            'bpjs_document_doctor_name' => ['nullable', 'string', 'max:100'],
+        ], [
+            'kd_pj.in' => 'Preview payload Antrol hanya tersedia untuk penjamin BPJ.',
+            'no_peserta.required' => 'No. kartu BPJS wajib diisi.',
+            'no_peserta.regex' => 'No. kartu BPJS hanya boleh berisi angka.',
+            'bpjs_document_type.required' => 'Pilih dokumen BPJS terlebih dahulu.',
+            'bpjs_document_source.required' => 'Sumber dokumen BPJS belum tersedia.',
+            'bpjs_document_number.required' => 'Nomor referensi BPJS wajib dipilih.',
+            'bpjs_document_number.regex' => 'Format nomor referensi BPJS tidak valid.',
+        ]);
+
+        try {
+            $data = $this->daftarOnlineService->previewAntrolPayload(
+                $request->user(),
+                $validated,
+                true
+            );
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Payload tambah antrean Antrol siap ditinjau. Data belum disimpan atau dikirim.',
+                'data' => $data,
+            ]);
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            Log::error('Gagal membuat preview payload tambah antrean Antrol.', [
+                'user_id' => $request->user()?->id,
+                'payload' => Arr::except($validated, [
+                    'no_peserta',
+                    'bpjs_document_card_number',
+                    'bpjs_document_nik',
+                    'bpjs_document_phone',
+                ]),
+                'message' => $exception->getMessage(),
+            ]);
+
+            return $this->khanzaErrorResponse(
+                'Payload Antrol belum dapat dibuat karena data Khanza belum siap.'
+            );
+        }
+    }
+
     public function store(Request $request): JsonResponse
     {
         $isRegistrationStaff = $this->roleConfigurationService->isConfigured($request->user());
@@ -168,6 +281,12 @@ class DaftarOnlineController extends Controller
             'no_peserta.max' => 'No. kartu tidak boleh lebih dari 25 karakter.',
         ]);
 
+        if (strtoupper(trim((string) $validated['kd_pj'])) === 'BPJ') {
+            throw ValidationException::withMessages([
+                'kd_pj' => 'Pendaftaran BPJ tidak disimpan pada tahap ini. Gunakan modal Proses Daftar MJKN untuk memilih dokumen BPJS dan meninjau payload Antrol.',
+            ]);
+        }
+
         try {
             $data = $this->daftarOnlineService->register(
                 $request->user(),
@@ -190,6 +309,48 @@ class DaftarOnlineController extends Controller
             ]);
 
             return $this->khanzaErrorResponse('Pendaftaran belum dapat disimpan karena koneksi atau struktur data Khanza belum siap.');
+        }
+    }
+
+    public function cancel(Request $request): JsonResponse
+    {
+        $isRegistrationStaff = $this->roleConfigurationService->isConfigured($request->user());
+
+        $validated = $request->validate([
+            'no_rawat' => ['required', 'string', 'max:30'],
+            'no_rkm_medis' => [
+                Rule::requiredIf($isRegistrationStaff),
+                'nullable',
+                'string',
+                'max:20',
+            ],
+        ]);
+
+        try {
+            $data = $this->daftarOnlineService->cancelRegistration(
+                $request->user(),
+                $validated['no_rawat'],
+                $validated['no_rkm_medis'] ?? null,
+                $isRegistrationStaff
+            );
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Pendaftaran berhasil dibatalkan.',
+                'data' => $data,
+            ]);
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            Log::error('Gagal membatalkan pendaftaran online.', [
+                'user_id' => $request->user()?->id,
+                'no_rawat' => $validated['no_rawat'],
+                'message' => $exception->getMessage(),
+            ]);
+
+            return $this->khanzaErrorResponse(
+                'Pendaftaran belum dapat dibatalkan karena koneksi atau struktur data Khanza belum siap.'
+            );
         }
     }
 

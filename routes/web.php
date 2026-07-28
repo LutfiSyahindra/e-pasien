@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Epasien\bridging\RencanaKontrolController;
 use App\Http\Controllers\Epasien\menu\DaftarOnlineController;
 use App\Http\Controllers\Epasien\settings\auth\permissionsController;
 use App\Http\Controllers\Epasien\settings\auth\rolesController;
@@ -72,7 +73,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/daftar-online', [DaftarOnlineController::class, 'index'])->name('daftarOnline.index');
         Route::get('/daftar-online/riwayat', [DaftarOnlineController::class, 'history'])->name('daftarOnline.history');
         Route::get('/daftar-online/jadwal', [DaftarOnlineController::class, 'schedules'])->name('daftarOnline.schedules');
+        Route::get('/daftar-online/surat-kontrol', [RencanaKontrolController::class, 'index'])
+            ->name('daftarOnline.suratKontrol');
+        Route::get('/daftar-online/surat-kontrol/{controlLetterNumber}', [RencanaKontrolController::class, 'show'])
+            ->name('daftarOnline.suratKontrol.show');
+        Route::post('/daftar-online/antrean/preview', [DaftarOnlineController::class, 'previewAntrol'])
+            ->name('daftarOnline.antrol.preview');
         Route::post('/daftar-online/store', [DaftarOnlineController::class, 'store'])->name('daftarOnline.store');
+        Route::patch('/daftar-online/batal', [DaftarOnlineController::class, 'cancel'])
+            ->name('daftarOnline.cancel');
     });
 });
 
