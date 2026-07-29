@@ -3,6 +3,7 @@
 namespace Tests\Unit\Services\Epasien\Menu;
 
 use App\Models\User;
+use App\Repositories\epasien\bridging\AntrolRepository;
 use App\Repositories\epasien\menu\DaftarOnlineRepository;
 use App\Services\epasien\menu\DaftarOnlineService;
 use Illuminate\Support\Carbon;
@@ -458,6 +459,147 @@ class DaftarOnlineServiceTest extends TestCase
         $this->assertSame('Dokumen BPJS', $result['field_sources']['nohp']);
         $this->assertSame('Dokumen BPJS', $result['field_sources']['kodepoli']);
         $this->assertSame('Dokumen BPJS', $result['field_sources']['kodedokter']);
+        $this->assertMatchesRegularExpression('/^[a-f0-9]{64}$/', $result['preview_hash']);
+        $this->assertSame('005', $result['final_data']['registration']['number']);
+        $this->assertSame(
+            '2026/07/27/000021',
+            $result['final_data']['registration']['treatment_number']
+        );
+    }
+
+    public function test_confirmed_mjkn_registration_is_saved_and_sent_to_antrol(): void
+    {
+        $patient = (object) [
+            'no_rkm_medis' => '000123',
+            'nm_pasien' => 'Budi',
+            'no_ktp' => '3212345678987654',
+            'no_tlp' => '081234567890',
+            'tgl_daftar' => '2020-01-01',
+            'tgl_lahir' => '1990-01-01',
+            'namakeluarga' => 'Budi',
+            'alamat' => 'Jl. Sehat',
+            'keluarga' => 'DIRI SENDIRI',
+        ];
+        $schedule = (object) [
+            'kd_dokter' => 'D001',
+            'nm_dokter' => 'dr. Budi',
+            'kd_poli' => 'POL01',
+            'nm_poli' => 'Poli Anak',
+            'jam_mulai' => '08:00:00',
+            'jam_selesai' => '10:00:00',
+            'kuota' => 30,
+            'kd_dokter_bpjs' => '12345',
+            'nm_dokter_bpjs' => 'Dr. Hendra',
+            'kd_poli_bpjs' => 'ANA',
+            'nm_poli_bpjs' => 'Anak',
+        ];
+        $penjamin = (object) [
+            'kd_pj' => 'BPJ',
+            'png_jawab' => 'BPJS Kesehatan',
+        ];
+        $data = [
+            'no_rkm_medis' => '000123',
+            'tgl_registrasi' => '2026-07-27',
+            'kd_dokter' => 'D001',
+            'kd_poli' => 'POL01',
+            'kd_pj' => 'BPJ',
+            'no_peserta' => '0001234567890',
+            'bpjs_document_type' => 'surat_kontrol',
+            'bpjs_document_source' => 'surat_kontrol',
+            'bpjs_document_number' => '0301R0110726K000001',
+            'bpjs_document_date' => '2026-07-27',
+            'bpjs_document_card_number' => '0001234567890',
+        ];
+        $repository = $this->createMock(DaftarOnlineRepository::class);
+        $repository
+            ->expects($this->exactly(3))
+            ->method('findPatient')
+            ->with('000123')
+            ->willReturn($patient);
+        $repository
+            ->expects($this->exactly(3))
+            ->method('findSchedule')
+            ->with('D001', 'POL01', ['SENIN'])
+            ->willReturn($schedule);
+        $repository
+            ->expects($this->exactly(2))
+            ->method('previewNextRegistrationNumber')
+            ->willReturn('005');
+        $repository
+            ->expects($this->exactly(2))
+            ->method('countActiveRegistrations')
+            ->willReturn(4);
+        $repository
+            ->expects($this->exactly(2))
+            ->method('previewNextTreatmentNumber')
+            ->willReturn('2026/07/27/000021');
+        $repository
+            ->expects($this->once())
+            ->method('findPendingRegistration')
+            ->with('000123')
+            ->willReturn(null);
+        $repository
+            ->expects($this->once())
+            ->method('findEligiblePenjamin')
+            ->with('BPJ', true)
+            ->willReturn($penjamin);
+        $repository
+            ->expects($this->once())
+            ->method('createMjknRegistration')
+            ->with(
+                $this->callback(fn (array $registration): bool => $registration['kd_pj'] === 'BPJ'),
+                '0001234567890',
+                $this->callback(function (array $reference): bool {
+                    return $reference['nobooking'] === '20260727000021'
+                        && $reference['jeniskunjungan'] === '3 (Kontrol)'
+                        && $reference['validasi'] === '0000-00-00 00:00:00'
+                        && $reference['statuskirim'] === 'Belum';
+                }),
+                '005',
+                '2026/07/27/000021'
+            )
+            ->willReturn([
+                'no_reg' => '005',
+                'no_rawat' => '2026/07/27/000021',
+                'tgl_registrasi' => '2026-07-27',
+                'jam_reg' => '08:00:00',
+                'kd_dokter' => 'D001',
+                'kd_poli' => 'POL01',
+                'kd_pj' => 'BPJ',
+                'stts' => 'Belum',
+                'status_bayar' => 'Belum Bayar',
+                'umurdaftar' => 36,
+                'sttsumur' => 'Th',
+            ]);
+        $repository
+            ->expects($this->once())
+            ->method('markMjknReferenceSent')
+            ->with('20260727000021')
+            ->willReturn(true);
+        $antrol = $this->createMock(AntrolRepository::class);
+        $antrol
+            ->expects($this->once())
+            ->method('addQueue')
+            ->with($this->callback(fn (array $payload): bool => $payload['nomorantrean'] === 'ANA-005'))
+            ->willReturn([
+                'metadata' => [
+                    'code' => 200,
+                    'message' => 'Ok',
+                ],
+            ]);
+        $service = new DaftarOnlineService($repository, $antrol);
+        $user = new User(['username' => '000123']);
+        $preview = $service->previewAntrolPayload($user, $data);
+
+        $result = $service->registerMjkn(
+            $user,
+            $data,
+            $preview['preview_hash']
+        );
+
+        $this->assertSame('005', $result['registration']['no_reg']);
+        $this->assertTrue($result['antrol']['sent']);
+        $this->assertSame('Sudah', $result['antrol']['delivery_status']);
     }
 
     public function test_antrol_preview_maps_bpjs_document_source_to_visit_type(): void

@@ -79,6 +79,8 @@ Route::middleware('auth')->group(function () {
             ->name('daftarOnline.suratKontrol.show');
         Route::post('/daftar-online/antrean/preview', [DaftarOnlineController::class, 'previewAntrol'])
             ->name('daftarOnline.antrol.preview');
+        Route::post('/daftar-online/antrean/submit', [DaftarOnlineController::class, 'submitAntrol'])
+            ->name('daftarOnline.antrol.submit');
         Route::post('/daftar-online/store', [DaftarOnlineController::class, 'store'])->name('daftarOnline.store');
         Route::patch('/daftar-online/batal', [DaftarOnlineController::class, 'cancel'])
             ->name('daftarOnline.cancel');

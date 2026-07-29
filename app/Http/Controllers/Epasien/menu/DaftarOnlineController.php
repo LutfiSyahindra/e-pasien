@@ -199,7 +199,7 @@ class DaftarOnlineController extends Controller
             'bpjs_document_number' => [
                 'required',
                 'string',
-                'max:50',
+                'max:40',
                 'regex:/^[A-Za-z0-9-]+$/',
             ],
             'bpjs_document_date' => ['nullable', 'date_format:Y-m-d'],
@@ -249,6 +249,103 @@ class DaftarOnlineController extends Controller
 
             return $this->khanzaErrorResponse(
                 'Payload Antrol belum dapat dibuat karena data Khanza belum siap.'
+            );
+        }
+    }
+
+    public function submitAntrol(Request $request): JsonResponse
+    {
+        if (! $this->roleConfigurationService->isConfigured($request->user())) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Anda tidak memiliki akses untuk memproses pendaftaran MJKN.',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'no_rkm_medis' => ['required', 'string', 'max:20'],
+            'tgl_registrasi' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
+            'kd_dokter' => ['required', 'string', 'max:20'],
+            'kd_poli' => ['required', 'string', 'max:15'],
+            'kd_pj' => ['required', Rule::in(['BPJ'])],
+            'no_peserta' => ['required', 'string', 'max:25', 'regex:/^\d+$/'],
+            'bpjs_document_type' => [
+                'required',
+                Rule::in(['surat_kontrol', 'rujukan']),
+            ],
+            'bpjs_document_source' => [
+                'required',
+                Rule::in([
+                    'surat_kontrol',
+                    'rujukan_pcare',
+                    'rujukan_internal',
+                    'rujukan_rumah_sakit',
+                    'rujukan_rs',
+                ]),
+            ],
+            'bpjs_document_number' => [
+                'required',
+                'string',
+                'max:40',
+                'regex:/^[A-Za-z0-9-]+$/',
+            ],
+            'bpjs_document_date' => ['nullable', 'date_format:Y-m-d'],
+            'bpjs_document_card_number' => ['nullable', 'string', 'max:25', 'regex:/^\d+$/'],
+            'bpjs_document_nik' => ['nullable', 'string', 'max:30', 'regex:/^\d+$/'],
+            'bpjs_document_phone' => ['nullable', 'string', 'max:20', 'regex:/^\d+$/'],
+            'bpjs_document_medical_record' => ['nullable', 'string', 'max:20'],
+            'bpjs_document_clinic_code' => ['nullable', 'string', 'max:15'],
+            'bpjs_document_clinic_name' => ['nullable', 'string', 'max:100'],
+            'bpjs_document_doctor_code' => ['nullable', 'string', 'max:20', 'regex:/^\d+$/'],
+            'bpjs_document_doctor_name' => ['nullable', 'string', 'max:100'],
+            'preview_hash' => ['required', 'string', 'size:64', 'regex:/^[a-f0-9]{64}$/'],
+        ], [
+            'kd_pj.in' => 'Pendaftaran MJKN hanya tersedia untuk penjamin BPJ.',
+            'no_peserta.required' => 'No. kartu BPJS wajib diisi.',
+            'no_peserta.regex' => 'No. kartu BPJS hanya boleh berisi angka.',
+            'bpjs_document_type.required' => 'Pilih dokumen BPJS terlebih dahulu.',
+            'bpjs_document_source.required' => 'Sumber dokumen BPJS belum tersedia.',
+            'bpjs_document_number.required' => 'Nomor referensi BPJS wajib dipilih.',
+            'bpjs_document_number.regex' => 'Format nomor referensi BPJS tidak valid.',
+            'preview_hash.required' => 'Data final wajib ditinjau sebelum dikirim ke BPJS.',
+            'preview_hash.size' => 'Konfirmasi data final tidak valid. Tampilkan preview kembali.',
+            'preview_hash.regex' => 'Konfirmasi data final tidak valid. Tampilkan preview kembali.',
+        ]);
+        $previewHash = (string) Arr::pull($validated, 'preview_hash');
+
+        try {
+            $data = $this->daftarOnlineService->registerMjkn(
+                $request->user(),
+                $validated,
+                $previewHash,
+                true
+            );
+            $sent = (bool) ($data['antrol']['sent'] ?? false);
+
+            return response()->json([
+                'status' => $sent ? 'success' : 'partial',
+                'message' => $sent
+                    ? 'Pendaftaran MJKN tersimpan dan antrean berhasil ditambahkan ke BPJS.'
+                    : 'Pendaftaran MJKN tersimpan. Pengiriman ke BPJS masih berstatus Belum: '
+                        .($data['antrol']['message'] ?? 'layanan BPJS belum memberi respons sukses.'),
+                'data' => $data,
+            ], $sent ? 201 : 202);
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            Log::error('Gagal memproses pendaftaran MJKN.', [
+                'user_id' => $request->user()?->id,
+                'payload' => Arr::except($validated, [
+                    'no_peserta',
+                    'bpjs_document_card_number',
+                    'bpjs_document_nik',
+                    'bpjs_document_phone',
+                ]),
+                'message' => $exception->getMessage(),
+            ]);
+
+            return $this->khanzaErrorResponse(
+                'Pendaftaran MJKN belum dapat diproses karena data Khanza atau layanan BPJS belum siap.'
             );
         }
     }

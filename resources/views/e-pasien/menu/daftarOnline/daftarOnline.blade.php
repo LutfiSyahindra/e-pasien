@@ -537,6 +537,7 @@
             controlLettersUrl: @json(route("daftarOnline.suratKontrol")),
             controlLetterDetailUrl: @json(route("daftarOnline.suratKontrol.show", ["controlLetterNumber" => "__NUMBER__"])),
             antrolPreviewUrl: @json(route("daftarOnline.antrol.preview")),
+            antrolSubmitUrl: @json(route("daftarOnline.antrol.submit")),
             storeUrl: @json(route("daftarOnline.store")),
             cancelUrl: @json(route("daftarOnline.cancel")),
             csrfToken: @json(csrf_token()),

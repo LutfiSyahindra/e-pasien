@@ -3,8 +3,10 @@
 namespace App\Services\epasien\menu;
 
 use App\Exceptions\RegistrationLockException;
+use App\Exceptions\RegistrationPreviewChangedException;
 use App\Models\OnlineRegistrationAudit;
 use App\Models\User;
+use App\Repositories\epasien\bridging\AntrolRepository;
 use App\Repositories\epasien\menu\DaftarOnlineRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
@@ -36,7 +38,8 @@ class DaftarOnlineService
     ];
 
     public function __construct(
-        private readonly DaftarOnlineRepository $daftarOnlineRepository
+        private readonly DaftarOnlineRepository $daftarOnlineRepository,
+        private readonly ?AntrolRepository $antrolRepository = null
     ) {}
 
     public function patientForUser(User $user): ?object
@@ -490,7 +493,7 @@ class DaftarOnlineService
             && Carbon::parse($patientRegistrationDate, self::HOSPITAL_TIMEZONE)
                 ->isSameDay(Carbon::parse($registrationDate, self::HOSPITAL_TIMEZONE));
 
-        return [
+        $preview = [
             'endpoint' => 'antrean/add',
             'method' => 'POST',
             'preview_only' => true,
@@ -565,6 +568,221 @@ class DaftarOnlineService
                 'sisakuotanonjkn' => $remainingQuota,
                 'kuotanonjkn' => $quota,
                 'keterangan' => 'Peserta harap 30 menit lebih awal guna pencatatan administrasi.',
+            ],
+        ];
+
+        $preview['final_data'] = [
+            'patient' => [
+                'name' => trim((string) ($patient->nm_pasien ?? '-')),
+                'medical_record_number' => trim((string) $patient->no_rkm_medis),
+                'card_number' => $cardNumber,
+            ],
+            'registration' => [
+                'number' => $nextRegistrationNumber,
+                'treatment_number' => $nextTreatmentNumber,
+                'date' => $registrationDate,
+                'doctor' => trim((string) ($schedule->nm_dokter ?? '-')),
+                'clinic' => trim((string) ($schedule->nm_poli ?? '-')),
+                'guarantor' => 'BPJS Kesehatan',
+            ],
+            'document' => $preview['document'],
+        ];
+        $preview['preview_hash'] = $this->antrolPreviewHash(
+            $preview['payload'],
+            $preview['document'],
+            $nextRegistrationNumber,
+            $nextTreatmentNumber
+        );
+
+        return $preview;
+    }
+
+    public function registerMjkn(
+        User $user,
+        array $data,
+        string $expectedPreviewHash,
+        bool $configuredRegistrationRole = false
+    ): array {
+        $preview = $this->previewAntrolPayload(
+            $user,
+            $data,
+            $configuredRegistrationRole
+        );
+
+        if (
+            $expectedPreviewHash === ''
+            || ! hash_equals((string) $preview['preview_hash'], $expectedPreviewHash)
+        ) {
+            throw ValidationException::withMessages([
+                'preview' => 'Data antrean berubah. Tinjau kembali data final terbaru sebelum dikirim ke BPJS.',
+            ]);
+        }
+
+        $registrationDate = (string) $data['tgl_registrasi'];
+        $doctorCode = trim((string) $data['kd_dokter']);
+        $clinicCode = trim((string) $data['kd_poli']);
+        $guarantorCode = strtoupper(trim((string) $data['kd_pj']));
+        $medicalRecordNumber = $configuredRegistrationRole
+            ? trim((string) ($data['no_rkm_medis'] ?? ''))
+            : trim((string) $user->username);
+        $patient = $this->patientForMedicalRecord($medicalRecordNumber);
+
+        if (! $patient) {
+            throw ValidationException::withMessages([
+                'pasien' => 'Data pasien tidak ditemukan.',
+            ]);
+        }
+
+        $pendingRegistration = $this->pendingRegistrationForMedicalRecord($medicalRecordNumber);
+
+        if ($pendingRegistration) {
+            throw ValidationException::withMessages([
+                'pendaftaran' => 'Masih ada pendaftaran berstatus Belum dengan nomor registrasi '
+                    .$pendingRegistration['no_reg'].'.',
+            ]);
+        }
+
+        $birthDate = $this->validBirthDate($patient->tgl_lahir ?? null);
+
+        if (! $birthDate) {
+            throw ValidationException::withMessages([
+                'pasien' => 'Tanggal lahir pasien belum valid, sehingga umur daftar tidak bisa dihitung.',
+            ]);
+        }
+
+        $schedule = $this->scheduleFor($registrationDate, $doctorCode, $clinicCode);
+        $penjamin = $this->daftarOnlineRepository->findEligiblePenjamin(
+            $guarantorCode,
+            true
+        );
+
+        if (! $schedule || ! $penjamin) {
+            throw ValidationException::withMessages([
+                'jadwal' => 'Jadwal atau penjamin BPJS tidak lagi tersedia.',
+            ]);
+        }
+
+        $patientCardNumber = trim((string) $preview['payload']['nomorkartu']);
+        $registration = [
+            'tgl_registrasi' => $registrationDate,
+            'jam_reg' => now(self::HOSPITAL_TIMEZONE)->format('H:i:s'),
+            'kd_dokter' => $doctorCode,
+            'no_rkm_medis' => trim((string) $patient->no_rkm_medis),
+            'kd_poli' => $clinicCode,
+            'p_jawab' => $this->limitValue($this->firstFilled([
+                $patient->namakeluarga ?? null,
+                $patient->nm_pasien ?? null,
+            ]), 100),
+            'almt_pj' => $this->limitValue($patient->alamat ?? '-', 200),
+            'hubunganpj' => $this->limitValue($patient->keluarga ?? '-', 20),
+            'biaya_reg' => 0,
+            'stts' => 'Belum',
+            'stts_daftar' => 'Lama',
+            'status_lanjut' => 'Ralan',
+            'kd_pj' => $guarantorCode,
+            'umurdaftar' => (int) $birthDate->diffInYears(Carbon::parse($registrationDate)),
+            'sttsumur' => 'Th',
+            'status_bayar' => 'Belum Bayar',
+            'status_poli' => 'Lama',
+        ];
+        $payload = $preview['payload'];
+        $mobileJknReference = [
+            'nobooking' => (string) $payload['kodebooking'],
+            'nomorkartu' => (string) $payload['nomorkartu'],
+            'nik' => (string) $payload['nik'],
+            'nohp' => (string) $payload['nohp'],
+            'kodepoli' => (string) $payload['kodepoli'],
+            'pasienbaru' => (string) ((int) $payload['pasienbaru']),
+            'norm' => (string) $payload['norm'],
+            'tanggalperiksa' => (string) $payload['tanggalperiksa'],
+            'kodedokter' => (string) $payload['kodedokter'],
+            'jampraktek' => (string) $payload['jampraktek'],
+            'jeniskunjungan' => $this->mobileJknVisitTypeLabel(
+                (int) $payload['jeniskunjungan']
+            ),
+            'nomorreferensi' => (string) $payload['nomorreferensi'],
+            'nomorantrean' => (string) $payload['nomorantrean'],
+            'angkaantrean' => (string) $payload['angkaantrean'],
+            'estimasidilayani' => (string) $payload['estimasidilayani'],
+            'sisakuotajkn' => (int) $payload['sisakuotajkn'],
+            'kuotajkn' => (int) $payload['kuotajkn'],
+            'sisakuotanonjkn' => (int) $payload['sisakuotanonjkn'],
+            'kuotanonjkn' => (int) $payload['kuotanonjkn'],
+            'status' => 'Belum',
+            'validasi' => '0000-00-00 00:00:00',
+            'statuskirim' => 'Belum',
+        ];
+
+        try {
+            $row = $this->daftarOnlineRepository->createMjknRegistration(
+                $registration,
+                $patientCardNumber,
+                $mobileJknReference,
+                (string) $preview['final_data']['registration']['number'],
+                (string) $preview['final_data']['registration']['treatment_number']
+            );
+        } catch (RegistrationPreviewChangedException) {
+            throw ValidationException::withMessages([
+                'preview' => 'Nomor antrean baru saja berubah. Data final telah diperbarui dan perlu dikonfirmasi ulang.',
+            ]);
+        } catch (RegistrationLockException) {
+            throw ValidationException::withMessages([
+                'pendaftaran' => 'Nomor registrasi sedang diproses. Silakan coba beberapa saat lagi.',
+            ]);
+        }
+
+        if (! $row) {
+            throw ValidationException::withMessages([
+                'jadwal' => 'Pasien sudah terdaftar pada dokter dan poli ini untuk tanggal tersebut.',
+            ]);
+        }
+
+        $this->recordRegistrationAudit(
+            $user,
+            $row,
+            $patient,
+            $schedule,
+            $penjamin,
+            $configuredRegistrationRole
+        );
+
+        $bpjsResponse = $this->antrolClient()->addQueue($payload);
+        $metadata = $bpjsResponse['metadata'] ?? $bpjsResponse['metaData'] ?? [];
+        $bpjsCode = (string) ($metadata['code'] ?? '');
+        $bpjsMessage = trim((string) ($metadata['message'] ?? 'Respons BPJS tidak memiliki metadata.'));
+        $sent = $bpjsCode === '200';
+
+        if ($sent) {
+            try {
+                $updated = $this->daftarOnlineRepository->markMjknReferenceSent(
+                    (string) $payload['kodebooking']
+                );
+
+                if (! $updated) {
+                    throw new \RuntimeException('Tidak ada baris statuskirim yang diperbarui.');
+                }
+            } catch (Throwable $exception) {
+                Log::critical('Antrean BPJS berhasil ditambah tetapi statuskirim lokal gagal diperbarui.', [
+                    'kodebooking' => $payload['kodebooking'],
+                    'no_rawat' => $row['no_rawat'],
+                    'message' => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        return [
+            'registration' => $this->registrationResult(
+                $row,
+                $schedule,
+                $penjamin,
+                $patientCardNumber
+            ),
+            'antrol' => [
+                'sent' => $sent,
+                'code' => $bpjsCode,
+                'message' => $bpjsMessage,
+                'booking_code' => (string) $payload['kodebooking'],
+                'delivery_status' => $sent ? 'Sudah' : 'Belum',
             ],
         ];
     }
@@ -757,6 +975,117 @@ class DaftarOnlineService
                 'umurdaftar' => $row['umurdaftar'],
                 'sttsumur' => $row['sttsumur'],
             ],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, mixed>  $document
+     */
+    private function antrolPreviewHash(
+        array $payload,
+        array $document,
+        string $registrationNumber,
+        string $treatmentNumber
+    ): string {
+        $content = json_encode([
+            'payload' => $payload,
+            'document' => $document,
+            'registration_number' => $registrationNumber,
+            'treatment_number' => $treatmentNumber,
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+
+        return hash_hmac('sha256', $content, (string) config('app.key'));
+    }
+
+    private function antrolClient(): AntrolRepository
+    {
+        return $this->antrolRepository ?? app(AntrolRepository::class);
+    }
+
+    private function mobileJknVisitTypeLabel(int $visitType): string
+    {
+        return match ($visitType) {
+            1 => '1 (Rujukan FKTP)',
+            2 => '2 (Rujukan Internal)',
+            3 => '3 (Kontrol)',
+            4 => '4 (Rujukan Antar RS)',
+            default => throw ValidationException::withMessages([
+                'bpjs_document_type' => 'Jenis kunjungan Mobile JKN tidak valid.',
+            ]),
+        };
+    }
+
+    private function recordRegistrationAudit(
+        User $user,
+        array $row,
+        object $patient,
+        object $schedule,
+        object $penjamin,
+        bool $configuredRegistrationRole
+    ): void {
+        if (! $configuredRegistrationRole) {
+            return;
+        }
+
+        try {
+            OnlineRegistrationAudit::query()->create([
+                'no_rawat' => $row['no_rawat'],
+                'no_reg' => $row['no_reg'],
+                'registration_date' => $row['tgl_registrasi'],
+                'registration_time' => $row['jam_reg'],
+                'patient_medical_record_number' => trim((string) $patient->no_rkm_medis),
+                'patient_name' => $this->limitValue($patient->nm_pasien, 100),
+                'doctor_code' => $row['kd_dokter'],
+                'doctor_name' => $this->limitValue($schedule->nm_dokter, 100),
+                'clinic_code' => $row['kd_poli'],
+                'clinic_name' => $this->limitValue($schedule->nm_poli, 100),
+                'guarantor_code' => $row['kd_pj'],
+                'guarantor_name' => $this->limitValue($penjamin->png_jawab, 100),
+                'registered_by_user_id' => $user->getKey(),
+                'registered_by_name' => $this->limitValue($user->name, 100),
+                'registered_by_username' => Str::limit(
+                    trim((string) $user->username),
+                    100,
+                    ''
+                ) ?: null,
+                'registered_by_roles' => $user->getRoleNames()->values()->all(),
+            ]);
+        } catch (Throwable $exception) {
+            Log::critical('Pendaftaran Khanza tersimpan tetapi audit E-Pasien gagal dibuat.', [
+                'no_rawat' => $row['no_rawat'],
+                'registered_by_user_id' => $user->getKey(),
+                'message' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function registrationResult(
+        array $row,
+        object $schedule,
+        object $penjamin,
+        ?string $patientCardNumber = null
+    ): array {
+        return [
+            'no_reg' => $row['no_reg'],
+            'no_rawat' => $row['no_rawat'],
+            'tanggal' => $row['tgl_registrasi'],
+            'tanggal_label' => $this->dateLabel(Carbon::parse($row['tgl_registrasi'])),
+            'jam' => $this->timeValue($row['jam_reg']),
+            'dokter' => trim((string) $schedule->nm_dokter),
+            'kd_dokter' => $row['kd_dokter'],
+            'poli' => trim((string) $schedule->nm_poli),
+            'kd_poli' => $row['kd_poli'],
+            'penjamin' => trim((string) $penjamin->png_jawab),
+            'kd_pj' => $row['kd_pj'],
+            'no_peserta' => $patientCardNumber,
+            'status' => $row['stts'],
+            'status_bayar' => $row['status_bayar'],
+            'umurdaftar' => $row['umurdaftar'],
+            'sttsumur' => $row['sttsumur'],
         ];
     }
 

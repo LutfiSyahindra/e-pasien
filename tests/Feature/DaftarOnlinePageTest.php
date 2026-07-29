@@ -211,16 +211,21 @@ class DaftarOnlinePageTest extends TestCase
             ->assertSee('controlLettersUrl:', false)
             ->assertSee('controlLetterDetailUrl:', false)
             ->assertSee('antrolPreviewUrl:', false)
+            ->assertSee('antrolSubmitUrl:', false)
             ->assertSeeText('Proses Daftar MJKN')
             ->assertSeeText('1. Cari Dokumen')
             ->assertSeeText('2. Pilih Dokumen')
-            ->assertSeeText('3. Preview Payload')
-            ->assertSeeText('Tidak ada insert ke reg_periksa dan tidak ada request tambah antrean ke BPJS.')
+            ->assertSeeText('3. Data Final')
+            ->assertSeeText('Data final yang akan dikirim')
             ->assertSeeText('Lihat Detail')
-            ->assertSeeText('Lanjut Preview Payload')
+            ->assertSeeText('Lanjut Lihat Data Final')
+            ->assertSeeText('Daftarkan & Kirim ke BPJS')
             ->assertSee('bpjs_document_nik: documentData.nik', false)
             ->assertSee('bpjs_document_clinic_code: documentData.clinicCode', false)
-            ->assertSee('const fieldSources = preview?.field_sources || {};', false)
+            ->assertDontSee('id="antrolFinalSummary"', false)
+            ->assertDontSee('id="antrolPayloadSources"', false)
+            ->assertDontSee('class="online-antrol-preview-warning"', false)
+            ->assertDontSee('class="online-antrol-preview-request"', false)
             ->assertSeeText('SEP Sudah Terbit')
             ->assertSeeText('SEP Belum Terbit')
             ->assertSeeInOrder(['Data Pasien', 'Ringkasan Kunjungan'])
@@ -542,6 +547,103 @@ class DaftarOnlinePageTest extends TestCase
             ->assertJsonPath('data.payload.kodebooking', $payload['kodebooking'])
             ->assertJsonPath('data.payload.jeniskunjungan', 3)
             ->assertJsonPath('data.payload.nomorreferensi', '0301R0110726K000001');
+    }
+
+    public function test_authorized_staff_can_confirm_and_submit_final_mjkn_data(): void
+    {
+        $date = now()->toDateString();
+        $previewHash = str_repeat('a', 64);
+        $submittedData = [
+            'no_rkm_medis' => '000456',
+            'tgl_registrasi' => $date,
+            'kd_dokter' => 'D001',
+            'kd_poli' => 'POL01',
+            'kd_pj' => 'BPJ',
+            'no_peserta' => '0002035874204',
+            'bpjs_document_type' => 'surat_kontrol',
+            'bpjs_document_source' => 'surat_kontrol',
+            'bpjs_document_number' => '0301R0110726K000001',
+        ];
+
+        $this->mock(RegistrationRoleConfigurationService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('isConfigured')->once()->andReturnTrue();
+        });
+        $this->mock(DaftarOnlineService::class, function (MockInterface $mock) use (
+            $submittedData,
+            $previewHash
+        ): void {
+            $mock
+                ->shouldReceive('registerMjkn')
+                ->once()
+                ->with(
+                    \Mockery::on(fn (User $user): bool => $user->username === 'PETUGAS01'),
+                    $submittedData,
+                    $previewHash,
+                    true
+                )
+                ->andReturn([
+                    'registration' => [
+                        'no_reg' => '001',
+                        'no_rawat' => '2026/07/28/000001',
+                    ],
+                    'antrol' => [
+                        'sent' => true,
+                        'code' => '200',
+                        'message' => 'Ok',
+                        'booking_code' => '20260728000001',
+                        'delivery_status' => 'Sudah',
+                    ],
+                ]);
+        });
+
+        $user = new User([
+            'name' => 'Petugas',
+            'username' => 'PETUGAS01',
+            'email' => 'petugas@example.test',
+            'status' => true,
+        ]);
+        $user->setRelation('roles', collect());
+
+        $response = $this->actingAs($user)->postJson(
+            route('daftarOnline.antrol.submit'),
+            array_merge($submittedData, ['preview_hash' => $previewHash])
+        );
+
+        $response
+            ->assertCreated()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.registration.no_reg', '001')
+            ->assertJsonPath('data.antrol.sent', true)
+            ->assertJsonPath('data.antrol.delivery_status', 'Sudah');
+    }
+
+    public function test_patient_without_configured_role_cannot_submit_mjkn_registration(): void
+    {
+        $this->mock(RegistrationRoleConfigurationService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('isConfigured')->once()->andReturnFalse();
+        });
+        $this->mock(DaftarOnlineService::class, function (MockInterface $mock): void {
+            $mock->shouldNotReceive('registerMjkn');
+        });
+        $user = new User([
+            'name' => 'Pasien',
+            'username' => '000123',
+            'email' => 'pasien@example.test',
+            'status' => true,
+        ]);
+        $user->setRelation('roles', collect());
+
+        $response = $this->actingAs($user)->postJson(
+            route('daftarOnline.antrol.submit')
+        );
+
+        $response
+            ->assertForbidden()
+            ->assertJsonPath('status', 'error')
+            ->assertJsonPath(
+                'message',
+                'Anda tidak memiliki akses untuk memproses pendaftaran MJKN.'
+            );
     }
 
     public function test_authorized_staff_can_find_bpjs_control_letters_without_saving_registration(): void

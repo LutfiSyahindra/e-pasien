@@ -10,6 +10,7 @@
             availableBpjsDocuments: [],
             pendingBpjsDocument: null,
             selectedBpjsDocument: null,
+            antrolPreview: null,
             submitting: false,
         };
 
@@ -45,10 +46,8 @@
             searchJourney: $('#bpjsSearchJourney'),
             documentChoiceHint: $('#bpjsDocumentChoiceHint'),
             confirmDocumentChoice: $('#confirmBpjsDocumentChoice'),
-            antrolPayloadMethod: $('#antrolPayloadMethod'),
-            antrolPayloadEndpoint: $('#antrolPayloadEndpoint'),
             antrolPayloadJson: $('#antrolPayloadJson'),
-            antrolPayloadSources: $('#antrolPayloadSources'),
+            submitMjknRegistration: $('#submitMjknRegistration'),
             showPendingResult: $('#showPendingRegistrationModal'),
             cancelPendingRegistration: $('#cancelPendingRegistration'),
             noticeModal: document.getElementById('onlineRegistrationNoticeModal'),
@@ -231,6 +230,7 @@
             state.availableBpjsDocuments = [];
             state.pendingBpjsDocument = null;
             state.selectedBpjsDocument = null;
+            state.antrolPreview = null;
             syncPendingBpjsDocument();
             syncSubmitPresentation();
         }
@@ -1634,24 +1634,41 @@
             });
         }
 
+        function antrolRequestData() {
+            const documentData = documentAntrolData(state.selectedBpjsDocument);
+
+            return {
+                no_rkm_medis: config.selectedMedicalRecordNumber,
+                tgl_registrasi: elements.date.val(),
+                kd_dokter: elements.doctorCode.val(),
+                kd_poli: elements.clinicCode.val(),
+                kd_pj: elements.guarantorCode.val(),
+                no_peserta: $.trim(elements.cardNumber.val()),
+                bpjs_document_type: state.selectedBpjsDocument?.type || '',
+                bpjs_document_source: state.selectedBpjsDocument?.source || '',
+                bpjs_document_number: state.selectedBpjsDocument?.number || '',
+                bpjs_document_date: documentData.date || null,
+                bpjs_document_card_number: documentData.cardNumber || null,
+                bpjs_document_nik: documentData.nik || null,
+                bpjs_document_phone: documentData.phone || null,
+                bpjs_document_medical_record: documentData.medicalRecord || null,
+                bpjs_document_clinic_code: documentData.clinicCode || null,
+                bpjs_document_clinic_name: documentData.clinicName || null,
+                bpjs_document_doctor_code: documentData.doctorCode || null,
+                bpjs_document_doctor_name: documentData.doctorName || null,
+            };
+        }
+
         function showAntrolPayloadPreview(preview) {
             const payload = preview?.payload || {};
-            const fieldSources = preview?.field_sources || {};
 
-            elements.antrolPayloadMethod.text(preview?.method || 'POST');
-            elements.antrolPayloadEndpoint.text(preview?.endpoint || 'antrean/add');
+            state.antrolPreview = preview;
+
             elements.antrolPayloadJson.text(JSON.stringify(payload, null, 3));
-            elements.antrolPayloadSources.html(`
-                <div>
-                    <strong>Sumber data payload</strong>
-                    <small>Respons BPJS dipakai lebih dulu, lalu dilengkapi data Khanza.</small>
-                </div>
-                <div class="online-antrol-source-chips">
-                    ${Object.entries(fieldSources).map(function(entry) {
-                        return `<span><b>${escapeHtml(entry[0])}</b>${escapeHtml(entry[1])}</span>`;
-                    }).join('')}
-                </div>
-            `);
+            elements.submitMjknRegistration.prop(
+                'disabled',
+                !preview?.preview_hash
+            );
             setMjknStep('preview');
         }
 
@@ -1661,9 +1678,8 @@
                 return;
             }
 
-            const documentData = documentAntrolData(state.selectedBpjsDocument);
-
             state.submitting = true;
+            state.antrolPreview = null;
             elements.confirmDocumentChoice
                 .prop('disabled', true)
                 .html('<span class="online-loader small"></span><span>Menyiapkan Payload</span>');
@@ -1674,26 +1690,7 @@
                 headers: {
                     'X-CSRF-TOKEN': config.csrfToken
                 },
-                data: {
-                    no_rkm_medis: config.selectedMedicalRecordNumber,
-                    tgl_registrasi: elements.date.val(),
-                    kd_dokter: elements.doctorCode.val(),
-                    kd_poli: elements.clinicCode.val(),
-                    kd_pj: elements.guarantorCode.val(),
-                    no_peserta: $.trim(elements.cardNumber.val()),
-                    bpjs_document_type: state.selectedBpjsDocument.type,
-                    bpjs_document_source: state.selectedBpjsDocument.source,
-                    bpjs_document_number: state.selectedBpjsDocument.number,
-                    bpjs_document_date: documentData.date || null,
-                    bpjs_document_card_number: documentData.cardNumber || null,
-                    bpjs_document_nik: documentData.nik || null,
-                    bpjs_document_phone: documentData.phone || null,
-                    bpjs_document_medical_record: documentData.medicalRecord || null,
-                    bpjs_document_clinic_code: documentData.clinicCode || null,
-                    bpjs_document_clinic_name: documentData.clinicName || null,
-                    bpjs_document_doctor_code: documentData.doctorCode || null,
-                    bpjs_document_doctor_name: documentData.doctorName || null,
-                },
+                data: antrolRequestData(),
                 success: function(response) {
                     showAntrolPayloadPreview(response.data || {});
                 },
@@ -1713,13 +1710,118 @@
                     state.submitting = false;
                     syncSubmitPresentation();
                     elements.confirmDocumentChoice.html(
-                        '<i class="bi bi-arrow-right"></i><span>Lanjut Preview Payload</span>'
+                        '<i class="bi bi-arrow-right"></i><span>Lanjut Lihat Data Final</span>'
                     );
                     syncPendingBpjsDocument();
                     updateSubmitState();
                 }
             });
         }
+
+        elements.submitMjknRegistration.on('click', function() {
+            const preview = state.antrolPreview || {};
+            const payload = preview.payload || {};
+            const registration = preview.final_data?.registration || {};
+
+            if (!preview.preview_hash || state.submitting) {
+                return;
+            }
+
+            confirmAction({
+                icon: 'question',
+                title: 'Daftarkan data final MJKN?',
+                html: `
+                    <div class="online-confirmation-text">
+                        <strong>${escapeHtml(payload.nomorantrean || '-')}</strong>
+                        <span>${escapeHtml(registration.clinic || '-')} · ${escapeHtml(registration.doctor || '-')}</span>
+                        <small>Setelah dikonfirmasi, data disimpan ke Khanza dan dikirim ke BPJS.</small>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Ya, daftarkan & kirim',
+                cancelButtonText: 'Periksa lagi',
+            }).then(function(result) {
+                if (!result.isConfirmed) {
+                    return;
+                }
+
+                let refreshFinalData = false;
+
+                state.submitting = true;
+                elements.submitMjknRegistration
+                    .prop('disabled', true)
+                    .html('<span class="online-loader small"></span><span>Memproses MJKN</span>');
+
+                $.ajax({
+                    url: config.antrolSubmitUrl,
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': config.csrfToken
+                    },
+                    data: {
+                        ...antrolRequestData(),
+                        preview_hash: preview.preview_hash,
+                    },
+                    success: function(response) {
+                        const savedRegistration = response.data?.registration || {};
+                        const antrol = response.data?.antrol || {};
+
+                        fillResultModal(savedRegistration);
+                        $('#resultStatus').text(
+                            `${savedRegistration.status || '-'} / ${savedRegistration.status_bayar || '-'} · Antrol ${antrol.delivery_status || '-'}`
+                        );
+                        $(elements.mjknModal).one('hidden.bs.modal', function() {
+                            showBootstrapModal(document.getElementById('onlineRegistrationResultModal'));
+                            $('#onlineRegistrationResultModal').one('hidden.bs.modal', function() {
+                                window.location.reload();
+                            });
+                        });
+                        hideBootstrapModal(elements.mjknModal);
+
+                        alertAction({
+                            icon: antrol.sent ? 'success' : 'warning',
+                            title: response.message || (
+                                antrol.sent
+                                    ? 'Pendaftaran MJKN berhasil.'
+                                    : 'Pendaftaran tersimpan, pengiriman BPJS masih menunggu.'
+                            ),
+                            confirmButtonText: 'Tutup',
+                        });
+                    },
+                    error: function(xhr) {
+                        const errors = xhr.responseJSON?.errors || {};
+
+                        if (xhr.status === 422) {
+                            showValidationErrors(errors);
+                            refreshFinalData = Boolean(errors.preview);
+                        }
+
+                        alertAction({
+                            icon: xhr.status === 422 ? 'warning' : 'error',
+                            title: refreshFinalData
+                                ? 'Data final berubah'
+                                : (xhr.status === 422
+                                    ? 'Pendaftaran belum valid'
+                                    : 'Gagal memproses MJKN'),
+                            text: xhr.responseJSON?.message
+                                || 'Pendaftaran MJKN belum dapat diproses.'
+                        });
+                    },
+                    complete: function() {
+                        state.submitting = false;
+                        elements.submitMjknRegistration
+                            .prop('disabled', false)
+                            .html('<i class="bi bi-send-check"></i><span>Daftarkan &amp; Kirim ke BPJS</span>');
+                        syncSubmitPresentation();
+                        updateSubmitState();
+
+                        if (refreshFinalData) {
+                            previewAntrolPayload();
+                        }
+                    }
+                });
+            });
+        });
 
         $('#copyAntrolPayload').on('click', function() {
             const payloadText = elements.antrolPayloadJson.text();

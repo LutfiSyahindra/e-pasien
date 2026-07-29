@@ -3,6 +3,7 @@
 namespace App\Repositories\epasien\menu;
 
 use App\Exceptions\RegistrationLockException;
+use App\Exceptions\RegistrationPreviewChangedException;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -390,6 +391,100 @@ class DaftarOnlineRepository
         } finally {
             $this->releaseLock($connection, $lockName);
         }
+    }
+
+    /**
+     * Simpan registrasi dan referensi Mobile JKN dalam satu transaksi Khanza.
+     *
+     * Nomor yang dialokasikan harus sama dengan data final yang sudah dilihat
+     * petugas. Jika antrean berubah, pemanggil wajib membuat preview baru.
+     */
+    public function createMjknRegistration(
+        array $registration,
+        string $patientCardNumber,
+        array $mobileJknReference,
+        string $expectedRegistrationNumber,
+        string $expectedTreatmentNumber
+    ): ?array {
+        $connection = $this->connection();
+        $registrationDate = (string) $registration['tgl_registrasi'];
+        $doctorCode = (string) $registration['kd_dokter'];
+        $clinicCode = (string) $registration['kd_poli'];
+        $lockName = 'epasien_reg_'.$registrationDate;
+
+        $this->acquireLock($connection, $lockName);
+
+        try {
+            return $connection->transaction(function () use (
+                $connection,
+                $registration,
+                $registrationDate,
+                $doctorCode,
+                $clinicCode,
+                $patientCardNumber,
+                $mobileJknReference,
+                $expectedRegistrationNumber,
+                $expectedTreatmentNumber
+            ): ?array {
+                $existingRegistration = $connection
+                    ->table('reg_periksa')
+                    ->where('tgl_registrasi', $registrationDate)
+                    ->where('no_rkm_medis', $registration['no_rkm_medis'])
+                    ->where('kd_dokter', $doctorCode)
+                    ->where('kd_poli', $clinicCode)
+                    ->where('stts', '<>', 'Batal')
+                    ->first();
+
+                if ($existingRegistration) {
+                    return null;
+                }
+
+                $registrationNumber = $this->nextRegistrationNumber(
+                    $connection,
+                    $registrationDate,
+                    $doctorCode,
+                    $clinicCode
+                );
+                $treatmentNumber = $this->nextTreatmentNumber($connection, $registrationDate);
+
+                if (
+                    $registrationNumber !== $expectedRegistrationNumber
+                    || $treatmentNumber !== $expectedTreatmentNumber
+                ) {
+                    throw new RegistrationPreviewChangedException(
+                        'Nomor registrasi berubah setelah data final ditampilkan.'
+                    );
+                }
+
+                $connection
+                    ->table('pasien')
+                    ->where('no_rkm_medis', $registration['no_rkm_medis'])
+                    ->update(['no_peserta' => $patientCardNumber]);
+
+                $row = array_merge($registration, [
+                    'no_reg' => $registrationNumber,
+                    'no_rawat' => $treatmentNumber,
+                ]);
+
+                $connection->table('reg_periksa')->insert($row);
+                $connection->table('referensi_mobilejkn_bpjs')->insert(array_merge(
+                    $mobileJknReference,
+                    ['no_rawat' => $treatmentNumber]
+                ));
+
+                return $row;
+            });
+        } finally {
+            $this->releaseLock($connection, $lockName);
+        }
+    }
+
+    public function markMjknReferenceSent(string $bookingCode): bool
+    {
+        return $this->connection()
+            ->table('referensi_mobilejkn_bpjs')
+            ->where('nobooking', $bookingCode)
+            ->update(['statuskirim' => 'Sudah']) === 1;
     }
 
     private function connection(): Connection

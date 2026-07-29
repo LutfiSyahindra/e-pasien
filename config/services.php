@@ -39,6 +39,14 @@ return [
         'consumer_id' => env('BPJS_CONS_ID'),
         'secret_key' => env('BPJS_SECRET_KEY'),
 
+        'antrol' => [
+            'base_url' => env('BPJS_BASE_URL_ANTROL'),
+            'user_key' => env('BPJS_USERKEY_ANTROL'),
+            'connect_timeout' => (int) env('BPJS_ANTROL_CONNECT_TIMEOUT', 10),
+            'timeout' => (int) env('BPJS_ANTROL_TIMEOUT', 30),
+            'database_logging' => (bool) env('BPJS_DATABASE_LOGGING', true),
+        ],
+
         'vclaim' => [
             'base_url' => env('BPJS_BASE_URL_VCLAIM'),
             'user_key' => env('BPJS_USERKEY_VCLAIM'),

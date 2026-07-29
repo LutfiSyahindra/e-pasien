@@ -86,8 +86,8 @@
                             <strong>2. Pilih Dokumen</strong>
                         </span>
                         <span data-mjkn-step="preview">
-                            <i class="bi bi-braces"></i>
-                            <strong>3. Preview Payload</strong>
+                            <i class="bi bi-clipboard2-check"></i>
+                            <strong>3. Data Final</strong>
                         </span>
                     </div>
 
@@ -134,28 +134,15 @@
                             <button type="button" class="online-button primary"
                                 id="confirmBpjsDocumentChoice" disabled>
                                 <i class="bi bi-arrow-right"></i>
-                                <span>Lanjut Preview Payload</span>
+                                <span>Lanjut Lihat Data Final</span>
                             </button>
                         </div>
                     </section>
 
                     <section class="online-mjkn-panel" data-mjkn-panel="preview" hidden>
-                        <div class="online-antrol-preview-warning">
-                            <i class="bi bi-shield-check"></i>
-                            <div>
-                                <strong>Preview saja—belum ada data yang disimpan atau dikirim</strong>
-                                <span>Tidak ada insert ke <code>reg_periksa</code> dan tidak ada request tambah antrean ke BPJS.</span>
-                            </div>
-                        </div>
-                        <div class="online-antrol-preview-request">
-                            <span id="antrolPayloadMethod">POST</span>
-                            <code id="antrolPayloadEndpoint">antrean/add</code>
-                            <small>BPJS Mobile JKN (Antrol)</small>
-                        </div>
-                        <div id="antrolPayloadSources" class="online-antrol-source-summary"></div>
                         <div class="online-antrol-json-heading">
                             <div>
-                                <strong>Request JSON yang akan dikirim</strong>
+                                <strong>Data final yang akan dikirim</strong>
                                 <small>Respons BPJS dilengkapi dengan data pasien, mapping, jadwal, dan kuota Khanza.</small>
                             </div>
                         </div>
@@ -167,9 +154,13 @@
                                 <i class="bi bi-arrow-left"></i>
                                 <span>Kembali Pilih Dokumen</span>
                             </button>
-                            <button type="button" id="copyAntrolPayload" class="online-button primary">
+                            <button type="button" id="copyAntrolPayload" class="online-button secondary">
                                 <i class="bi bi-copy"></i>
                                 <span>Salin JSON</span>
+                            </button>
+                            <button type="button" id="submitMjknRegistration" class="online-button primary">
+                                <i class="bi bi-send-check"></i>
+                                <span>Daftarkan &amp; Kirim ke BPJS</span>
                             </button>
                         </div>
                     </section>
