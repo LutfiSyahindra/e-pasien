@@ -1,0 +1,430 @@
+.radiology-page {
+    --lab-teal: #0f6e75;
+    --lab-teal-dark: #0a5057;
+}
+
+.radiology-page .laboratory-hero {
+    background:
+        radial-gradient(circle at 91% 3%, rgba(15, 110, 117, 0.17), transparent 32%),
+        linear-gradient(135deg, rgba(15, 110, 117, 0.10), rgba(255, 255, 255, 0.97) 57%),
+        #fff;
+}
+
+.radiology-page .laboratory-hero-icon {
+    background: linear-gradient(135deg, #267f87, #0f6e75);
+}
+
+.radiology-result-modal .laboratory-modal-icon {
+    background: #e6f5f5;
+    color: #0f6e75;
+}
+
+.radiology-result-section {
+    border: 1px solid #e5eaee;
+    border-radius: 16px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.radiology-result-section + .radiology-result-section {
+    margin-top: 18px;
+}
+
+.radiology-result-section > header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid #e8edef;
+    background: #f7fafb;
+}
+
+.radiology-result-section > header > span {
+    display: inline-grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 auto;
+    border-radius: 11px;
+    background: #e6f5f5;
+    color: #0f6e75;
+    font-size: 18px;
+}
+
+.radiology-result-section h3 {
+    margin: 0;
+    color: #26383b;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.radiology-result-section header small {
+    display: block;
+    margin-top: 2px;
+    color: #738184;
+    font-size: 12px;
+}
+
+.radiology-examination-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 16px 18px;
+}
+
+.radiology-examination-list article {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 13px 14px;
+    border: 1px solid #e4ebed;
+    border-radius: 12px;
+    background: #fbfcfc;
+}
+
+.radiology-examination-list article > span {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    border-radius: 9px;
+    background: #e6f5f5;
+    color: #0f6e75;
+}
+
+.radiology-examination-list article div {
+    min-width: 0;
+}
+
+.radiology-examination-list strong,
+.radiology-examination-list small {
+    display: block;
+}
+
+.radiology-examination-list strong {
+    overflow: hidden;
+    color: #2c3e41;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.radiology-examination-list small {
+    margin-top: 3px;
+    color: #7b888b;
+    font-size: 11px;
+}
+
+.radiology-report-list {
+    display: grid;
+    gap: 14px;
+    padding: 18px;
+}
+
+.radiology-report-list article {
+    overflow: hidden;
+    border: 1px solid #dfe8ea;
+    border-radius: 13px;
+}
+
+.radiology-report-list article header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 15px;
+    background: #edf7f7;
+}
+
+.radiology-report-list article header strong {
+    color: #0b5c63;
+    font-size: 13px;
+}
+
+.radiology-report-list article header small {
+    color: #64777a;
+    font-size: 11px;
+    text-align: right;
+}
+
+.radiology-report-list article p {
+    margin: 0;
+    padding: 18px;
+    color: #314346;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+}
+
+.radiology-image-gallery {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    padding: 18px;
+}
+
+.radiology-image-card {
+    display: block;
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid #dfe7e9;
+    border-radius: 13px;
+    background: #111719;
+    cursor: zoom-in;
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.radiology-image-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(20, 50, 54, 0.16);
+}
+
+.radiology-image-card img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: contain;
+}
+
+.radiology-image-card > span {
+    display: block;
+    padding: 10px 12px;
+    background: #fff;
+}
+
+.radiology-image-card strong,
+.radiology-image-card small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.radiology-image-card strong {
+    color: #304245;
+    font-size: 12px;
+}
+
+.radiology-image-card small {
+    margin-top: 3px;
+    color: #788689;
+    font-size: 10px;
+}
+
+.radiology-image-viewer[hidden] {
+    display: none !important;
+}
+
+.radiology-image-viewer {
+    position: fixed;
+    z-index: 1095;
+    inset: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    padding:
+        max(12px, env(safe-area-inset-top))
+        max(12px, env(safe-area-inset-right))
+        max(12px, env(safe-area-inset-bottom))
+        max(12px, env(safe-area-inset-left));
+    background: rgba(5, 11, 13, 0.96);
+    color: #fff;
+}
+
+body.radiology-viewer-open {
+    overflow: hidden;
+    touch-action: pinch-zoom;
+}
+
+.radiology-viewer-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    min-width: 0;
+    padding: 2px 2px 12px;
+}
+
+.radiology-viewer-toolbar > div {
+    min-width: 0;
+}
+
+.radiology-viewer-toolbar strong,
+.radiology-viewer-toolbar small {
+    display: block;
+}
+
+.radiology-viewer-toolbar strong {
+    overflow: hidden;
+    max-width: min(72vw, 720px);
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.radiology-viewer-toolbar small {
+    margin-top: 3px;
+    color: #aebdc0;
+    font-size: 11px;
+}
+
+.radiology-viewer-toolbar button,
+.radiology-viewer-navigation {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: #fff;
+    background: rgba(255, 255, 255, 0.10);
+}
+
+.radiology-viewer-toolbar button {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    font-size: 18px;
+}
+
+.radiology-viewer-stage {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    min-height: 0;
+    gap: 14px;
+}
+
+.radiology-viewer-stage figure {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    align-items: center;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    margin: 0;
+}
+
+.radiology-viewer-stage img {
+    display: block;
+    max-width: 100%;
+    max-height: calc(100vh - 120px);
+    margin: auto;
+    object-fit: contain;
+}
+
+.radiology-viewer-stage figcaption {
+    min-height: 24px;
+    padding-top: 8px;
+    color: #b7c5c7;
+    font-size: 11px;
+    text-align: center;
+}
+
+.radiology-viewer-navigation {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    font-size: 20px;
+}
+
+.radiology-viewer-toolbar button:focus-visible,
+.radiology-viewer-navigation:focus-visible,
+.radiology-image-card:focus-visible {
+    outline: 3px solid #64d5da;
+    outline-offset: 3px;
+}
+
+@media (max-width: 767px) {
+    .radiology-examination-list,
+    .radiology-image-gallery {
+        grid-template-columns: 1fr;
+    }
+
+    .radiology-report-list article header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .radiology-report-list article header small {
+        text-align: left;
+    }
+
+    .radiology-image-viewer {
+        padding:
+            max(10px, env(safe-area-inset-top))
+            max(8px, env(safe-area-inset-right))
+            max(10px, env(safe-area-inset-bottom))
+            max(8px, env(safe-area-inset-left));
+    }
+
+    .radiology-viewer-stage {
+        position: relative;
+        display: block;
+    }
+
+    .radiology-viewer-stage figure {
+        height: 100%;
+        padding: 0 2px;
+    }
+
+    .radiology-viewer-stage img {
+        max-height: calc(100dvh - 112px);
+    }
+
+    .radiology-viewer-navigation {
+        position: absolute;
+        z-index: 2;
+        top: 50%;
+        width: 42px;
+        height: 42px;
+        transform: translateY(-50%);
+        background: rgba(4, 12, 14, 0.72);
+    }
+
+    .radiology-viewer-navigation.previous {
+        left: 4px;
+    }
+
+    .radiology-viewer-navigation.next {
+        right: 4px;
+    }
+}
+
+@media print {
+    body.radiology-result-printing > * {
+        visibility: hidden;
+    }
+
+    body.radiology-result-printing #radiologyResultModal,
+    body.radiology-result-printing #radiologyResultModal * {
+        visibility: visible;
+    }
+
+    body.radiology-result-printing #radiologyResultModal {
+        position: absolute;
+        inset: 0;
+        display: block !important;
+        overflow: visible !important;
+        background: #fff;
+    }
+
+    body.radiology-result-printing #radiologyResultModal .modal-dialog,
+    body.radiology-result-printing #radiologyResultModal .modal-content {
+        max-width: none;
+        height: auto;
+        margin: 0;
+        border: 0;
+        box-shadow: none;
+    }
+
+    body.radiology-result-printing #radiologyResultModal .modal-footer,
+    body.radiology-result-printing #radiologyResultModal .btn-close {
+        display: none !important;
+    }
+}

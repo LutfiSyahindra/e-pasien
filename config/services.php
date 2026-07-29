@@ -56,4 +56,16 @@ return [
         ],
     ],
 
+    'radiology' => [
+        'image_base_url' => env(
+            'RADIOLOGY_IMAGE_BASE_URL',
+            'http://192.168.2.9/webapps/radiologi'
+        ),
+        'connect_timeout' => (int) env(
+            'RADIOLOGY_IMAGE_CONNECT_TIMEOUT',
+            5
+        ),
+        'timeout' => (int) env('RADIOLOGY_IMAGE_TIMEOUT', 15),
+    ],
+
 ];

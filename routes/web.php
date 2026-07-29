@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Epasien\bridging\RencanaKontrolController;
 use App\Http\Controllers\Epasien\menu\DaftarOnlineController;
+use App\Http\Controllers\Epasien\menu\PemeriksaanLaboratController;
+use App\Http\Controllers\Epasien\menu\PemeriksaanRadiologiController;
 use App\Http\Controllers\Epasien\menu\RiwayatPemeriksaanController;
 use App\Http\Controllers\Epasien\settings\auth\permissionsController;
 use App\Http\Controllers\Epasien\settings\auth\rolesController;
@@ -71,6 +73,20 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('e-pasien/menu')->group(function () {
+        Route::get('/permintaan-tindakan/pemeriksaan-laborat', [PemeriksaanLaboratController::class, 'index'])
+            ->name('pemeriksaanLaborat.index');
+        Route::get('/permintaan-tindakan/pemeriksaan-laborat/hasil', [PemeriksaanLaboratController::class, 'result'])
+            ->name('pemeriksaanLaborat.result');
+        Route::get('/permintaan-tindakan/pemeriksaan-radiologi', [PemeriksaanRadiologiController::class, 'index'])
+            ->name('pemeriksaanRadiologi.index');
+        Route::get('/permintaan-tindakan/pemeriksaan-radiologi/hasil', [PemeriksaanRadiologiController::class, 'result'])
+            ->name('pemeriksaanRadiologi.result');
+        Route::get(
+            '/permintaan-tindakan/pemeriksaan-radiologi/{noorder}/gambar/{image}',
+            [PemeriksaanRadiologiController::class, 'image']
+        )
+            ->whereNumber('image')
+            ->name('pemeriksaanRadiologi.image');
         Route::get('/riwayat-pemeriksaan', [RiwayatPemeriksaanController::class, 'index'])
             ->name('riwayatPemeriksaan.index');
         Route::get('/riwayat-pemeriksaan/resume', [RiwayatPemeriksaanController::class, 'resume'])

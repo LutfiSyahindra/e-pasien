@@ -66,6 +66,27 @@
                 </li>
                 <li>
                     <a href="javascript:;" class="has-arrow">
+                        <div class="parent-icon"><i class="bi bi-clipboard2-plus"></i>
+                        </div>
+                        <div class="menu-title">Permintaan dan Tindakan</div>
+                    </a>
+                    <ul>
+                        <li>
+                            <a href="{{ route("pemeriksaanLaborat.index") }}">
+                                <i class="bi bi-droplet-half"></i>
+                                Pemeriksaan Laborat
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route("pemeriksaanRadiologi.index") }}">
+                                <i class="bi bi-radioactive"></i>
+                                Pemeriksaan Radiologi
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="javascript:;" class="has-arrow">
                         <div class="parent-icon"><i class="bi bi-calendar2-plus"></i>
                         </div>
                         <div class="menu-title">Pendaftaran Online</div>
