@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Epasien\bridging\RencanaKontrolController;
 use App\Http\Controllers\Epasien\menu\DaftarOnlineController;
+use App\Http\Controllers\Epasien\menu\RiwayatPemeriksaanController;
 use App\Http\Controllers\Epasien\settings\auth\permissionsController;
 use App\Http\Controllers\Epasien\settings\auth\rolesController;
 use App\Http\Controllers\Epasien\settings\auth\usersController;
@@ -70,6 +71,12 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('e-pasien/menu')->group(function () {
+        Route::get('/riwayat-pemeriksaan', [RiwayatPemeriksaanController::class, 'index'])
+            ->name('riwayatPemeriksaan.index');
+        Route::get('/riwayat-pemeriksaan/resume', [RiwayatPemeriksaanController::class, 'resume'])
+            ->name('riwayatPemeriksaan.resume');
+        Route::get('/riwayat-pemeriksaan/pembayaran', [RiwayatPemeriksaanController::class, 'payment'])
+            ->name('riwayatPemeriksaan.payment');
         Route::get('/daftar-online', [DaftarOnlineController::class, 'index'])->name('daftarOnline.index');
         Route::get('/daftar-online/riwayat', [DaftarOnlineController::class, 'history'])->name('daftarOnline.history');
         Route::get('/daftar-online/jadwal', [DaftarOnlineController::class, 'schedules'])->name('daftarOnline.schedules');

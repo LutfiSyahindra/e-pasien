@@ -58,6 +58,13 @@
 
                 <li class="menu-label">Menu</li>
                 <li>
+                    <a href="{{ route("riwayatPemeriksaan.index") }}">
+                        <div class="parent-icon"><i class="bi bi-clipboard2-pulse"></i>
+                        </div>
+                        <div class="menu-title">Riwayat Pemeriksaan</div>
+                    </a>
+                </li>
+                <li>
                     <a href="javascript:;" class="has-arrow">
                         <div class="parent-icon"><i class="bi bi-calendar2-plus"></i>
                         </div>
