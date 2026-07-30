@@ -3,8 +3,8 @@
 namespace Tests\Unit\Services\Epasien\Menu;
 
 use App\Models\User;
-use App\Repositories\epasien\menu\OperasiRepository;
-use App\Services\epasien\menu\OperasiService;
+use App\Repositories\epasien\menu\PermintaanTindakan\OperasiRepository;
+use App\Services\epasien\menu\PermintaanTindakan\OperasiService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Tests\TestCase;

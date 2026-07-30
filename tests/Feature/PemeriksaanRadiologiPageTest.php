@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use App\Services\epasien\menu\PemeriksaanRadiologiService;
+use App\Services\epasien\menu\PermintaanTindakan\PemeriksaanRadiologiService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Http;
 use Mockery\MockInterface;
@@ -114,7 +114,7 @@ class PemeriksaanRadiologiPageTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertViewIs('e-pasien.menu.pemeriksaanRadiologi.index')
+            ->assertViewIs('e-pasien.menu.PermintaanTindakan.pemeriksaanRadiologi.index')
             ->assertSeeText('Pemeriksaan Radiologi')
             ->assertSeeText('Budi Santoso')
             ->assertSeeText('PR20260729001')

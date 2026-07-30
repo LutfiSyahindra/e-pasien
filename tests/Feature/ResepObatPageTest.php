@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use App\Services\epasien\menu\ResepObatService;
+use App\Services\epasien\menu\PermintaanTindakan\ResepObatService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Mockery\MockInterface;
 use Tests\TestCase;
@@ -79,7 +79,7 @@ class ResepObatPageTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertViewIs('e-pasien.menu.resepObat.index')
+            ->assertViewIs('e-pasien.menu.PermintaanTindakan.resepObat.index')
             ->assertSeeText('Resep Obat')
             ->assertSeeText('Budi Santoso')
             ->assertSeeText('RSP2026072901')

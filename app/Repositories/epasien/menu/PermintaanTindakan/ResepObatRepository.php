@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Repositories\epasien\menu;
+namespace App\Repositories\epasien\menu\PermintaanTindakan;
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\Query\Builder;

@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Epasien\menu;
+namespace App\Http\Controllers\Epasien\menu\PermintaanTindakan;
 
 use App\Http\Controllers\Controller;
-use App\Services\epasien\menu\ResepObatService;
+use App\Services\epasien\menu\PermintaanTindakan\ResepObatService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
@@ -70,7 +70,7 @@ class ResepObatController extends Controller
                 .'Koneksi data Khanza tidak tersedia.';
         }
 
-        return view('e-pasien.menu.resepObat.index', [
+        return view('e-pasien.menu.PermintaanTindakan.resepObat.index', [
             'patient' => $patient,
             'prescriptions' => $prescriptions,
             'counts' => $counts,

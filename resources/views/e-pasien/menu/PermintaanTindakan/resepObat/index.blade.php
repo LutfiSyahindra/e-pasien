@@ -463,5 +463,5 @@
 @endsection
 
 @push("script")
-    @include("e-pasien.menu.partials.mobileHistoryFilters")
+    @include("e-pasien.menu.PermintaanTindakan.partials.mobileHistoryFilters")
 @endpush

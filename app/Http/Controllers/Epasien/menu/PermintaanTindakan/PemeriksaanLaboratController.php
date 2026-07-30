@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Epasien\menu;
+namespace App\Http\Controllers\Epasien\menu\PermintaanTindakan;
 
 use App\Http\Controllers\Controller;
-use App\Services\epasien\menu\OperasiService;
+use App\Services\epasien\menu\PermintaanTindakan\PemeriksaanLaboratService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -11,10 +11,10 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Throwable;
 
-class OperasiController extends Controller
+class PemeriksaanLaboratController extends Controller
 {
     public function __construct(
-        private readonly OperasiService $operasiService
+        private readonly PemeriksaanLaboratService $pemeriksaanLaboratService
     ) {}
 
     public function index(Request $request)
@@ -26,58 +26,53 @@ class OperasiController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => [
+            'status_hasil' => [
                 'nullable',
-                Rule::in([
-                    'terjadwal',
-                    'proses',
-                    'menunggu_laporan',
-                    'selesai',
-                ]),
+                Rule::in(['menunggu', 'proses', 'selesai']),
             ],
             'status_layanan' => ['nullable', Rule::in(['Ralan', 'Ranap'])],
             'tanggal_mulai' => ['nullable', 'date_format:Y-m-d'],
             'tanggal_selesai' => $endDateRules,
             'q' => ['nullable', 'string', 'max:60'],
         ]);
-        $workflowStatus = $validated['status'] ?? null;
+        $resultStatus = $validated['status_hasil'] ?? null;
         $careType = $validated['status_layanan'] ?? null;
         $startDate = $validated['tanggal_mulai'] ?? null;
         $endDate = $validated['tanggal_selesai'] ?? null;
         $search = trim((string) ($validated['q'] ?? ''));
         $patient = null;
-        $operations = $this->emptyOperations();
-        $counts = $this->operasiService->emptyCounts();
+        $requests = $this->emptyRequests();
+        $counts = $this->pemeriksaanLaboratService->emptyCounts();
         $connectionError = null;
 
         try {
-            $patient = $this->operasiService
+            $patient = $this->pemeriksaanLaboratService
                 ->patientForUser($request->user());
-            $operations = $this->operasiService->operationsForUser(
+            $requests = $this->pemeriksaanLaboratService->requestsForUser(
                 $request->user(),
-                $workflowStatus,
+                $resultStatus,
                 $careType,
                 $startDate,
                 $endDate,
                 $search
             );
-            $counts = $this->operasiService
+            $counts = $this->pemeriksaanLaboratService
                 ->countsForUser($request->user());
         } catch (Throwable $exception) {
-            Log::warning('Gagal memuat data operasi pasien.', [
+            Log::warning('Gagal memuat permintaan pemeriksaan laboratorium pasien.', [
                 'user_id' => $request->user()?->id,
                 'message' => $exception->getMessage(),
             ]);
 
-            $connectionError = 'Data operasi belum dapat dimuat. '
+            $connectionError = 'Data pemeriksaan laboratorium belum dapat dimuat. '
                 .'Koneksi data Khanza tidak tersedia.';
         }
 
-        return view('e-pasien.menu.operasi.index', [
+        return view('e-pasien.menu.PermintaanTindakan.pemeriksaanLaborat.pemeriksaanLaborat', [
             'patient' => $patient,
-            'operations' => $operations,
+            'requests' => $requests,
             'counts' => $counts,
-            'workflowStatus' => $workflowStatus,
+            'resultStatus' => $resultStatus,
             'careType' => $careType,
             'startDate' => $startDate,
             'endDate' => $endDate,
@@ -86,48 +81,43 @@ class OperasiController extends Controller
         ]);
     }
 
-    public function detail(Request $request): JsonResponse
+    public function result(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'no_rawat' => ['required', 'string', 'max:17'],
-            'tanggal' => ['required', 'date_format:Y-m-d'],
-            'jam_mulai' => ['required', 'date_format:H:i:s'],
+            'noorder' => ['required', 'string', 'max:20'],
         ]);
 
         try {
-            $detail = $this->operasiService->detailForUser(
+            $result = $this->pemeriksaanLaboratService->resultForUser(
                 $request->user(),
-                $validated['no_rawat'],
-                $validated['tanggal'],
-                $validated['jam_mulai']
+                $validated['noorder']
             );
         } catch (Throwable $exception) {
-            Log::warning('Gagal memuat detail operasi pasien.', [
+            Log::warning('Gagal memuat hasil pemeriksaan laboratorium pasien.', [
                 'user_id' => $request->user()?->id,
-                'no_rawat' => $validated['no_rawat'],
-                'tanggal' => $validated['tanggal'],
+                'noorder' => $validated['noorder'],
                 'message' => $exception->getMessage(),
             ]);
 
             return response()->json([
-                'message' => 'Detail operasi belum dapat dimuat. '
+                'message' => 'Hasil laboratorium belum dapat dimuat. '
                     .'Koneksi data Khanza tidak tersedia.',
             ], 503);
         }
 
-        if ($detail === null) {
+        if ($result === null) {
             return response()->json([
-                'message' => 'Data operasi tidak ditemukan.',
+                'message' => 'Permintaan laboratorium tidak ditemukan.',
             ], 404);
         }
 
         return response()->json([
-            'message' => 'Detail operasi berhasil dimuat.',
-            'data' => $detail,
+            'message' => 'Hasil laboratorium berhasil dimuat.',
+            'data' => $result,
         ]);
     }
 
-    private function emptyOperations(): LengthAwarePaginator
+    private function emptyRequests(): LengthAwarePaginator
     {
         return new LengthAwarePaginator(
             [],

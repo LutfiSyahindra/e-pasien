@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use App\Services\epasien\menu\PemeriksaanLaboratService;
+use App\Services\epasien\menu\PermintaanTindakan\PemeriksaanLaboratService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Mockery\MockInterface;
 use Tests\TestCase;
@@ -99,7 +99,7 @@ class PemeriksaanLaboratPageTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertViewIs('e-pasien.menu.pemeriksaanLaborat.pemeriksaanLaborat')
+            ->assertViewIs('e-pasien.menu.PermintaanTindakan.pemeriksaanLaborat.pemeriksaanLaborat')
             ->assertSeeText('Pemeriksaan Laborat')
             ->assertSeeText('Budi Santoso')
             ->assertSeeText('PL20260729001')

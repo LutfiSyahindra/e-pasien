@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Repositories\Epasien\Menu;
 
-use App\Repositories\epasien\menu\ResepObatRepository;
+use App\Repositories\epasien\menu\PermintaanTindakan\ResepObatRepository;
 use Illuminate\Database\MySqlConnection;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Expression;

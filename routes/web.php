@@ -2,10 +2,10 @@
 
 use App\Http\Controllers\Epasien\bridging\RencanaKontrolController;
 use App\Http\Controllers\Epasien\menu\DaftarOnlineController;
-use App\Http\Controllers\Epasien\menu\OperasiController;
-use App\Http\Controllers\Epasien\menu\PemeriksaanLaboratController;
-use App\Http\Controllers\Epasien\menu\PemeriksaanRadiologiController;
-use App\Http\Controllers\Epasien\menu\ResepObatController;
+use App\Http\Controllers\Epasien\menu\PermintaanTindakan\OperasiController;
+use App\Http\Controllers\Epasien\menu\PermintaanTindakan\PemeriksaanLaboratController;
+use App\Http\Controllers\Epasien\menu\PermintaanTindakan\PemeriksaanRadiologiController;
+use App\Http\Controllers\Epasien\menu\PermintaanTindakan\ResepObatController;
 use App\Http\Controllers\Epasien\menu\RiwayatMcuController;
 use App\Http\Controllers\Epasien\menu\RiwayatPemeriksaanController;
 use App\Http\Controllers\Epasien\settings\auth\permissionsController;

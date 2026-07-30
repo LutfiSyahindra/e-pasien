@@ -56,7 +56,7 @@
         $activeFilterCount = ($workflowStatus !== null ? 1 : 0) + count($persistentFilters);
     @endphp
 
-    @include("e-pasien.menu.operasi.modalDetail")
+    @include("e-pasien.menu.PermintaanTindakan.operasi.modalDetail")
 
     <div class="laboratory-page operation-page">
         <nav class="laboratory-breadcrumb" aria-label="Breadcrumb">
@@ -438,6 +438,6 @@
 @endsection
 
 @push("script")
-    @include("e-pasien.menu.partials.mobileHistoryFilters")
-    @include("e-pasien.menu.operasi.jsMain")
+    @include("e-pasien.menu.PermintaanTindakan.partials.mobileHistoryFilters")
+    @include("e-pasien.menu.PermintaanTindakan.operasi.jsMain")
 @endpush

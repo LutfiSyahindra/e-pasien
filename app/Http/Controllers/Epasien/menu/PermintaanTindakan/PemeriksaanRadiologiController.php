@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Epasien\menu;
+namespace App\Http\Controllers\Epasien\menu\PermintaanTindakan;
 
 use App\Http\Controllers\Controller;
-use App\Services\epasien\menu\PemeriksaanRadiologiService;
+use App\Services\epasien\menu\PermintaanTindakan\PemeriksaanRadiologiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -73,7 +73,7 @@ class PemeriksaanRadiologiController extends Controller
                 .'Koneksi data Khanza tidak tersedia.';
         }
 
-        return view('e-pasien.menu.pemeriksaanRadiologi.index', [
+        return view('e-pasien.menu.PermintaanTindakan.pemeriksaanRadiologi.index', [
             'patient' => $patient,
             'requests' => $requests,
             'counts' => $counts,

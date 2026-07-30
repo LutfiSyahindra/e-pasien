@@ -49,7 +49,7 @@
         $activeFilterCount = ($resultStatus !== null ? 1 : 0) + count($persistentFilters);
     @endphp
 
-    @include("e-pasien.menu.pemeriksaanLaborat.modalHasil")
+    @include("e-pasien.menu.PermintaanTindakan.pemeriksaanLaborat.modalHasil")
 
     <div class="laboratory-page">
         <nav class="laboratory-breadcrumb" aria-label="Breadcrumb">
@@ -439,6 +439,6 @@
 @endsection
 
 @push("script")
-    @include("e-pasien.menu.partials.mobileHistoryFilters")
-    @include("e-pasien.menu.pemeriksaanLaborat.jsMain")
+    @include("e-pasien.menu.PermintaanTindakan.partials.mobileHistoryFilters")
+    @include("e-pasien.menu.PermintaanTindakan.pemeriksaanLaborat.jsMain")
 @endpush

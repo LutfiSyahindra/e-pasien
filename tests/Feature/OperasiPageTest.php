@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use App\Services\epasien\menu\OperasiService;
+use App\Services\epasien\menu\PermintaanTindakan\OperasiService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Mockery\MockInterface;
 use Tests\TestCase;
@@ -77,7 +77,7 @@ class OperasiPageTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertViewIs('e-pasien.menu.operasi.index')
+            ->assertViewIs('e-pasien.menu.PermintaanTindakan.operasi.index')
             ->assertSeeText('Operasi')
             ->assertSeeText('Budi Santoso')
             ->assertSeeText('Appendektomi')

@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Services\epasien\menu;
+namespace App\Services\epasien\menu\PermintaanTindakan;
 
 use App\Models\User;
-use App\Repositories\epasien\menu\ResepObatRepository;
+use App\Repositories\epasien\menu\PermintaanTindakan\ResepObatRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
