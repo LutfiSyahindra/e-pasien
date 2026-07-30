@@ -83,6 +83,12 @@
                                 Pemeriksaan Radiologi
                             </a>
                         </li>
+                        <li>
+                            <a href="{{ route("resepObat.index") }}">
+                                <i class="bi bi-capsule-pill"></i>
+                                Resep Obat
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <li>
