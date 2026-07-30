@@ -6,6 +6,7 @@ use App\Http\Controllers\Epasien\menu\OperasiController;
 use App\Http\Controllers\Epasien\menu\PemeriksaanLaboratController;
 use App\Http\Controllers\Epasien\menu\PemeriksaanRadiologiController;
 use App\Http\Controllers\Epasien\menu\ResepObatController;
+use App\Http\Controllers\Epasien\menu\RiwayatMcuController;
 use App\Http\Controllers\Epasien\menu\RiwayatPemeriksaanController;
 use App\Http\Controllers\Epasien\settings\auth\permissionsController;
 use App\Http\Controllers\Epasien\settings\auth\rolesController;
@@ -101,6 +102,10 @@ Route::middleware('auth')->group(function () {
             ->name('riwayatPemeriksaan.resume');
         Route::get('/riwayat-pemeriksaan/pembayaran', [RiwayatPemeriksaanController::class, 'payment'])
             ->name('riwayatPemeriksaan.payment');
+        Route::get('/riwayat-mcu', [RiwayatMcuController::class, 'index'])
+            ->name('riwayatMcu.index');
+        Route::get('/riwayat-mcu/detail', [RiwayatMcuController::class, 'detail'])
+            ->name('riwayatMcu.detail');
         Route::get('/daftar-online', [DaftarOnlineController::class, 'index'])->name('daftarOnline.index');
         Route::get('/daftar-online/riwayat', [DaftarOnlineController::class, 'history'])->name('daftarOnline.history');
         Route::get('/daftar-online/jadwal', [DaftarOnlineController::class, 'schedules'])->name('daftarOnline.schedules');

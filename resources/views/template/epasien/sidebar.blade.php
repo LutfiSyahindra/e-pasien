@@ -65,6 +65,13 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ route("riwayatMcu.index") }}">
+                        <div class="parent-icon"><i class="bi bi-clipboard2-heart"></i>
+                        </div>
+                        <div class="menu-title">Riwayat MCU</div>
+                    </a>
+                </li>
+                <li>
                     <a href="javascript:;" class="has-arrow">
                         <div class="parent-icon"><i class="bi bi-clipboard2-plus"></i>
                         </div>
