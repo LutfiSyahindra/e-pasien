@@ -42,10 +42,13 @@
                     </div>
                 @else
                     <div class="online-notice-bpjs">
-                        <span><i class="bi bi-phone"></i></span>
+                        <span><i class="bi bi-shield-check"></i></span>
                         <div>
                             <strong>Pendaftaran BPJS Kesehatan</strong>
-                            <p>Silakan lakukan pendaftaran melalui aplikasi <b>Mobile JKN</b>.</p>
+                            <p>
+                                Dapat didaftarkan langsung tanpa surat kontrol atau rujukan,
+                                kecuali jika poli yang dipilih adalah <b>IRM</b>.
+                            </p>
                         </div>
                     </div>
                 @endif

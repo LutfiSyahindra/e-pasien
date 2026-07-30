@@ -20,6 +20,8 @@ class DaftarOnlineService
 {
     private const ANTROL_SERVICE_INTERVAL_MINUTES = 5;
 
+    private const BPJS_EXCLUDED_CLINIC_CODES = ['IRM'];
+
     private const HOSPITAL_TIMEZONE = 'Asia/Jakarta';
 
     private const MONTHS = [
@@ -168,11 +170,17 @@ class DaftarOnlineService
         User $user,
         string $treatmentNumber,
         ?string $requestedMedicalRecordNumber = null,
-        bool $configuredRegistrationRole = false
+        bool $configuredRegistrationRole = false,
+        string $cancellationReason = ''
     ): array {
         $treatmentNumber = trim($treatmentNumber);
         $requestedMedicalRecordNumber = trim((string) $requestedMedicalRecordNumber);
         $userMedicalRecordNumber = trim((string) $user->username);
+        $cancellationReason = trim($cancellationReason) ?: (
+            $configuredRegistrationRole
+                ? 'Pendaftaran dibatalkan oleh petugas melalui E-Pasien.'
+                : 'Pendaftaran dibatalkan oleh pasien melalui E-Pasien.'
+        );
 
         if ($treatmentNumber === '') {
             throw ValidationException::withMessages([
@@ -206,10 +214,53 @@ class DaftarOnlineService
             ]);
         }
 
+        $mobileJknReference = $this->daftarOnlineRepository
+            ->findPendingMobileJknReference($treatmentNumber, $medicalRecordNumber);
+        $antrolCancellation = null;
+
+        if (
+            $mobileJknReference
+            && ! (bool) ($mobileJknReference->sudah_checkin ?? false)
+            && strtoupper(trim((string) $mobileJknReference->statuskirim)) === 'SUDAH'
+        ) {
+            $bookingCode = trim((string) $mobileJknReference->nobooking);
+            $bpjsResponse = $this->antrolClient()->cancelQueue(
+                $bookingCode,
+                Str::limit($cancellationReason, 255, '')
+            );
+            $metadata = $bpjsResponse['metadata'] ?? $bpjsResponse['metaData'] ?? [];
+            $bpjsCode = (string) ($metadata['code'] ?? '');
+            $bpjsMessage = trim((string) (
+                $metadata['message']
+                ?? 'Layanan BPJS tidak memberikan keterangan pembatalan.'
+            ));
+
+            if ($bpjsCode !== '200') {
+                throw ValidationException::withMessages([
+                    'pendaftaran' => 'Antrean JKN belum berhasil dibatalkan di BPJS: '.$bpjsMessage,
+                ]);
+            }
+
+            $antrolCancellation = [
+                'cancelled' => true,
+                'booking_code' => $bookingCode,
+                'code' => $bpjsCode,
+                'message' => $bpjsMessage,
+            ];
+        }
+
         $result = $this->daftarOnlineRepository->cancelPendingRegistration(
             $treatmentNumber,
             $medicalRecordNumber
         );
+
+        if ($antrolCancellation && $result !== DaftarOnlineRepository::CANCELLATION_CANCELLED) {
+            Log::critical('Antrean JKN berhasil dibatalkan di BPJS tetapi pembatalan lokal gagal.', [
+                'no_rawat' => $treatmentNumber,
+                'kodebooking' => $antrolCancellation['booking_code'],
+                'local_result' => $result,
+            ]);
+        }
 
         if ($result === DaftarOnlineRepository::CANCELLATION_CHECKED_IN) {
             throw ValidationException::withMessages([
@@ -232,6 +283,7 @@ class DaftarOnlineService
         return [
             'no_rawat' => $treatmentNumber,
             'status' => 'Batal',
+            'antrol' => $antrolCancellation,
         ];
     }
 
@@ -291,6 +343,7 @@ class DaftarOnlineService
         $doctorCode = trim((string) $data['kd_dokter']);
         $clinicCode = trim((string) $data['kd_poli']);
         $guarantorCode = strtoupper(trim((string) $data['kd_pj']));
+        $this->ensureBpjsClinicIsEligible($guarantorCode, $clinicCode);
         $requestedMedicalRecordNumber = trim((string) ($data['no_rkm_medis'] ?? ''));
         $userMedicalRecordNumber = trim((string) $user->username);
 
@@ -795,6 +848,7 @@ class DaftarOnlineService
         $guarantorCode = trim((string) $data['kd_pj']);
         $requestedMedicalRecordNumber = trim((string) ($data['no_rkm_medis'] ?? ''));
         $userMedicalRecordNumber = trim((string) $user->username);
+        $isBpjsGuarantor = strtoupper($guarantorCode) === 'BPJ';
 
         if ($configuredRegistrationRole && $requestedMedicalRecordNumber === '') {
             throw ValidationException::withMessages([
@@ -816,7 +870,9 @@ class DaftarOnlineService
             ? $requestedMedicalRecordNumber
             : $userMedicalRecordNumber;
 
-        if (strtoupper($guarantorCode) === 'BPJ') {
+        $this->ensureBpjsClinicIsEligible($guarantorCode, $clinicCode);
+
+        if ($configuredRegistrationRole && $isBpjsGuarantor) {
             throw ValidationException::withMessages([
                 'kd_pj' => 'Pendaftaran BPJ tidak disimpan pada tahap ini. Gunakan modal Proses Daftar MJKN untuk memilih dokumen BPJS dan meninjau payload Antrol.',
             ]);
@@ -856,18 +912,15 @@ class DaftarOnlineService
 
         $penjamin = $this->daftarOnlineRepository->findEligiblePenjamin(
             $guarantorCode,
-            $configuredRegistrationRole
+            $configuredRegistrationRole || $isBpjsGuarantor
         );
 
         if (! $penjamin) {
             throw ValidationException::withMessages([
-                'kd_pj' => $configuredRegistrationRole
-                    ? 'Penjamin tidak tersedia.'
-                    : 'Penjamin tidak tersedia atau termasuk BPJS Kesehatan.',
+                'kd_pj' => 'Penjamin tidak tersedia.',
             ]);
         }
 
-        $isBpjsGuarantor = strtoupper($guarantorCode) === 'BPJ';
         $patientCardNumber = $isBpjsGuarantor
             ? trim((string) ($data['no_peserta'] ?? ''))
             : null;
@@ -1208,6 +1261,18 @@ class DaftarOnlineService
         throw ValidationException::withMessages([
             'bpjs_document_type' => 'Jenis dan sumber dokumen BPJS tidak sesuai.',
         ]);
+    }
+
+    private function ensureBpjsClinicIsEligible(string $guarantorCode, string $clinicCode): void
+    {
+        if (
+            strtoupper(trim($guarantorCode)) === 'BPJ'
+            && in_array(strtoupper(trim($clinicCode)), self::BPJS_EXCLUDED_CLINIC_CODES, true)
+        ) {
+            throw ValidationException::withMessages([
+                'kd_poli' => 'Penjamin BPJ tidak dapat digunakan untuk pendaftaran online ke poli IRM.',
+            ]);
+        }
     }
 
     private function timeValue(mixed $value): string

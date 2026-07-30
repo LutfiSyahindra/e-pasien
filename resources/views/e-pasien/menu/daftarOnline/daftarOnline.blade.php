@@ -369,8 +369,8 @@
                                         <label for="kd_pj">Penjamin</label>
                                         <small>
                                             {{ $isRegistrationStaff
-                                                ? "BPJS Kesehatan tersedia untuk role Anda."
-                                                : "BPJS Kesehatan tidak ditampilkan." }}
+                                                ? "BPJS Kesehatan diproses melalui alur MJKN."
+                                                : "BPJS Kesehatan tersedia, kecuali untuk poli IRM." }}
                                         </small>
                                     </div>
                                 </div>
@@ -392,7 +392,11 @@
                                 <div id="bpjsCardNumberField" class="online-bpjs-card-number" hidden>
                                     <div>
                                         <label for="no_peserta">No. Kartu BPJS</label>
-                                        <small id="bpjsCardNumberHelp">Digunakan untuk mencari surat kontrol, lalu rujukan PCare dan RS.</small>
+                                        <small id="bpjsCardNumberHelp">
+                                            {{ $isRegistrationStaff
+                                                ? "Digunakan untuk mencari surat kontrol, lalu rujukan PCare dan RS."
+                                                : "Disimpan bersama pendaftaran BPJ langsung ke reg_periksa." }}
+                                        </small>
                                     </div>
                                     <div class="online-field-control">
                                         <i class="bi bi-credit-card-2-front"></i>

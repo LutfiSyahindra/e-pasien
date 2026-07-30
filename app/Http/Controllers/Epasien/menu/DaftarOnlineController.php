@@ -71,7 +71,7 @@ class DaftarOnlineController extends Controller
             }
 
             if (! $pendingRegistration) {
-                $penjaminOptions = $this->daftarOnlineService->penjaminOptions($isRegistrationStaff);
+                $penjaminOptions = $this->daftarOnlineService->penjaminOptions(true);
             }
 
         } catch (Throwable $exception) {
@@ -378,7 +378,10 @@ class DaftarOnlineController extends Controller
             'no_peserta.max' => 'No. kartu tidak boleh lebih dari 25 karakter.',
         ]);
 
-        if (strtoupper(trim((string) $validated['kd_pj'])) === 'BPJ') {
+        if (
+            $isRegistrationStaff
+            && strtoupper(trim((string) $validated['kd_pj'])) === 'BPJ'
+        ) {
             throw ValidationException::withMessages([
                 'kd_pj' => 'Pendaftaran BPJ tidak disimpan pada tahap ini. Gunakan modal Proses Daftar MJKN untuk memilih dokumen BPJS dan meninjau payload Antrol.',
             ]);
@@ -421,6 +424,7 @@ class DaftarOnlineController extends Controller
                 'string',
                 'max:20',
             ],
+            'keterangan' => ['nullable', 'string', 'min:5', 'max:255'],
         ]);
 
         try {
@@ -428,12 +432,16 @@ class DaftarOnlineController extends Controller
                 $request->user(),
                 $validated['no_rawat'],
                 $validated['no_rkm_medis'] ?? null,
-                $isRegistrationStaff
+                $isRegistrationStaff,
+                $validated['keterangan'] ?? ''
             );
+            $antrolCancelled = (bool) ($data['antrol']['cancelled'] ?? false);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Pendaftaran berhasil dibatalkan.',
+                'message' => $antrolCancelled
+                    ? 'Pendaftaran dan antrean JKN berhasil dibatalkan.'
+                    : 'Pendaftaran berhasil dibatalkan.',
                 'data' => $data,
             ]);
         } catch (ValidationException $exception) {

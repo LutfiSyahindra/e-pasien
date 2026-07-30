@@ -153,6 +153,20 @@
             return String(state.selectedGuarantor?.kd_pj || '').toUpperCase() === 'BPJ';
         }
 
+        function isIrmSelected() {
+            const clinicCode = state.selectedSchedule?.kd_poli || elements.clinicCode.val() || '';
+
+            return String(clinicCode).trim().toUpperCase() === 'IRM';
+        }
+
+        function isBpjsIrmCombination() {
+            return isBpjsSelected() && isIrmSelected();
+        }
+
+        function usesMjknFlow() {
+            return Boolean(config.isRegistrationStaff) && isBpjsSelected();
+        }
+
         function hasRequiredCardNumber() {
             return !isBpjsSelected() || Boolean($.trim(elements.cardNumber.val()));
         }
@@ -311,7 +325,7 @@
         function syncSubmitPresentation() {
             if (!state.submitting) {
                 elements.submit.html(
-                    isBpjsSelected()
+                    usesMjknFlow()
                         ? '<i class="bi bi-phone"></i><span>Proses Daftar MJKN</span>'
                         : '<i class="bi bi-send-check"></i><span>Simpan Pendaftaran</span>'
                 );
@@ -619,6 +633,7 @@
                 Boolean(state.selectedSchedule) &&
                 Boolean(state.selectedGuarantor) &&
                 hasRequiredCardNumber() &&
+                !isBpjsIrmCombination() &&
                 !state.submitting;
 
             elements.submit.prop('disabled', !ready);
@@ -639,11 +654,13 @@
             elements.summaryGuarantor.text(guarantor?.name || '-');
             elements.summaryQueue.text(schedule?.estimasi_no_reg ? `No. ${schedule.estimasi_no_reg}` : '-');
 
-            if (schedule && guarantor && !hasRequiredCardNumber()) {
+            if (schedule && guarantor && isBpjsIrmCombination()) {
+                elements.summaryState.text('Penjamin BPJ tidak tersedia untuk poli IRM.');
+            } else if (schedule && guarantor && !hasRequiredCardNumber()) {
                 elements.summaryState.text('Lengkapi no. kartu BPJS.');
             } else if (schedule && guarantor) {
                 elements.summaryState.text(
-                    isBpjsSelected()
+                    usesMjknFlow()
                         ? 'Siap diproses melalui modal daftar MJKN.'
                         : 'Siap disimpan.'
                 );
@@ -1883,7 +1900,18 @@
                 return;
             }
 
-            if (isBpjsSelected()) {
+            if (isBpjsIrmCombination()) {
+                markInvalid('kd_poli');
+                $('#error-kd_poli').text('Penjamin BPJ tidak dapat digunakan untuk poli IRM.');
+                alertAction({
+                    icon: 'warning',
+                    title: 'Penjamin tidak tersedia',
+                    text: 'Pendaftaran online ke poli IRM tidak dapat menggunakan penjamin BPJ.'
+                });
+                return;
+            }
+
+            if (usesMjknFlow()) {
                 searchBpjsControlLetters();
                 return;
             }
@@ -1980,6 +2008,9 @@
             }
 
             const registration = config.pendingRegistration || {};
+            const defaultCancellationReason = config.isRegistrationStaff
+                ? 'Pendaftaran dibatalkan oleh petugas melalui E-Pasien.'
+                : 'Pendaftaran dibatalkan oleh pasien melalui E-Pasien.';
 
             confirmAction({
                 icon: 'warning',
@@ -1991,6 +2022,19 @@
                         <small>No. Rawat ${escapeHtml(registration.no_rawat || '-')}</small>
                     </div>
                 `,
+                input: 'textarea',
+                inputLabel: 'Alasan pembatalan',
+                inputValue: defaultCancellationReason,
+                inputPlaceholder: 'Tuliskan alasan pembatalan',
+                inputAttributes: {
+                    maxlength: 255,
+                    autocapitalize: 'sentences',
+                },
+                inputValidator: function(value) {
+                    if ($.trim(value).length < 5) {
+                        return 'Alasan pembatalan minimal 5 karakter.';
+                    }
+                },
                 showCancelButton: true,
                 confirmButtonText: 'Ya, batalkan',
                 cancelButtonText: 'Kembali',
@@ -2014,6 +2058,7 @@
                     data: {
                         no_rawat: registration.no_rawat,
                         no_rkm_medis: registration.no_rkm_medis,
+                        keterangan: $.trim(result.value || defaultCancellationReason),
                     },
                     success: function(response) {
                         alertAction({

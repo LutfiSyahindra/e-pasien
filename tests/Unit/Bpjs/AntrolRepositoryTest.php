@@ -63,6 +63,33 @@ class AntrolRepositoryTest extends TestCase
         });
     }
 
+    public function test_it_cancels_queue_with_booking_code_and_reason(): void
+    {
+        Http::fake([
+            'https://antrol.test/*' => Http::response([
+                'metadata' => [
+                    'code' => 200,
+                    'message' => 'Ok',
+                ],
+            ]),
+        ]);
+
+        $result = (new AntrolRepository)->cancelQueue(
+            ' 20260727000001 ',
+            ' Pendaftaran dibatalkan oleh pasien. '
+        );
+
+        $this->assertSame(200, $result['metadata']['code']);
+        Http::assertSent(function (Request $request): bool {
+            return $request->method() === 'POST'
+                && $request->url() === 'https://antrol.test/root/antrean/batal'
+                && $request->data() === [
+                    'kodebooking' => '20260727000001',
+                    'keterangan' => 'Pendaftaran dibatalkan oleh pasien.',
+                ];
+        });
+    }
+
     public function test_it_returns_stable_metadata_when_antrol_is_unreachable(): void
     {
         Http::fake([

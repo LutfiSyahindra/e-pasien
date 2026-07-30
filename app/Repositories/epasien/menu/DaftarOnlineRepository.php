@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 
 class DaftarOnlineRepository
 {
+    private const EMERGENCY_CLINIC_CODE_PREFIX = 'IGD';
+
     public const CANCELLATION_CANCELLED = 'cancelled';
 
     public const CANCELLATION_CHECKED_IN = 'checked_in';
@@ -189,8 +191,43 @@ class DaftarOnlineRepository
                 ) AS sudah_checkin'
             )
             ->where('reg_periksa.stts', 'Belum')
+            ->whereRaw(
+                'UPPER(TRIM(reg_periksa.kd_poli)) NOT LIKE ?',
+                [self::EMERGENCY_CLINIC_CODE_PREFIX.'%']
+            )
             ->orderByDesc('reg_periksa.tgl_registrasi')
             ->orderByDesc('reg_periksa.jam_reg')
+            ->first();
+    }
+
+    public function findPendingMobileJknReference(
+        string $treatmentNumber,
+        string $medicalRecordNumber
+    ): ?object {
+        return $this->connection()
+            ->table('referensi_mobilejkn_bpjs as mobile_jkn')
+            ->join(
+                'reg_periksa as registration',
+                'registration.no_rawat',
+                '=',
+                'mobile_jkn.no_rawat'
+            )
+            ->select(
+                'mobile_jkn.nobooking',
+                'mobile_jkn.statuskirim'
+            )
+            ->selectRaw(
+                'EXISTS (
+                    SELECT 1
+                    FROM checkin_poli
+                    WHERE checkin_poli.no_rawat = registration.no_rawat
+                ) AS sudah_checkin'
+            )
+            ->where('registration.no_rawat', $treatmentNumber)
+            ->where('registration.no_rkm_medis', $medicalRecordNumber)
+            ->where('registration.stts', 'Belum')
+            ->whereNotNull('mobile_jkn.nobooking')
+            ->where('mobile_jkn.nobooking', '<>', '')
             ->first();
     }
 
@@ -236,9 +273,19 @@ class DaftarOnlineRepository
                 ->where('stts', 'Belum')
                 ->update(['stts' => 'Batal']);
 
-            return $affectedRows === 1
-                ? self::CANCELLATION_CANCELLED
-                : self::CANCELLATION_NOT_PENDING;
+            if ($affectedRows !== 1) {
+                return self::CANCELLATION_NOT_PENDING;
+            }
+
+            $connection
+                ->table('referensi_mobilejkn_bpjs')
+                ->where('no_rawat', $treatmentNumber)
+                ->update([
+                    'status' => 'Batal',
+                    'validasi' => now()->format('Y-m-d H:i:s'),
+                ]);
+
+            return self::CANCELLATION_CANCELLED;
         });
     }
 

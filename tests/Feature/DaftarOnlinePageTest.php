@@ -24,7 +24,8 @@ class DaftarOnlinePageTest extends TestCase
         $this->mock(DaftarOnlineService::class, function (MockInterface $mock) use ($patient): void {
             $mock->shouldReceive('patientForUser')->once()->andReturn($patient);
             $mock->shouldReceive('pendingRegistrationForMedicalRecord')->once()->with('000123')->andReturnNull();
-            $mock->shouldReceive('penjaminOptions')->once()->with(false)->andReturn([
+            $mock->shouldReceive('penjaminOptions')->once()->with(true)->andReturn([
+                ['kd_pj' => 'BPJ', 'png_jawab' => 'BPJS Kesehatan'],
                 ['kd_pj' => 'A01', 'png_jawab' => 'Asuransi Sehat'],
             ]);
         });
@@ -44,7 +45,9 @@ class DaftarOnlinePageTest extends TestCase
             ->assertSee('id="onlineRegistrationNoticeModal"', false)
             ->assertSeeText('UMUM')
             ->assertSeeText('Asuransi selain BPJS Kesehatan')
-            ->assertSeeText('Silakan lakukan pendaftaran melalui aplikasi Mobile JKN.')
+            ->assertSeeText('Dapat didaftarkan langsung tanpa surat kontrol atau rujukan')
+            ->assertSeeText('BPJS Kesehatan tersedia, kecuali untuk poli IRM.')
+            ->assertSeeText('Disimpan bersama pendaftaran BPJ langsung ke reg_periksa.')
             ->assertSee('class="online-choice-flow"', false)
             ->assertSee('id="kd_poli"', false)
             ->assertSee('id="kd_dokter"', false)
@@ -201,7 +204,7 @@ class DaftarOnlinePageTest extends TestCase
         $response
             ->assertOk()
             ->assertSeeText('Role Anda dapat mendaftarkan pasien lain')
-            ->assertSeeText('BPJS Kesehatan tersedia untuk role Anda.')
+            ->assertSeeText('BPJS Kesehatan diproses melalui alur MJKN.')
             ->assertSee('value="000456"', false)
             ->assertSee('id="no_peserta"', false)
             ->assertSee('value="0001234567890"', false)
@@ -385,7 +388,7 @@ class DaftarOnlinePageTest extends TestCase
             ->assertJsonValidationErrors('no_peserta');
     }
 
-    public function test_bpjs_registration_with_card_number_is_not_saved(): void
+    public function test_staff_bpjs_registration_with_card_number_must_use_mjkn_flow(): void
     {
         $this->mock(RegistrationRoleConfigurationService::class, function (MockInterface $mock): void {
             $mock->shouldReceive('isConfigured')->once()->andReturnTrue();
@@ -420,6 +423,56 @@ class DaftarOnlinePageTest extends TestCase
             );
     }
 
+    public function test_patient_bpjs_registration_with_card_number_is_saved_directly(): void
+    {
+        $date = now()->toDateString();
+
+        $this->mock(RegistrationRoleConfigurationService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('isConfigured')->once()->andReturnFalse();
+        });
+        $this->mock(DaftarOnlineService::class, function (MockInterface $mock) use ($date): void {
+            $mock
+                ->shouldReceive('register')
+                ->once()
+                ->withArgs(function (User $user, array $data, bool $isRegistrationStaff) use ($date): bool {
+                    return $user->username === '000123'
+                        && $data['tgl_registrasi'] === $date
+                        && $data['kd_poli'] === 'POL01'
+                        && $data['kd_pj'] === 'BPJ'
+                        && $data['no_peserta'] === '0002035874204'
+                        && ! $isRegistrationStaff;
+                })
+                ->andReturn([
+                    'registration' => [
+                        'no_reg' => '001',
+                        'no_rawat' => now()->format('Y/m/d').'/000001',
+                        'kd_pj' => 'BPJ',
+                    ],
+                ]);
+        });
+
+        $user = new User([
+            'name' => 'Budi',
+            'username' => '000123',
+            'email' => 'budi@example.test',
+            'status' => true,
+        ]);
+        $user->setRelation('roles', collect());
+
+        $response = $this->actingAs($user)->postJson(route('daftarOnline.store'), [
+            'tgl_registrasi' => $date,
+            'kd_dokter' => 'D001',
+            'kd_poli' => 'POL01',
+            'kd_pj' => 'BPJ',
+            'no_peserta' => '0002035874204',
+        ]);
+
+        $response
+            ->assertCreated()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.registration.kd_pj', 'BPJ');
+    }
+
     public function test_patient_can_cancel_own_pending_registration(): void
     {
         $treatmentNumber = '2026/07/28/000001';
@@ -438,10 +491,11 @@ class DaftarOnlinePageTest extends TestCase
             $mock
                 ->shouldReceive('cancelRegistration')
                 ->once()
-                ->with($user, $treatmentNumber, '000123', false)
+                ->with($user, $treatmentNumber, '000123', false, '')
                 ->andReturn([
                     'no_rawat' => $treatmentNumber,
                     'status' => 'Batal',
+                    'antrol' => null,
                 ]);
         });
 
@@ -456,6 +510,57 @@ class DaftarOnlinePageTest extends TestCase
             ->assertJsonPath('message', 'Pendaftaran berhasil dibatalkan.')
             ->assertJsonPath('data.no_rawat', $treatmentNumber)
             ->assertJsonPath('data.status', 'Batal');
+    }
+
+    public function test_jkn_cancellation_returns_combined_success_message(): void
+    {
+        $treatmentNumber = '2026/07/28/000001';
+        $user = new User([
+            'name' => 'Budi',
+            'username' => '000123',
+            'email' => 'budi@example.test',
+            'status' => true,
+        ]);
+        $user->setRelation('roles', collect());
+
+        $this->mock(RegistrationRoleConfigurationService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('isConfigured')->once()->andReturnFalse();
+        });
+        $this->mock(DaftarOnlineService::class, function (MockInterface $mock) use ($treatmentNumber, $user): void {
+            $mock
+                ->shouldReceive('cancelRegistration')
+                ->once()
+                ->with(
+                    $user,
+                    $treatmentNumber,
+                    '000123',
+                    false,
+                    'Terjadi perubahan jadwal dokter.'
+                )
+                ->andReturn([
+                    'no_rawat' => $treatmentNumber,
+                    'status' => 'Batal',
+                    'antrol' => [
+                        'cancelled' => true,
+                        'booking_code' => '20260728000001',
+                    ],
+                ]);
+        });
+
+        $response = $this->actingAs($user)->patchJson(route('daftarOnline.cancel'), [
+            'no_rawat' => $treatmentNumber,
+            'no_rkm_medis' => '000123',
+            'keterangan' => 'Terjadi perubahan jadwal dokter.',
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath(
+                'message',
+                'Pendaftaran dan antrean JKN berhasil dibatalkan.'
+            )
+            ->assertJsonPath('data.antrol.cancelled', true);
     }
 
     public function test_authorized_staff_can_preview_antrol_payload_without_saving_or_sending(): void

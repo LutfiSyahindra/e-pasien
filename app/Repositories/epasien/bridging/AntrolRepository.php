@@ -23,6 +23,17 @@ class AntrolRepository
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public function cancelQueue(string $bookingCode, string $reason): array
+    {
+        return $this->request('antrean/batal', [
+            'kodebooking' => trim($bookingCode),
+            'keterangan' => trim($reason),
+        ]);
+    }
+
+    /**
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
