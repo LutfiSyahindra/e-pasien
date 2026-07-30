@@ -89,6 +89,12 @@
                                 Resep Obat
                             </a>
                         </li>
+                        <li>
+                            <a href="{{ route("operasi.index") }}">
+                                <i class="bi bi-bandaid"></i>
+                                Operasi
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <li>

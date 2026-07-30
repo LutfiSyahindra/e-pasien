@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Epasien\bridging\RencanaKontrolController;
 use App\Http\Controllers\Epasien\menu\DaftarOnlineController;
+use App\Http\Controllers\Epasien\menu\OperasiController;
 use App\Http\Controllers\Epasien\menu\PemeriksaanLaboratController;
 use App\Http\Controllers\Epasien\menu\PemeriksaanRadiologiController;
 use App\Http\Controllers\Epasien\menu\ResepObatController;
@@ -84,6 +85,10 @@ Route::middleware('auth')->group(function () {
             ->name('pemeriksaanRadiologi.result');
         Route::get('/permintaan-tindakan/resep-obat', [ResepObatController::class, 'index'])
             ->name('resepObat.index');
+        Route::get('/permintaan-tindakan/operasi', [OperasiController::class, 'index'])
+            ->name('operasi.index');
+        Route::get('/permintaan-tindakan/operasi/detail', [OperasiController::class, 'detail'])
+            ->name('operasi.detail');
         Route::get(
             '/permintaan-tindakan/pemeriksaan-radiologi/{noorder}/gambar/{image}',
             [PemeriksaanRadiologiController::class, 'image']
