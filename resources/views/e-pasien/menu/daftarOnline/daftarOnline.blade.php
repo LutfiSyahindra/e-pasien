@@ -301,6 +301,17 @@
                             </span>
                         </div>
 
+                        <div class="online-mobile-progress" id="onlineMobileProgress" role="status"
+                            aria-live="polite">
+                            <div>
+                                <span>Progres pengisian</span>
+                                <strong id="onlineMobileProgressLabel">Langkah 1 dari 4 · Tanggal kunjungan</strong>
+                            </div>
+                            <span class="online-mobile-progress-track" aria-hidden="true">
+                                <span id="onlineMobileProgressBar"></span>
+                            </span>
+                        </div>
+
                         <div class="online-choice-flow">
                             <div class="online-choice-card active" data-choice="date">
                                 <div class="online-choice-title">
@@ -444,7 +455,7 @@
             </section>
 
             @unless ($hasPendingRegistration)
-                <aside class="online-side-panel">
+                <aside class="online-side-panel" id="onlineSidePanel">
                 <section class="online-patient-panel">
                     <div class="online-panel-title">
                         <i class="bi bi-person-lines-fill"></i>
@@ -491,7 +502,7 @@
                     </dl>
                 </section>
 
-                <section class="online-summary">
+                <section class="online-summary" id="onlineVisitSummary">
                     <div class="online-summary-header">
                         <span><i class="bi bi-clipboard2-pulse"></i></span>
                         <div>

@@ -86,6 +86,9 @@ class OperasiPageTest extends TestCase
             ->assertSeeText('Lihat Detail')
             ->assertSee('data-detail-url=', false)
             ->assertSee('id="operationDetailModal"', false)
+            ->assertSee('data-mobile-filter-toggle', false)
+            ->assertSee('id="operationFilterPanel"', false)
+            ->assertSeeText('5 aktif')
             ->assertSee('class="laboratory-card operation-card tone-selesai"', false)
             ->assertSeeText('Reset semua filter');
     }

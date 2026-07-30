@@ -24,6 +24,7 @@
         ], fn ($value) => $value !== null && $value !== "");
         $hasDetailFilters = count($persistentFilters) > 0;
         $hasActiveFilters = $careType !== null || $hasDetailFilters;
+        $activeFilterCount = ($careType !== null ? 1 : 0) + count($persistentFilters);
     @endphp
 
     @include("e-pasien.menu.riwayatPemeriksaan.modalMain")
@@ -87,99 +88,119 @@
                 @endif
             </div>
 
-            <nav class="examination-filters" aria-label="Filter jenis perawatan">
-                @foreach ($filters as $value => $filter)
-                    @php
-                        $isActive = ($careType ?? "") === $value;
-                        $filterQuery = $persistentFilters;
-                        if ($value !== "") {
-                            $filterQuery["status_lanjut"] = $value;
-                        }
-                        $filterUrl = route("riwayatPemeriksaan.index", $filterQuery);
-                    @endphp
-                    <a href="{{ $filterUrl }}" class="{{ $isActive ? "active" : "" }}"
-                        @if ($isActive) aria-current="page" @endif>
-                        <span class="examination-filter-icon"><i class="bi {{ $filter["icon"] }}"></i></span>
-                        <span class="examination-filter-copy">
-                            <strong>{{ $filter["label"] }}</strong>
-                            <small>{{ $filter["count"] }} kunjungan</small>
-                        </span>
-                        <i class="bi bi-check-circle-fill examination-filter-check"></i>
-                    </a>
-                @endforeach
-            </nav>
-
-            <form action="{{ route("riwayatPemeriksaan.index") }}" method="GET"
-                class="examination-advanced-filter">
-                @if ($careType)
-                    <input type="hidden" name="status_lanjut" value="{{ $careType }}">
+            <button type="button" class="examination-mobile-filter-toggle"
+                id="examinationMobileFilterToggle" aria-controls="examinationFilterPanel"
+                aria-expanded="true">
+                <span class="examination-mobile-filter-icon"><i class="bi bi-sliders"></i></span>
+                <span class="examination-mobile-filter-copy">
+                    <strong>Filter pemeriksaan</strong>
+                    <small>
+                        {{ $hasActiveFilters
+                            ? $activeFilterCount." filter sedang aktif"
+                            : "Jenis perawatan, tanggal, dan dokter" }}
+                    </small>
+                </span>
+                @if ($hasActiveFilters)
+                    <span class="examination-mobile-filter-count">{{ $activeFilterCount }}</span>
                 @endif
+                <i class="bi bi-chevron-up examination-mobile-filter-chevron"></i>
+            </button>
 
-                <div class="examination-advanced-filter-heading">
-                    <span><i class="bi bi-funnel"></i></span>
-                    <div>
-                        <strong>Persempit hasil</strong>
-                        <small>Pilih rentang tanggal dan dokter pemeriksa.</small>
-                    </div>
-                </div>
-
-                <label class="examination-filter-field">
-                    <span>Tanggal mulai</span>
-                    <span class="examination-filter-control">
-                        <i class="bi bi-calendar-event"></i>
-                        <input type="date" name="tanggal_mulai"
-                            value="{{ old("tanggal_mulai", $startDate) }}">
-                    </span>
-                    @error("tanggal_mulai")
-                        <small class="examination-filter-error">{{ $message }}</small>
-                    @enderror
-                </label>
-
-                <label class="examination-filter-field">
-                    <span>Tanggal selesai</span>
-                    <span class="examination-filter-control">
-                        <i class="bi bi-calendar-check"></i>
-                        <input type="date" name="tanggal_selesai"
-                            value="{{ old("tanggal_selesai", $endDate) }}">
-                    </span>
-                    @error("tanggal_selesai")
-                        <small class="examination-filter-error">{{ $message }}</small>
-                    @enderror
-                </label>
-
-                <label class="examination-filter-field">
-                    <span>Dokter</span>
-                    <span class="examination-filter-control">
-                        <i class="bi bi-person-badge"></i>
-                        <select name="dokter">
-                            <option value="">Semua dokter</option>
-                            @foreach ($doctors as $doctor)
-                                <option value="{{ $doctor["code"] }}"
-                                    @selected(old("dokter", $doctorCode) === $doctor["code"])>
-                                    {{ $doctor["name"] }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </span>
-                    @error("dokter")
-                        <small class="examination-filter-error">{{ $message }}</small>
-                    @enderror
-                </label>
-
-                <div class="examination-filter-actions">
-                    @if ($hasDetailFilters)
-                        <a href="{{ route("riwayatPemeriksaan.index", array_filter([
-                            "status_lanjut" => $careType,
-                        ])) }}">
-                            Hapus
+            <div class="examination-filter-panel" id="examinationFilterPanel">
+                <nav class="examination-filters" aria-label="Filter jenis perawatan">
+                    @foreach ($filters as $value => $filter)
+                        @php
+                            $isActive = ($careType ?? "") === $value;
+                            $filterQuery = $persistentFilters;
+                            if ($value !== "") {
+                                $filterQuery["status_lanjut"] = $value;
+                            }
+                            $filterUrl = route("riwayatPemeriksaan.index", $filterQuery);
+                        @endphp
+                        <a href="{{ $filterUrl }}" class="{{ $isActive ? "active" : "" }}"
+                            @if ($isActive) aria-current="page" @endif>
+                            <span class="examination-filter-icon"><i class="bi {{ $filter["icon"] }}"></i></span>
+                            <span class="examination-filter-copy">
+                                <strong>{{ $filter["label"] }}</strong>
+                                <small>{{ $filter["count"] }} kunjungan</small>
+                            </span>
+                            <i class="bi bi-check-circle-fill examination-filter-check"></i>
                         </a>
+                    @endforeach
+                </nav>
+
+                <form action="{{ route("riwayatPemeriksaan.index") }}" method="GET"
+                    class="examination-advanced-filter">
+                    @if ($careType)
+                        <input type="hidden" name="status_lanjut" value="{{ $careType }}">
                     @endif
-                    <button type="submit">
-                        <i class="bi bi-search"></i>
-                        Terapkan
-                    </button>
-                </div>
-            </form>
+
+                    <div class="examination-advanced-filter-heading">
+                        <span><i class="bi bi-funnel"></i></span>
+                        <div>
+                            <strong>Persempit hasil</strong>
+                            <small>Pilih rentang tanggal dan dokter pemeriksa.</small>
+                        </div>
+                    </div>
+
+                    <label class="examination-filter-field">
+                        <span>Tanggal mulai</span>
+                        <span class="examination-filter-control">
+                            <i class="bi bi-calendar-event"></i>
+                            <input type="date" name="tanggal_mulai"
+                                value="{{ old("tanggal_mulai", $startDate) }}">
+                        </span>
+                        @error("tanggal_mulai")
+                            <small class="examination-filter-error">{{ $message }}</small>
+                        @enderror
+                    </label>
+
+                    <label class="examination-filter-field">
+                        <span>Tanggal selesai</span>
+                        <span class="examination-filter-control">
+                            <i class="bi bi-calendar-check"></i>
+                            <input type="date" name="tanggal_selesai"
+                                value="{{ old("tanggal_selesai", $endDate) }}">
+                        </span>
+                        @error("tanggal_selesai")
+                            <small class="examination-filter-error">{{ $message }}</small>
+                        @enderror
+                    </label>
+
+                    <label class="examination-filter-field">
+                        <span>Dokter</span>
+                        <span class="examination-filter-control">
+                            <i class="bi bi-person-badge"></i>
+                            <select name="dokter">
+                                <option value="">Semua dokter</option>
+                                @foreach ($doctors as $doctor)
+                                    <option value="{{ $doctor["code"] }}"
+                                        @selected(old("dokter", $doctorCode) === $doctor["code"])>
+                                        {{ $doctor["name"] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </span>
+                        @error("dokter")
+                            <small class="examination-filter-error">{{ $message }}</small>
+                        @enderror
+                    </label>
+
+                    <div class="examination-filter-actions">
+                        @if ($hasDetailFilters)
+                            <a href="{{ route("riwayatPemeriksaan.index", array_filter([
+                                "status_lanjut" => $careType,
+                            ])) }}">
+                                Hapus
+                            </a>
+                        @endif
+                        <button type="submit">
+                            <i class="bi bi-search"></i>
+                            Terapkan
+                        </button>
+                    </div>
+                </form>
+            </div>
 
             <div class="examination-list-heading">
                 <div>

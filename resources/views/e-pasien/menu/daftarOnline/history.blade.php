@@ -18,6 +18,7 @@
         $patientPhone = $viewAllPatients ? "Seluruh penjamin" : trim((string) ($patient->no_tlp ?? "-"));
         $historyItems = collect($registrations->items())->values();
         $hasFilter = $searchQuery !== "" || $guarantorCode !== "";
+        $activeFilterCount = ($searchQuery !== "" ? 1 : 0) + ($guarantorCode !== "" ? 1 : 0);
         $historyReady = $viewAllPatients || (bool) $patient;
     @endphp
 
@@ -82,36 +83,65 @@
         @endif
 
         <section class="online-history-panel">
-            <form class="online-history-filter" method="GET" action="{{ route("daftarOnline.history") }}">
-                <div class="online-field-control">
-                    <i class="bi bi-search"></i>
-                    <input type="search" name="q" class="form-control" value="{{ $searchQuery }}"
-                        placeholder="{{ $viewAllPatients ? "Cari pasien, no. RM, no. rawat, poli, dokter" : "Cari no. rawat, poli, dokter, status" }}"
-                        @disabled($connectionError || ! $historyReady)>
-                </div>
-                <div class="online-field-control">
-                    <i class="bi bi-shield-check"></i>
-                    <select name="kd_pj" class="form-select" aria-label="Filter penjamin"
-                        @disabled($connectionError || ! $historyReady)>
-                        <option value="">Semua Penjamin</option>
-                        @foreach ($penjaminOptions as $penjamin)
-                            <option value="{{ $penjamin["kd_pj"] }}" @selected($guarantorCode === $penjamin["kd_pj"])>
-                                {{ $penjamin["png_jawab"] }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <button type="submit" class="online-button primary" @disabled($connectionError || ! $historyReady)>
-                    <i class="bi bi-funnel"></i>
-                    <span>Filter</span>
-                </button>
+            <button type="button" class="online-history-mobile-filter-toggle"
+                id="onlineHistoryMobileFilterToggle" aria-controls="onlineHistoryFilterPanel"
+                aria-expanded="true">
+                <span class="online-history-mobile-filter-icon"><i class="bi bi-sliders"></i></span>
+                <span class="online-history-mobile-filter-copy">
+                    <strong>Filter riwayat</strong>
+                    <small>
+                        {{ $hasFilter
+                            ? $activeFilterCount." filter sedang aktif"
+                            : "Cari kunjungan atau pilih penjamin" }}
+                    </small>
+                </span>
                 @if ($hasFilter)
-                    <a href="{{ route("daftarOnline.history") }}" class="online-button secondary">
-                        <i class="bi bi-x-lg"></i>
-                        <span>Reset</span>
-                    </a>
+                    <span class="online-history-mobile-filter-count">{{ $activeFilterCount }}</span>
                 @endif
-            </form>
+                <i class="bi bi-chevron-up online-history-mobile-filter-chevron"></i>
+            </button>
+
+            <div class="online-history-filter-panel" id="onlineHistoryFilterPanel">
+                <form class="online-history-filter" method="GET" action="{{ route("daftarOnline.history") }}">
+                    <div class="online-field-control">
+                        <i class="bi bi-search"></i>
+                        <input type="search" name="q" class="form-control" value="{{ $searchQuery }}"
+                            placeholder="{{ $viewAllPatients ? "Cari pasien, no. RM, no. rawat, poli, dokter" : "Cari no. rawat, poli, dokter, status" }}"
+                            @disabled($connectionError || ! $historyReady)>
+                    </div>
+                    <div class="online-field-control">
+                        <i class="bi bi-shield-check"></i>
+                        <select name="kd_pj" class="form-select" aria-label="Filter penjamin"
+                            @disabled($connectionError || ! $historyReady)>
+                            <option value="">Semua Penjamin</option>
+                            @foreach ($penjaminOptions as $penjamin)
+                                <option value="{{ $penjamin["kd_pj"] }}" @selected($guarantorCode === $penjamin["kd_pj"])>
+                                    {{ $penjamin["png_jawab"] }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <button type="submit" class="online-button primary" @disabled($connectionError || ! $historyReady)>
+                        <i class="bi bi-funnel"></i>
+                        <span>Terapkan Filter</span>
+                    </button>
+                    @if ($hasFilter)
+                        <a href="{{ route("daftarOnline.history") }}" class="online-button secondary">
+                            <i class="bi bi-x-lg"></i>
+                            <span>Reset</span>
+                        </a>
+                    @endif
+                </form>
+            </div>
+
+            <div class="online-history-list-heading">
+                <div>
+                    <span>{{ $hasFilter ? "Hasil filter" : "Riwayat terbaru" }}</span>
+                    <h2>{{ $hasFilter ? "Pendaftaran yang ditemukan" : "Daftar Pendaftaran" }}</h2>
+                    <p>{{ $hasFilter ? "Menampilkan riwayat yang sesuai pencarian Anda." : "Diurutkan dari kunjungan yang paling baru." }}</p>
+                </div>
+                <strong>{{ $registrations->total() }} hasil</strong>
+            </div>
 
             @if ($connectionError || ! $historyReady)
                 <div class="online-empty-state">
@@ -149,13 +179,13 @@
                                 <p>{{ $registration["dokter"] }}</p>
                                 <div class="online-history-meta">
                                     @if ($viewAllPatients)
-                                        <span><i class="bi bi-person-vcard"></i>{{ $registration["nama_pasien"] }} · {{ $registration["no_rkm_medis"] }}</span>
+                                        <span class="meta-patient"><i class="bi bi-person-vcard"></i>{{ $registration["nama_pasien"] }} · {{ $registration["no_rkm_medis"] }}</span>
                                     @endif
-                                    <span><i class="bi bi-calendar3"></i>{{ $registration["tanggal_lengkap"] }}</span>
-                                    <span><i class="bi bi-clock"></i>{{ $registration["jam"] }}</span>
-                                    <span><i class="bi bi-shield-check"></i>{{ $registration["penjamin"] }}</span>
+                                    <span class="meta-date"><i class="bi bi-calendar3"></i>{{ $registration["tanggal_lengkap"] }}</span>
+                                    <span class="meta-time"><i class="bi bi-clock"></i>{{ $registration["jam"] }}</span>
+                                    <span class="meta-guarantor"><i class="bi bi-shield-check"></i>{{ $registration["penjamin"] }}</span>
                                     @if ($registration["didaftarkan_oleh"] !== "-")
-                                        <span><i class="bi bi-person-check"></i>{{ $registration["didaftarkan_oleh"] }}</span>
+                                        <span class="meta-registrant"><i class="bi bi-person-check"></i>{{ $registration["didaftarkan_oleh"] }}</span>
                                     @endif
                                 </div>
                             </div>
@@ -307,6 +337,44 @@
         $(document).ready(function() {
             const historyItems = @json($historyItems);
             const detailModal = $('#onlineHistoryDetailModal');
+            const historyPage = document.querySelector('.online-history-page');
+            const mobileFilterToggle = document.getElementById('onlineHistoryMobileFilterToggle');
+            const filterPanel = document.getElementById('onlineHistoryFilterPanel');
+
+            if (historyPage && mobileFilterToggle && filterPanel) {
+                const mobileFilterMedia = window.matchMedia('(max-width: 767.98px)');
+                let mobileFilterExpanded = false;
+
+                function syncMobileFilter() {
+                    const isExpanded = !mobileFilterMedia.matches || mobileFilterExpanded;
+                    const chevron = mobileFilterToggle.querySelector(
+                        '.online-history-mobile-filter-chevron'
+                    );
+
+                    filterPanel.hidden = !isExpanded;
+                    mobileFilterToggle.setAttribute('aria-expanded', String(isExpanded));
+
+                    if (chevron) {
+                        chevron.className = isExpanded
+                            ? 'bi bi-chevron-up online-history-mobile-filter-chevron'
+                            : 'bi bi-chevron-down online-history-mobile-filter-chevron';
+                    }
+                }
+
+                mobileFilterToggle.addEventListener('click', function() {
+                    mobileFilterExpanded = !mobileFilterExpanded;
+                    syncMobileFilter();
+                });
+
+                if (typeof mobileFilterMedia.addEventListener === 'function') {
+                    mobileFilterMedia.addEventListener('change', syncMobileFilter);
+                } else {
+                    mobileFilterMedia.addListener(syncMobileFilter);
+                }
+
+                historyPage.classList.add('is-filter-enhanced');
+                syncMobileFilter();
+            }
 
             function valueOrDash(value) {
                 const text = String(value ?? '').trim();

@@ -122,6 +122,9 @@ class PemeriksaanRadiologiPageTest extends TestCase
             ->assertSeeText('2 gambar')
             ->assertSee('id="radiologyResultModal"', false)
             ->assertSee('id="radiologyImageViewer"', false)
+            ->assertSee('data-mobile-filter-toggle', false)
+            ->assertSee('id="radiologyFilterPanel"', false)
+            ->assertSeeText('5 aktif')
             ->assertDontSee('target = "_blank"', false)
             ->assertSee('data-result-url=', false);
     }

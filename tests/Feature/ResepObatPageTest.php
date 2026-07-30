@@ -90,6 +90,9 @@ class ResepObatPageTest extends TestCase
             ->assertSeeText('Menunggu Validasi')
             ->assertSee('name="jenis_resep"', false)
             ->assertSee('name="status_layanan"', false)
+            ->assertSee('data-mobile-filter-toggle', false)
+            ->assertSee('id="prescriptionFilterPanel"', false)
+            ->assertSeeText('5 aktif')
             ->assertSee('class="prescription-details"', false)
             ->assertSeeText('Reset semua filter');
     }

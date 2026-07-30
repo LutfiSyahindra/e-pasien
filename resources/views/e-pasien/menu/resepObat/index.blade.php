@@ -43,6 +43,7 @@
             || filled($endDate)
             || filled($search);
         $hasActiveFilters = filled($careType) || $hasDetailFilters;
+        $activeFilterCount = (filled($careType) ? 1 : 0) + count($persistentFilters);
     @endphp
 
     <div class="prescription-page">
@@ -111,6 +112,26 @@
                 @endif
             </div>
 
+            <button type="button" class="prescription-mobile-filter-toggle"
+                data-mobile-filter-toggle aria-controls="prescriptionFilterPanel"
+                aria-expanded="true">
+                <span class="prescription-mobile-filter-toggle-icon">
+                    <i class="bi bi-sliders2"></i>
+                </span>
+                <span class="prescription-mobile-filter-toggle-copy">
+                    <strong>Filter &amp; pencarian</strong>
+                    <small>Pilih layanan, jenis resep, atau tanggal</small>
+                </span>
+                @if ($activeFilterCount > 0)
+                    <span class="prescription-mobile-filter-count">
+                        {{ $activeFilterCount }} aktif
+                    </span>
+                @endif
+                <i class="bi bi-chevron-up prescription-mobile-filter-chevron"></i>
+            </button>
+
+            <div class="prescription-filter-panel" id="prescriptionFilterPanel"
+                data-mobile-filter-panel>
             <nav class="prescription-care-filters" aria-label="Filter jenis layanan resep">
                 @foreach ($careFilters as $value => $filter)
                     @php
@@ -213,6 +234,7 @@
                     </button>
                 </div>
             </form>
+            </div>
 
             <div class="prescription-list-heading">
                 <div>
@@ -439,3 +461,7 @@
         </div>
     </div>
 @endsection
+
+@push("script")
+    @include("e-pasien.menu.partials.mobileHistoryFilters")
+@endpush

@@ -1,5 +1,47 @@
 <script>
     document.addEventListener("DOMContentLoaded", () => {
+        const historyPage = document.querySelector(".examination-history-page");
+        const mobileFilterToggle = document.getElementById("examinationMobileFilterToggle");
+        const filterPanel = document.getElementById("examinationFilterPanel");
+
+        if (historyPage && mobileFilterToggle && filterPanel) {
+            const mobileFilterMedia = window.matchMedia("(max-width: 767.98px)");
+            let mobileFilterExpanded = Boolean(
+                filterPanel.querySelector(".examination-filter-error")
+            );
+
+            const syncMobileFilter = () => {
+                const isMobile = mobileFilterMedia.matches;
+                const isExpanded = !isMobile || mobileFilterExpanded;
+                const chevron = mobileFilterToggle.querySelector(
+                    ".examination-mobile-filter-chevron"
+                );
+
+                filterPanel.hidden = !isExpanded;
+                mobileFilterToggle.setAttribute("aria-expanded", String(isExpanded));
+
+                if (chevron) {
+                    chevron.className = isExpanded
+                        ? "bi bi-chevron-up examination-mobile-filter-chevron"
+                        : "bi bi-chevron-down examination-mobile-filter-chevron";
+                }
+            };
+
+            mobileFilterToggle.addEventListener("click", () => {
+                mobileFilterExpanded = !mobileFilterExpanded;
+                syncMobileFilter();
+            });
+
+            if (typeof mobileFilterMedia.addEventListener === "function") {
+                mobileFilterMedia.addEventListener("change", syncMobileFilter);
+            } else {
+                mobileFilterMedia.addListener(syncMobileFilter);
+            }
+
+            historyPage.classList.add("is-filter-enhanced");
+            syncMobileFilter();
+        }
+
         document.querySelectorAll(".examination-filters a").forEach((filter) => {
             filter.addEventListener("click", () => {
                 if (!filter.classList.contains("active")) {

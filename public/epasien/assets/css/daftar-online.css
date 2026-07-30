@@ -315,6 +315,10 @@
     min-width: 0;
 }
 
+.online-mobile-progress {
+    display: none;
+}
+
 .online-required-note {
     align-items: center;
     background: #fff8eb;
@@ -1687,6 +1691,14 @@
     padding: 18px;
 }
 
+.online-history-mobile-filter-toggle {
+    display: none;
+}
+
+.online-history-filter-panel {
+    min-width: 0;
+}
+
 .online-history-filter {
     align-items: center;
     background: #f8fafc;
@@ -1696,6 +1708,54 @@
     gap: 10px;
     grid-template-columns: minmax(0, 1fr) minmax(210px, 0.45fr) auto auto;
     padding: 12px;
+}
+
+.online-history-list-heading {
+    align-items: flex-end;
+    border-top: 1px solid var(--online-border);
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    padding-top: 16px;
+}
+
+.online-history-list-heading > div {
+    min-width: 0;
+}
+
+.online-history-list-heading > div > span {
+    color: var(--online-green);
+    display: block;
+    font-size: 10px;
+    font-weight: 900;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.online-history-list-heading h2 {
+    color: var(--online-ink);
+    font-size: 18px;
+    font-weight: 900;
+    line-height: 1.3;
+    margin: 0;
+}
+
+.online-history-list-heading p {
+    color: var(--online-muted);
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1.45;
+    margin: 3px 0 0;
+}
+
+.online-history-list-heading > strong {
+    background: #eef4fb;
+    border-radius: 999px;
+    color: #526078;
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 7px 10px;
 }
 
 .online-history-filter .online-field-control .form-control {
@@ -3968,5 +4028,787 @@
     .online-quota-row {
         align-items: flex-start;
         flex-direction: column;
+    }
+}
+
+/* Smartphone patient journey */
+@media (max-width: 767.98px) {
+    .page-content:has(.online-registration-page) {
+        overflow-x: clip;
+        padding: 14px 12px 24px;
+    }
+
+    .online-registration-page {
+        padding-bottom: max(24px, env(safe-area-inset-bottom));
+    }
+
+    .online-breadcrumb {
+        margin-bottom: 10px;
+    }
+
+    .online-page-tabs {
+        display: grid;
+        gap: 6px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-bottom: 12px;
+        padding: 5px;
+        width: 100%;
+    }
+
+    .online-page-tabs a {
+        font-size: 13px;
+        min-height: 46px;
+        min-width: 0;
+        padding: 9px 10px;
+        touch-action: manipulation;
+        width: 100%;
+    }
+
+    .online-header {
+        border-radius: 14px;
+        gap: 14px;
+        margin-bottom: 12px;
+        padding: 18px 15px;
+    }
+
+    .online-header h1 {
+        font-size: 25px;
+    }
+
+    .online-patient-line {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+    }
+
+    .online-patient-line span {
+        min-width: 0;
+        overflow-wrap: anywhere;
+        width: auto;
+    }
+
+    .online-patient-line span:first-child {
+        grid-column: 1 / -1;
+    }
+
+    .online-status-cluster {
+        gap: 8px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+    }
+
+    .online-status-item {
+        gap: 8px;
+        min-width: 0;
+        padding: 10px;
+    }
+
+    .online-status-item > i {
+        flex-basis: 36px;
+        font-size: 16px;
+        height: 36px;
+        width: 36px;
+    }
+
+    .online-status-item > span {
+        min-width: 0;
+    }
+
+    .online-status-item small {
+        font-size: 9px;
+        line-height: 1.3;
+    }
+
+    .online-status-item strong {
+        font-size: 12px;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+    }
+
+    .online-alert {
+        border-radius: 12px;
+        font-size: 13px;
+        line-height: 1.5;
+        margin-bottom: 12px;
+    }
+
+    .online-layout {
+        gap: 12px;
+    }
+
+    .online-header,
+    .online-main-panel,
+    .online-side-panel > section,
+    .online-history-panel {
+        border-radius: 14px;
+    }
+
+    .online-main-panel {
+        padding: 14px;
+    }
+
+    .online-form {
+        gap: 14px;
+    }
+
+    .online-form-heading {
+        gap: 9px;
+    }
+
+    .online-section-header {
+        gap: 10px;
+    }
+
+    .online-section-icon {
+        flex-basis: 40px;
+        height: 40px;
+        width: 40px;
+    }
+
+    .online-required-note {
+        min-height: 30px;
+    }
+
+    .online-mobile-progress {
+        background: #f5f8fd;
+        border: 1px solid #d7e3f2;
+        border-radius: 11px;
+        display: grid;
+        gap: 9px;
+        padding: 11px 12px;
+    }
+
+    .online-mobile-progress > div {
+        display: grid;
+        gap: 2px;
+    }
+
+    .online-mobile-progress > div > span {
+        color: var(--online-muted);
+        font-size: 9px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+
+    .online-mobile-progress > div > strong {
+        color: var(--online-ink);
+        font-size: 12px;
+        font-weight: 900;
+        line-height: 1.4;
+    }
+
+    .online-mobile-progress-track {
+        background: #dfe7f2;
+        border-radius: 999px;
+        display: block;
+        height: 6px;
+        overflow: hidden;
+        width: 100%;
+    }
+
+    .online-mobile-progress-track > span {
+        background: linear-gradient(90deg, var(--online-blue), #4f83e9);
+        border-radius: inherit;
+        display: block;
+        height: 100%;
+        min-width: 25%;
+        transition: width 180ms ease, background-color 180ms ease;
+        width: 25%;
+    }
+
+    .online-mobile-progress.complete {
+        background: #f0fbf7;
+        border-color: #bce7d8;
+    }
+
+    .online-mobile-progress.complete .online-mobile-progress-track > span {
+        background: var(--online-green);
+    }
+
+    .online-choice-flow {
+        border-radius: 12px;
+    }
+
+    .online-choice-card {
+        gap: 11px;
+        padding: 14px 12px 15px;
+        scroll-margin-top: 12px;
+    }
+
+    .online-choice-card:first-child {
+        border-radius: 11px 11px 0 0;
+    }
+
+    .online-choice-card:last-child {
+        border-radius: 0 0 11px 11px;
+    }
+
+    .online-choice-title {
+        align-items: flex-start;
+    }
+
+    .online-choice-title > span {
+        flex-basis: 36px;
+        height: 36px;
+        width: 36px;
+    }
+
+    .online-choice-title label {
+        font-size: 14px;
+    }
+
+    .online-choice-title small {
+        font-size: 12px;
+        line-height: 1.45;
+    }
+
+    .online-date-input .form-control,
+    .online-search input,
+    .online-field-control .form-control,
+    .online-field-control .form-select {
+        font-size: 16px;
+        min-height: 50px;
+    }
+
+    .online-field-control .select2-container--bootstrap4 .select2-selection {
+        height: 50px;
+        min-height: 50px;
+    }
+
+    .online-field-control .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+        font-size: 16px;
+        line-height: 48px;
+    }
+
+    .online-field-control .select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow {
+        height: 48px;
+    }
+
+    .online-field-control .select2-search--dropdown .select2-search__field {
+        font-size: 16px;
+        min-height: 44px;
+    }
+
+    .online-picker-button {
+        height: 40px;
+        right: 5px;
+        width: 42px;
+    }
+
+    .online-schedule-card,
+    .online-guarantor-card {
+        min-height: 0;
+        touch-action: manipulation;
+    }
+
+    .online-schedule-card:hover,
+    .online-guarantor-card:hover {
+        box-shadow: none;
+        transform: none;
+    }
+
+    .online-empty-state {
+        min-height: 128px;
+        padding: 16px 12px;
+    }
+
+    .online-empty-state.compact {
+        min-height: 112px;
+    }
+
+    .online-selected-schedule {
+        border-radius: 11px;
+        padding: 12px;
+    }
+
+    .online-selected-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .online-selected-meta span {
+        border-radius: 8px;
+        line-height: 1.35;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .online-button {
+        min-height: 48px;
+        touch-action: manipulation;
+    }
+
+    .online-actions {
+        gap: 8px;
+        padding-top: 12px;
+    }
+
+    .online-summary.is-mobile-inline {
+        background: #f9fbfd;
+        border: 1px solid var(--online-border);
+        border-radius: 12px;
+        box-shadow: none;
+        padding: 13px;
+    }
+
+    .online-summary.is-mobile-inline .online-summary-header {
+        margin-bottom: 10px;
+    }
+
+    .online-summary.is-mobile-inline .online-summary-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .online-summary.is-mobile-inline .online-summary-list > div {
+        min-width: 0;
+        padding: 9px;
+    }
+
+    .online-summary.is-mobile-inline .online-summary-list dt {
+        font-size: 9px;
+    }
+
+    .online-summary.is-mobile-inline .online-summary-list dd {
+        font-size: 12px;
+    }
+
+    .online-visit-actions {
+        align-items: stretch;
+        flex-direction: column-reverse;
+    }
+
+    .online-visit-actions .online-button {
+        width: 100%;
+    }
+
+    .online-timeline-step {
+        border-left: 3px solid #dce3ec;
+        border-top: 0;
+        padding: 10px 0 10px 12px;
+    }
+
+    .online-visit-number small {
+        overflow-wrap: anywhere;
+    }
+
+    .online-history-filter .online-button,
+    .online-history-action .online-button,
+    .online-history-pagination .online-button {
+        min-height: 48px;
+    }
+
+    .online-history-card:hover {
+        transform: none;
+    }
+}
+
+@media (max-width: 479.98px) {
+    .page-content:has(.online-registration-page) {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .online-breadcrumb span:not(.active),
+    .online-breadcrumb > i:nth-of-type(1) {
+        display: none;
+    }
+
+    .online-eyebrow {
+        font-size: 10px;
+    }
+
+    .online-header {
+        padding: 17px 14px;
+    }
+
+    .online-main-panel {
+        padding: 12px;
+    }
+
+    .online-patient-line {
+        font-size: 12px;
+    }
+
+    .online-status-item {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .online-status-item > i {
+        flex-basis: 34px;
+        height: 34px;
+        width: 34px;
+    }
+
+    .online-form-heading .online-required-note {
+        align-self: flex-start;
+    }
+
+    .online-choice-card {
+        padding-left: 11px;
+        padding-right: 11px;
+    }
+
+    .online-selected-meta {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .online-notice-modal,
+    .online-result-modal {
+        padding: 0 !important;
+    }
+
+    .online-notice-modal .modal-dialog,
+    .online-result-modal .modal-dialog {
+        align-items: flex-end;
+        display: flex;
+        margin: 0;
+        max-width: none;
+        min-height: 100vh;
+        min-height: 100dvh;
+        width: 100%;
+    }
+
+    .online-notice-modal .modal-content,
+    .online-result-modal .modal-content {
+        border-radius: 18px 18px 0 0;
+        max-height: calc(100vh - 12px);
+        max-height: calc(100dvh - 12px);
+        width: 100%;
+    }
+
+    .online-notice-modal .modal-header,
+    .online-result-modal .modal-header {
+        flex: 0 0 auto;
+        padding: 15px 14px;
+    }
+
+    .online-notice-modal .modal-body,
+    .online-result-modal .modal-body {
+        -webkit-overflow-scrolling: touch;
+        overflow-y: auto;
+        padding: 14px;
+    }
+
+    .online-notice-modal .modal-footer,
+    .online-result-modal .modal-footer {
+        flex: 0 0 auto;
+        padding: 10px 12px max(10px, env(safe-area-inset-bottom));
+    }
+
+    .online-notice-modal .online-button,
+    .online-result-modal .online-button {
+        min-height: 50px;
+        touch-action: manipulation;
+    }
+}
+
+@media (max-width: 359.98px) {
+    .online-page-tabs a {
+        font-size: 12px;
+        gap: 6px;
+        padding-left: 7px;
+        padding-right: 7px;
+    }
+
+    .online-patient-line {
+        grid-template-columns: 1fr;
+    }
+
+    .online-patient-line span:first-child {
+        grid-column: auto;
+    }
+
+    .online-status-cluster,
+    .online-summary.is-mobile-inline .online-summary-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Smartphone registration history */
+@media (max-width: 767.98px) {
+    .online-history-panel {
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .online-history-page.is-filter-enhanced .online-history-mobile-filter-toggle {
+        align-items: center;
+        background: #f5f8fc;
+        border: 1px solid #d8e3ef;
+        border-radius: 12px;
+        color: var(--online-ink);
+        display: grid;
+        gap: 10px;
+        grid-template-columns: 38px minmax(0, 1fr) auto auto;
+        min-height: 58px;
+        padding: 9px 11px;
+        text-align: left;
+        touch-action: manipulation;
+        width: 100%;
+    }
+
+    .online-history-mobile-filter-toggle:focus-visible {
+        border-color: #8bb4f4;
+        box-shadow: 0 0 0 3px rgba(47, 101, 213, .12);
+        outline: 0;
+    }
+
+    .online-history-mobile-filter-icon {
+        align-items: center;
+        background: #e5edfb;
+        border-radius: 10px;
+        color: var(--online-blue);
+        display: inline-flex;
+        font-size: 16px;
+        height: 38px;
+        justify-content: center;
+        width: 38px;
+    }
+
+    .online-history-mobile-filter-copy {
+        min-width: 0;
+    }
+
+    .online-history-mobile-filter-copy strong,
+    .online-history-mobile-filter-copy small {
+        display: block;
+    }
+
+    .online-history-mobile-filter-copy strong {
+        font-size: 13px;
+        font-weight: 900;
+    }
+
+    .online-history-mobile-filter-copy small {
+        color: var(--online-muted);
+        font-size: 10px;
+        line-height: 1.35;
+        margin-top: 2px;
+    }
+
+    .online-history-mobile-filter-count {
+        align-items: center;
+        background: var(--online-blue);
+        border-radius: 999px;
+        color: #fff;
+        display: inline-flex;
+        font-size: 10px;
+        font-weight: 900;
+        height: 23px;
+        justify-content: center;
+        min-width: 23px;
+        padding: 0 7px;
+    }
+
+    .online-history-mobile-filter-chevron {
+        color: #718096;
+        font-size: 13px;
+    }
+
+    .online-history-filter-panel {
+        padding-top: 1px;
+    }
+
+    .online-history-filter {
+        border-radius: 11px;
+        gap: 9px;
+        padding: 10px;
+    }
+
+    .online-history-filter .online-button {
+        min-height: 48px;
+        touch-action: manipulation;
+    }
+
+    .online-history-list-heading {
+        align-items: flex-start;
+        gap: 10px;
+        padding-top: 13px;
+    }
+
+    .online-history-list-heading h2 {
+        font-size: 17px;
+    }
+
+    .online-history-list-heading p {
+        font-size: 11px;
+    }
+
+    .online-history-list-heading > strong {
+        font-size: 10px;
+        padding: 6px 9px;
+    }
+
+    .online-history-list {
+        gap: 10px;
+    }
+
+    .online-history-card {
+        border-radius: 12px;
+        gap: 11px;
+        grid-template-columns: minmax(0, 1fr);
+        padding: 12px;
+    }
+
+    .online-history-date {
+        align-items: center;
+        border-radius: 999px;
+        display: inline-grid;
+        gap: 5px;
+        grid-template-columns: auto auto auto;
+        justify-items: start;
+        min-height: 0;
+        padding: 7px 10px;
+        width: max-content;
+    }
+
+    .online-history-date span,
+    .online-history-date small,
+    .online-history-date strong {
+        font-size: 11px;
+        line-height: 1;
+    }
+
+    .online-history-card h2 {
+        font-size: 17px;
+        margin-top: 9px;
+    }
+
+    .online-history-card p {
+        font-size: 13px;
+    }
+
+    .online-history-heading {
+        gap: 6px;
+    }
+
+    .online-history-status,
+    .online-history-payment {
+        font-size: 10px;
+        min-height: 27px;
+        padding: 5px 8px;
+    }
+
+    .online-history-meta {
+        display: grid;
+        gap: 7px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .online-history-meta span {
+        align-items: flex-start;
+        border-radius: 8px;
+        font-size: 11px;
+        line-height: 1.4;
+        min-height: 38px;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        padding: 8px;
+    }
+
+    .online-history-meta .meta-patient,
+    .online-history-meta .meta-date,
+    .online-history-meta .meta-registrant {
+        grid-column: 1 / -1;
+    }
+
+    .online-history-action {
+        align-items: center;
+        border-top: 1px solid var(--online-border);
+        gap: 8px;
+        grid-template-columns: minmax(0, 1fr) auto;
+        justify-items: stretch;
+        padding-top: 11px;
+    }
+
+    .online-history-action > span {
+        justify-items: start;
+        min-width: 0;
+    }
+
+    .online-history-action strong {
+        font-size: 24px;
+    }
+
+    .online-history-action em {
+        font-size: 11px;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        text-align: left;
+    }
+
+    .online-history-action .online-button {
+        min-height: 48px;
+        padding-left: 12px;
+        padding-right: 12px;
+        width: auto;
+    }
+
+    .online-history-pagination {
+        gap: 8px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .online-history-pagination > .online-button {
+        justify-content: center;
+        min-height: 48px;
+        width: 100%;
+    }
+
+    .online-history-page-count {
+        grid-column: 1 / -1;
+        grid-row: 1;
+    }
+
+    .online-history-modal .modal-body {
+        scroll-padding-top: 12px;
+    }
+
+    .online-history-modal .online-ticket {
+        margin-bottom: 10px;
+    }
+}
+
+@media (max-width: 359.98px) {
+    .online-history-mobile-filter-copy small {
+        display: none;
+    }
+
+    .online-history-page.is-filter-enhanced .online-history-mobile-filter-toggle {
+        grid-template-columns: 36px minmax(0, 1fr) auto auto;
+        min-height: 54px;
+        padding: 8px 9px;
+    }
+
+    .online-history-mobile-filter-icon {
+        height: 36px;
+        width: 36px;
+    }
+
+    .online-history-action {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .online-history-action .online-button {
+        width: 100%;
+    }
+
+    .online-history-meta {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .online-history-meta .meta-time,
+    .online-history-meta .meta-guarantor {
+        grid-column: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .online-mobile-progress-track > span {
+        transition: none;
     }
 }

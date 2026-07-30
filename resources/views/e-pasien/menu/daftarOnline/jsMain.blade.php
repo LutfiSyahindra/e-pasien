@@ -35,6 +35,12 @@
             summaryTime: $('#summaryTime'),
             summaryGuarantor: $('#summaryGuarantor'),
             summaryQueue: $('#summaryQueue'),
+            mobileProgress: $('#onlineMobileProgress'),
+            mobileProgressLabel: $('#onlineMobileProgressLabel'),
+            mobileProgressBar: $('#onlineMobileProgressBar'),
+            summaryPanel: $('#onlineVisitSummary'),
+            sidePanel: $('#onlineSidePanel'),
+            formActions: $('#onlineRegistrationForm > .online-actions'),
             controlLetterList: $('#bpjsControlLetterList'),
             controlLetterDetail: $('#bpjsControlLetterDetail'),
             controlLetterTitle: $('#bpjsControlLetterTitle'),
@@ -52,6 +58,35 @@
             cancelPendingRegistration: $('#cancelPendingRegistration'),
             noticeModal: document.getElementById('onlineRegistrationNoticeModal'),
         };
+
+        const mobileLayoutMedia = window.matchMedia('(max-width: 767.98px)');
+
+        function syncMobileSummaryPlacement() {
+            if (!elements.summaryPanel.length || !elements.formActions.length) {
+                return;
+            }
+
+            if (mobileLayoutMedia.matches) {
+                elements.summaryPanel
+                    .addClass('is-mobile-inline')
+                    .insertBefore(elements.formActions);
+                return;
+            }
+
+            if (elements.sidePanel.length) {
+                elements.summaryPanel
+                    .removeClass('is-mobile-inline')
+                    .appendTo(elements.sidePanel);
+            }
+        }
+
+        if (typeof mobileLayoutMedia.addEventListener === 'function') {
+            mobileLayoutMedia.addEventListener('change', syncMobileSummaryPlacement);
+        } else {
+            mobileLayoutMedia.addListener(syncMobileSummaryPlacement);
+        }
+
+        syncMobileSummaryPlacement();
 
         function alertAction(options) {
             if (window.Swal) {
@@ -619,12 +654,39 @@
             const hasDoctor = Boolean(state.selectedSchedule);
             const hasGuarantor = Boolean(state.selectedGuarantor);
             const hasGuarantorDetails = hasGuarantor && hasRequiredCardNumber();
+            let activeStep = 1;
+            let activeLabel = 'Tanggal kunjungan';
 
             $('.online-choice-card').removeClass('active done');
             $('.online-choice-card[data-choice="date"]').toggleClass('done', hasDate).toggleClass('active', !hasDate);
             $('.online-choice-card[data-choice="clinic"]').toggleClass('done', hasClinic).toggleClass('active', hasDate && !hasClinic);
             $('.online-choice-card[data-choice="doctor"]').toggleClass('done', hasDoctor).toggleClass('active', hasClinic && !hasDoctor);
             $('.online-choice-card[data-choice="guarantor"]').toggleClass('done', hasGuarantorDetails).toggleClass('active', hasDoctor && !hasGuarantorDetails);
+
+            if (hasGuarantorDetails) {
+                activeStep = 4;
+                activeLabel = 'Siap simpan pendaftaran';
+            } else if (hasDoctor) {
+                activeStep = 4;
+                activeLabel = isBpjsSelected() ? 'Penjamin dan nomor BPJS' : 'Penjamin';
+            } else if (hasClinic) {
+                activeStep = 3;
+                activeLabel = 'Dokter';
+            } else if (hasDate) {
+                activeStep = 2;
+                activeLabel = 'Poli tujuan';
+            }
+
+            elements.mobileProgressLabel.text(
+                hasGuarantorDetails
+                    ? 'Semua data lengkap · Siap disimpan'
+                    : `Langkah ${activeStep} dari 4 · ${activeLabel}`
+            );
+            elements.mobileProgressBar.css(
+                'width',
+                `${hasGuarantorDetails ? 100 : activeStep * 25}%`
+            );
+            elements.mobileProgress.toggleClass('complete', hasGuarantorDetails);
         }
 
         function updateSubmitState() {

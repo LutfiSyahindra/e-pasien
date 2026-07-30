@@ -46,6 +46,7 @@
         ], fn ($value) => $value !== null && $value !== "");
         $hasDetailFilters = count($persistentFilters) > 0;
         $hasActiveFilters = $resultStatus !== null || $hasDetailFilters;
+        $activeFilterCount = ($resultStatus !== null ? 1 : 0) + count($persistentFilters);
     @endphp
 
     @include("e-pasien.menu.pemeriksaanLaborat.modalHasil")
@@ -111,6 +112,26 @@
                 @endif
             </div>
 
+            <button type="button" class="laboratory-mobile-filter-toggle"
+                data-mobile-filter-toggle aria-controls="laboratoryFilterPanel"
+                aria-expanded="true">
+                <span class="laboratory-mobile-filter-toggle-icon">
+                    <i class="bi bi-sliders2"></i>
+                </span>
+                <span class="laboratory-mobile-filter-toggle-copy">
+                    <strong>Filter &amp; pencarian</strong>
+                    <small>Pilih status, layanan, atau tanggal</small>
+                </span>
+                @if ($activeFilterCount > 0)
+                    <span class="laboratory-mobile-filter-count">
+                        {{ $activeFilterCount }} aktif
+                    </span>
+                @endif
+                <i class="bi bi-chevron-up laboratory-mobile-filter-chevron"></i>
+            </button>
+
+            <div class="laboratory-filter-panel" id="laboratoryFilterPanel"
+                data-mobile-filter-panel>
             <nav class="laboratory-status-filters" aria-label="Filter status hasil laboratorium">
                 @foreach ($statusFilters as $value => $filter)
                     @php
@@ -213,6 +234,7 @@
                     </button>
                 </div>
             </form>
+            </div>
 
             <div class="laboratory-list-heading">
                 <div>
@@ -417,5 +439,6 @@
 @endsection
 
 @push("script")
+    @include("e-pasien.menu.partials.mobileHistoryFilters")
     @include("e-pasien.menu.pemeriksaanLaborat.jsMain")
 @endpush
