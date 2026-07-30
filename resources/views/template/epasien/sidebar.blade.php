@@ -104,6 +104,22 @@
                         </li>
                     </ul>
                 </li>
+                <li class="{{ request()->routeIs("kamar.*") ? "mm-active" : "" }}">
+                    <a href="javascript:;" class="has-arrow">
+                        <div class="parent-icon"><i class="bi bi-building"></i>
+                        </div>
+                        <div class="menu-title">Fasilitas &amp; Tarif</div>
+                    </a>
+                    <ul class="{{ request()->routeIs("kamar.*") ? "mm-show" : "" }}">
+                        <li>
+                            <a href="{{ route("kamar.index") }}"
+                                class="{{ request()->routeIs("kamar.*") ? "mm-active" : "" }}">
+                                <i class="bi bi-door-open"></i>
+                                Kamar
+                            </a>
+                        </li>
+                    </ul>
+                </li>
                 <li>
                     <a href="javascript:;" class="has-arrow">
                         <div class="parent-icon"><i class="bi bi-calendar2-plus"></i>

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Epasien\bridging\RencanaKontrolController;
 use App\Http\Controllers\Epasien\menu\DaftarOnlineController;
+use App\Http\Controllers\Epasien\menu\FasilitasTarif\KamarController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\OperasiController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\PemeriksaanLaboratController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\PemeriksaanRadiologiController;
@@ -76,6 +77,8 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('e-pasien/menu')->group(function () {
+        Route::get('/fasilitas-tarif/kamar', [KamarController::class, 'index'])
+            ->name('kamar.index');
         Route::get('/permintaan-tindakan/pemeriksaan-laborat', [PemeriksaanLaboratController::class, 'index'])
             ->name('pemeriksaanLaborat.index');
         Route::get('/permintaan-tindakan/pemeriksaan-laborat/hasil', [PemeriksaanLaboratController::class, 'result'])
