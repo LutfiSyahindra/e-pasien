@@ -104,18 +104,39 @@
                         </li>
                     </ul>
                 </li>
-                <li class="{{ request()->routeIs("kamar.*") ? "mm-active" : "" }}">
+                <li class="{{ request()->routeIs("kamar.*", "laboratorium.*", "poliklinik.*", "radiologi.*") ? "mm-active" : "" }}">
                     <a href="javascript:;" class="has-arrow">
                         <div class="parent-icon"><i class="bi bi-building"></i>
                         </div>
                         <div class="menu-title">Fasilitas &amp; Tarif</div>
                     </a>
-                    <ul class="{{ request()->routeIs("kamar.*") ? "mm-show" : "" }}">
+                    <ul class="{{ request()->routeIs("kamar.*", "laboratorium.*", "poliklinik.*", "radiologi.*") ? "mm-show" : "" }}">
                         <li>
                             <a href="{{ route("kamar.index") }}"
                                 class="{{ request()->routeIs("kamar.*") ? "mm-active" : "" }}">
                                 <i class="bi bi-door-open"></i>
                                 Kamar
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route("poliklinik.index") }}"
+                                class="{{ request()->routeIs("poliklinik.*") ? "mm-active" : "" }}">
+                                <i class="bi bi-hospital"></i>
+                                Poliklinik
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route("laboratorium.index") }}"
+                                class="{{ request()->routeIs("laboratorium.*") ? "mm-active" : "" }}">
+                                <i class="bi bi-droplet-half"></i>
+                                Laboratorium
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route("radiologi.index") }}"
+                                class="{{ request()->routeIs("radiologi.*") ? "mm-active" : "" }}">
+                                <i class="bi bi-radioactive"></i>
+                                Radiologi
                             </a>
                         </li>
                     </ul>

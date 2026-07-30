@@ -3,6 +3,9 @@
 use App\Http\Controllers\Epasien\bridging\RencanaKontrolController;
 use App\Http\Controllers\Epasien\menu\DaftarOnlineController;
 use App\Http\Controllers\Epasien\menu\FasilitasTarif\KamarController;
+use App\Http\Controllers\Epasien\menu\FasilitasTarif\LaboratoriumController;
+use App\Http\Controllers\Epasien\menu\FasilitasTarif\PoliklinikController;
+use App\Http\Controllers\Epasien\menu\FasilitasTarif\RadiologiController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\OperasiController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\PemeriksaanLaboratController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\PemeriksaanRadiologiController;
@@ -79,6 +82,12 @@ Route::middleware('auth')->group(function () {
     Route::prefix('e-pasien/menu')->group(function () {
         Route::get('/fasilitas-tarif/kamar', [KamarController::class, 'index'])
             ->name('kamar.index');
+        Route::get('/fasilitas-tarif/laboratorium', [LaboratoriumController::class, 'index'])
+            ->name('laboratorium.index');
+        Route::get('/fasilitas-tarif/poliklinik', [PoliklinikController::class, 'index'])
+            ->name('poliklinik.index');
+        Route::get('/fasilitas-tarif/radiologi', [RadiologiController::class, 'index'])
+            ->name('radiologi.index');
         Route::get('/permintaan-tindakan/pemeriksaan-laborat', [PemeriksaanLaboratController::class, 'index'])
             ->name('pemeriksaanLaborat.index');
         Route::get('/permintaan-tindakan/pemeriksaan-laborat/hasil', [PemeriksaanLaboratController::class, 'result'])

@@ -1,0 +1,1031 @@
+.page-content:has(.polyclinic-rate-page) {
+    background:
+        radial-gradient(circle at 95% 0, rgba(87, 92, 190, 0.12), transparent 29%),
+        linear-gradient(180deg, #f8f9fd 0%, #f0f3f9 100%) !important;
+}
+
+.polyclinic-rate-page {
+    --clinic-primary: #3f51b5;
+    --clinic-primary-dark: #283777;
+    --clinic-primary-soft: #eef0ff;
+    --clinic-accent: #168aa4;
+    --clinic-ink: #263653;
+    --clinic-muted: #6d7a92;
+    --clinic-border: #dce2ef;
+    --clinic-surface: #fff;
+    --clinic-success: #12815f;
+    --clinic-success-soft: #e8f7f1;
+    --clinic-shadow: 0 15px 36px rgba(38, 54, 83, 0.08);
+    color: var(--clinic-ink);
+    font-family: "Roboto", sans-serif;
+    margin: 0 auto;
+    max-width: 1440px;
+    padding-bottom: 1rem;
+    width: 100%;
+}
+
+.polyclinic-rate-page *,
+.polyclinic-rate-page *::before,
+.polyclinic-rate-page *::after {
+    box-sizing: border-box;
+}
+
+.polyclinic-rate-page a,
+.polyclinic-rate-page button,
+.polyclinic-rate-page input {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.polyclinic-rate-breadcrumb {
+    align-items: center;
+    color: var(--clinic-muted);
+    display: flex;
+    font-size: 0.78rem;
+    gap: 0.45rem;
+    margin: 0 0 1rem;
+    min-width: 0;
+}
+
+.polyclinic-rate-breadcrumb a {
+    align-items: center;
+    color: var(--clinic-primary);
+    display: inline-flex;
+    font-size: 1rem;
+    justify-content: center;
+    min-height: 32px;
+    min-width: 32px;
+}
+
+.polyclinic-rate-breadcrumb > i {
+    font-size: 0.62rem;
+    opacity: 0.6;
+}
+
+.polyclinic-rate-breadcrumb span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.polyclinic-rate-breadcrumb .active {
+    color: var(--clinic-ink);
+    font-weight: 700;
+}
+
+.polyclinic-rate-hero {
+    align-items: center;
+    background:
+        radial-gradient(circle at 91% 5%, rgba(22, 138, 164, 0.18), transparent 32%),
+        linear-gradient(135deg, rgba(63, 81, 181, 0.12), rgba(255, 255, 255, 0.98) 60%),
+        #fff;
+    border: 1px solid var(--clinic-border);
+    border-radius: 20px;
+    box-shadow: 0 18px 45px rgba(38, 54, 83, 0.08);
+    display: flex;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    gap: 2rem;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    padding: 1.8rem 2rem;
+    position: relative;
+}
+
+.polyclinic-rate-hero::before {
+    background: linear-gradient(180deg, var(--clinic-accent), var(--clinic-primary));
+    content: "";
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 5px;
+}
+
+.polyclinic-rate-hero-copy {
+    min-width: 0;
+}
+
+.polyclinic-rate-eyebrow {
+    align-items: center;
+    color: var(--clinic-primary);
+    display: inline-flex;
+    font-size: 0.7rem;
+    font-weight: 900;
+    gap: 0.45rem;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.45rem;
+    text-transform: uppercase;
+}
+
+.polyclinic-rate-hero h1 {
+    color: var(--clinic-ink);
+    font-size: clamp(1.75rem, 3vw, 2.4rem);
+    font-weight: 900;
+    line-height: 1.12;
+    margin: 0;
+}
+
+.polyclinic-rate-hero p {
+    color: #4d5e79;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    margin: 0.65rem 0 0;
+    max-width: 700px;
+}
+
+.polyclinic-rate-hero-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1rem;
+}
+
+.polyclinic-rate-hero-actions > span,
+.polyclinic-rate-hero-actions > a {
+    align-items: center;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.73rem;
+    font-weight: 800;
+    gap: 0.42rem;
+    min-height: 36px;
+    padding: 0.45rem 0.75rem;
+}
+
+.polyclinic-rate-hero-actions > span {
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid #d9e0ed;
+    color: #4c5c76;
+}
+
+.polyclinic-rate-hero-actions > span i {
+    color: var(--clinic-primary);
+}
+
+.polyclinic-rate-hero-actions > a {
+    background: var(--clinic-primary);
+    color: #fff;
+    text-decoration: none;
+}
+
+.polyclinic-rate-hero-total {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(63, 81, 181, 0.17);
+    border-radius: 17px;
+    box-shadow: 0 12px 30px rgba(63, 81, 181, 0.08);
+    display: flex;
+    flex: 0 0 auto;
+    gap: 0.8rem;
+    min-width: 210px;
+    padding: 1rem;
+}
+
+.polyclinic-rate-hero-icon {
+    align-items: center;
+    background: linear-gradient(135deg, var(--clinic-primary), var(--clinic-accent));
+    border-radius: 14px;
+    color: #fff;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 1.35rem;
+    height: 54px;
+    justify-content: center;
+    width: 54px;
+}
+
+.polyclinic-rate-hero-total > span:last-child {
+    display: grid;
+}
+
+.polyclinic-rate-hero-total small,
+.polyclinic-rate-hero-total em {
+    color: var(--clinic-muted);
+    font-size: 0.65rem;
+    font-style: normal;
+}
+
+.polyclinic-rate-hero-total strong {
+    color: var(--clinic-primary-dark);
+    font-size: 1.65rem;
+    font-weight: 900;
+    line-height: 1.1;
+}
+
+.polyclinic-rate-alert {
+    align-items: flex-start;
+    background: #fff6e6;
+    border: 1px solid #f2d6a2;
+    border-radius: 15px;
+    color: #7a5518;
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding: 0.9rem 1rem;
+}
+
+.polyclinic-rate-alert > i {
+    flex: 0 0 auto;
+    font-size: 1.15rem;
+}
+
+.polyclinic-rate-alert div {
+    display: grid;
+    gap: 0.2rem;
+}
+
+.polyclinic-rate-alert strong {
+    font-size: 0.82rem;
+}
+
+.polyclinic-rate-alert span {
+    font-size: 0.75rem;
+    line-height: 1.5;
+}
+
+.polyclinic-rate-overview {
+    display: grid;
+    gap: 0.8rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: 1rem;
+}
+
+.polyclinic-rate-overview > div {
+    align-items: center;
+    background: var(--clinic-surface);
+    border: 1px solid var(--clinic-border);
+    border-radius: 15px;
+    box-shadow: 0 9px 24px rgba(38, 54, 83, 0.05);
+    display: flex;
+    gap: 0.7rem;
+    min-width: 0;
+    padding: 0.85rem;
+}
+
+.polyclinic-rate-overview > div > span {
+    align-items: center;
+    background: var(--clinic-primary-soft);
+    border-radius: 11px;
+    color: var(--clinic-primary);
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 1rem;
+    height: 40px;
+    justify-content: center;
+    width: 40px;
+}
+
+.polyclinic-rate-overview > div > div {
+    display: grid;
+    min-width: 0;
+}
+
+.polyclinic-rate-overview small {
+    color: var(--clinic-muted);
+    font-size: 0.63rem;
+    font-weight: 700;
+}
+
+.polyclinic-rate-overview strong {
+    color: var(--clinic-ink);
+    font-size: 0.9rem;
+    font-weight: 900;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.polyclinic-rate-content {
+    background: var(--clinic-surface);
+    border: 1px solid var(--clinic-border);
+    border-radius: 20px;
+    box-shadow: var(--clinic-shadow);
+    padding: 1.2rem;
+}
+
+.polyclinic-rate-content-heading,
+.polyclinic-rate-results-heading {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.polyclinic-rate-content-heading > div,
+.polyclinic-rate-results-heading > div {
+    min-width: 0;
+}
+
+.polyclinic-rate-content-heading > div > span {
+    color: var(--clinic-primary);
+    display: block;
+    font-size: 0.67rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.2rem;
+    text-transform: uppercase;
+}
+
+.polyclinic-rate-content-heading h2,
+.polyclinic-rate-results-heading h2 {
+    color: var(--clinic-ink);
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    font-weight: 900;
+    margin: 0;
+}
+
+.polyclinic-rate-content-heading h2 {
+    font-size: 1.2rem;
+}
+
+.polyclinic-rate-content-heading > a {
+    align-items: center;
+    background: var(--clinic-primary-soft);
+    border-radius: 11px;
+    color: var(--clinic-primary-dark);
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 0.74rem;
+    font-weight: 900;
+    gap: 0.4rem;
+    min-height: 42px;
+    padding: 0.65rem 0.8rem;
+    text-decoration: none;
+}
+
+.polyclinic-rate-search {
+    align-items: end;
+    background: #f6f7fb;
+    border: 1px solid #e1e5ef;
+    border-radius: 16px;
+    display: grid;
+    gap: 0.8rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin-top: 1rem;
+    padding: 0.9rem;
+}
+
+.polyclinic-rate-search label {
+    color: #4c5c76;
+    display: grid;
+    font-size: 0.67rem;
+    font-weight: 800;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.polyclinic-rate-control {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #d2d9e7;
+    border-radius: 12px;
+    display: flex;
+    min-height: 48px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.polyclinic-rate-control:focus-within {
+    border-color: var(--clinic-primary);
+    box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.12);
+}
+
+.polyclinic-rate-control > i {
+    color: var(--clinic-primary);
+    flex: 0 0 auto;
+    margin-left: 0.8rem;
+}
+
+.polyclinic-rate-control input {
+    background: transparent;
+    border: 0;
+    color: var(--clinic-ink);
+    font-size: 0.82rem;
+    height: 46px;
+    min-width: 0;
+    outline: 0;
+    padding: 0 0.75rem;
+    width: 100%;
+}
+
+.polyclinic-rate-field-error {
+    color: #b42318;
+    font-size: 0.65rem;
+}
+
+.polyclinic-rate-search > button {
+    align-items: center;
+    background: linear-gradient(135deg, var(--clinic-primary), var(--clinic-accent));
+    border: 0;
+    border-radius: 12px;
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.78rem;
+    font-weight: 900;
+    gap: 0.4rem;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0 1.15rem;
+}
+
+.polyclinic-rate-search > button:disabled,
+.polyclinic-rate-control input:disabled {
+    cursor: not-allowed;
+    opacity: 0.62;
+}
+
+.polyclinic-rate-results-heading {
+    border-bottom: 1px solid #e6e9f1;
+    margin: 1.3rem 0 1rem;
+    padding-bottom: 0.75rem;
+}
+
+.polyclinic-rate-results-heading h2 {
+    font-size: 1rem;
+}
+
+.polyclinic-rate-results-heading p {
+    color: var(--clinic-muted);
+    font-size: 0.7rem;
+    margin: 0.2rem 0 0;
+}
+
+.polyclinic-rate-results-heading > span {
+    background: var(--clinic-primary-soft);
+    border-radius: 999px;
+    color: var(--clinic-primary-dark);
+    flex: 0 0 auto;
+    font-size: 0.67rem;
+    font-weight: 900;
+    padding: 0.42rem 0.65rem;
+}
+
+.polyclinic-rate-grid {
+    display: grid;
+    gap: 0.9rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.polyclinic-rate-card {
+    background: #fff;
+    border: 1px solid var(--clinic-border);
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    padding: 1rem;
+    position: relative;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.polyclinic-rate-card::before {
+    background: linear-gradient(90deg, var(--clinic-primary), var(--clinic-accent));
+    content: "";
+    height: 3px;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.polyclinic-rate-card:hover {
+    border-color: #bbc4e5;
+    box-shadow: 0 14px 30px rgba(38, 54, 83, 0.1);
+    transform: translateY(-2px);
+}
+
+.polyclinic-rate-card-top {
+    align-items: center;
+    display: flex;
+    gap: 0.6rem;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.polyclinic-rate-status,
+.polyclinic-rate-code {
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 900;
+}
+
+.polyclinic-rate-status {
+    align-items: center;
+    background: var(--clinic-success-soft);
+    color: var(--clinic-success);
+    display: inline-flex;
+    gap: 0.3rem;
+    padding: 0.4rem 0.6rem;
+}
+
+.polyclinic-rate-code {
+    background: #f1f3f8;
+    color: #66748d;
+    max-width: 42%;
+    overflow: hidden;
+    padding: 0.4rem 0.6rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.polyclinic-rate-card-main {
+    align-items: center;
+    display: flex;
+    flex: 1 1 auto;
+    gap: 0.8rem;
+    min-height: 126px;
+    padding: 1rem 0.15rem;
+}
+
+.polyclinic-rate-card-icon {
+    align-items: center;
+    background: linear-gradient(135deg, #f0f2ff, #e9f3f8);
+    border: 1px solid #d9def1;
+    border-radius: 15px;
+    color: var(--clinic-primary);
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 1.35rem;
+    height: 58px;
+    justify-content: center;
+    width: 58px;
+}
+
+.polyclinic-rate-card-main > div {
+    min-width: 0;
+}
+
+.polyclinic-rate-card-main small {
+    color: var(--clinic-muted);
+    display: block;
+    font-size: 0.67rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.polyclinic-rate-card-main h3 {
+    color: var(--clinic-ink);
+    display: -webkit-box;
+    font-size: 0.95rem;
+    font-weight: 900;
+    line-height: 1.45;
+    margin: 0;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+.polyclinic-rate-card-main div > span {
+    align-items: center;
+    color: var(--clinic-muted);
+    display: inline-flex;
+    font-size: 0.64rem;
+    gap: 0.28rem;
+    margin-top: 0.45rem;
+}
+
+.polyclinic-rate-fees {
+    display: grid;
+    gap: 0.55rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.polyclinic-rate-fee {
+    align-items: center;
+    background: linear-gradient(135deg, #f1f3ff, #f8f9fd);
+    border: 1px solid #dde1f1;
+    border-radius: 13px;
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: auto minmax(0, 1fr);
+    min-width: 0;
+    padding: 0.7rem;
+}
+
+.polyclinic-rate-fee > span {
+    align-items: center;
+    background: #fff;
+    border-radius: 9px;
+    color: var(--clinic-primary);
+    display: inline-flex;
+    font-size: 0.88rem;
+    height: 32px;
+    justify-content: center;
+    width: 32px;
+}
+
+.polyclinic-rate-fee > div {
+    display: grid;
+    min-width: 0;
+}
+
+.polyclinic-rate-fee small {
+    color: var(--clinic-muted);
+    font-size: 0.57rem;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 0.12rem;
+}
+
+.polyclinic-rate-fee strong {
+    color: var(--clinic-primary-dark);
+    font-size: 0.78rem;
+    font-weight: 900;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.polyclinic-rate-fee.is-unavailable {
+    background: #fff8ed;
+    border-color: #f1dbb7;
+}
+
+.polyclinic-rate-fee.is-unavailable > span,
+.polyclinic-rate-fee.is-unavailable strong {
+    color: #946216;
+}
+
+.polyclinic-rate-empty {
+    align-items: center;
+    border: 1px dashed #ccd3e3;
+    border-radius: 17px;
+    display: flex;
+    flex-direction: column;
+    min-height: 260px;
+    padding: 2rem 1rem;
+    text-align: center;
+}
+
+.polyclinic-rate-empty > span {
+    align-items: center;
+    background: var(--clinic-primary-soft);
+    border-radius: 50%;
+    color: var(--clinic-primary);
+    display: inline-flex;
+    font-size: 1.5rem;
+    height: 58px;
+    justify-content: center;
+    margin-bottom: 0.85rem;
+    width: 58px;
+}
+
+.polyclinic-rate-empty strong {
+    color: var(--clinic-ink);
+    font-size: 1rem;
+}
+
+.polyclinic-rate-empty p {
+    color: var(--clinic-muted);
+    font-size: 0.8rem;
+    line-height: 1.55;
+    margin: 0.4rem 0 0;
+}
+
+.polyclinic-rate-empty a {
+    background: var(--clinic-primary-soft);
+    border-radius: 10px;
+    color: var(--clinic-primary-dark);
+    font-size: 0.77rem;
+    font-weight: 900;
+    margin-top: 1rem;
+    min-height: 42px;
+    padding: 0.7rem 0.9rem;
+    text-decoration: none;
+}
+
+.polyclinic-rate-pagination {
+    align-items: center;
+    display: flex;
+    gap: 0.65rem;
+    justify-content: center;
+    margin-top: 1.25rem;
+}
+
+.polyclinic-rate-pagination > a,
+.polyclinic-rate-pagination > span:not(.polyclinic-rate-page-count) {
+    align-items: center;
+    border: 1px solid var(--clinic-border);
+    border-radius: 12px;
+    color: var(--clinic-primary-dark);
+    display: inline-flex;
+    font-size: 0.76rem;
+    font-weight: 900;
+    gap: 0.35rem;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 0.85rem;
+    text-decoration: none;
+}
+
+.polyclinic-rate-pagination > a {
+    background: #fff;
+}
+
+.polyclinic-rate-pagination > a:hover {
+    background: var(--clinic-primary-soft);
+    border-color: #bec6e4;
+}
+
+.polyclinic-rate-pagination .disabled {
+    color: #9da6b9 !important;
+    cursor: not-allowed;
+}
+
+.polyclinic-rate-page-count {
+    align-items: center;
+    background: var(--clinic-primary);
+    border-radius: 12px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 48px;
+    min-width: 78px;
+    padding: 0.35rem 0.65rem;
+}
+
+.polyclinic-rate-page-count small {
+    font-size: 0.56rem;
+    opacity: 0.82;
+    text-transform: uppercase;
+}
+
+.polyclinic-rate-page-count strong {
+    font-size: 0.78rem;
+}
+
+.polyclinic-rate-disclaimer {
+    align-items: flex-start;
+    background: #f0f3fb;
+    border: 1px solid #d8dfef;
+    border-radius: 16px;
+    color: #4d5e79;
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding: 0.95rem 1rem;
+}
+
+.polyclinic-rate-disclaimer > i {
+    color: var(--clinic-primary);
+    flex: 0 0 auto;
+    font-size: 1.05rem;
+    margin-top: 0.05rem;
+}
+
+.polyclinic-rate-disclaimer p {
+    font-size: 0.76rem;
+    line-height: 1.55;
+    margin: 0;
+}
+
+.polyclinic-rate-disclaimer strong {
+    color: var(--clinic-ink);
+    display: block;
+    margin-bottom: 0.15rem;
+}
+
+@media (max-width: 1199.98px) {
+    .polyclinic-rate-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 991.98px) {
+    .polyclinic-rate-hero {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .polyclinic-rate-hero-total {
+        min-width: 0;
+        width: 100%;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .page-content:has(.polyclinic-rate-page) {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .polyclinic-rate-breadcrumb {
+        margin-bottom: 0.75rem;
+    }
+
+    .polyclinic-rate-hero {
+        border-radius: 17px;
+        gap: 1rem;
+        margin-bottom: 0.8rem;
+        padding: 1.25rem 1rem;
+    }
+
+    .polyclinic-rate-hero p {
+        font-size: 0.82rem;
+    }
+
+    .polyclinic-rate-hero-total {
+        padding: 0.85rem;
+    }
+
+    .polyclinic-rate-overview {
+        gap: 0.65rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .polyclinic-rate-overview > div {
+        min-height: 72px;
+        padding: 0.75rem;
+    }
+
+    .polyclinic-rate-overview > div:last-child {
+        grid-column: 1 / -1;
+    }
+
+    .polyclinic-rate-content {
+        border-radius: 17px;
+        padding: 0.9rem;
+    }
+
+    .polyclinic-rate-content-heading {
+        align-items: flex-start;
+    }
+
+    .polyclinic-rate-content-heading > a {
+        min-height: 44px;
+    }
+
+    .polyclinic-rate-search {
+        gap: 0.65rem;
+        padding: 0.75rem;
+    }
+
+    .polyclinic-rate-search > button,
+    .polyclinic-rate-control {
+        min-height: 52px;
+    }
+
+    .polyclinic-rate-control input {
+        font-size: 16px;
+        height: 50px;
+    }
+
+    .polyclinic-rate-results-heading {
+        margin-top: 1.1rem;
+    }
+
+    .polyclinic-rate-grid {
+        gap: 0.85rem;
+        grid-template-columns: 1fr;
+    }
+
+    .polyclinic-rate-card {
+        box-shadow:
+            0 11px 28px rgba(38, 54, 83, 0.08),
+            0 2px 7px rgba(38, 54, 83, 0.04);
+    }
+
+    .polyclinic-rate-card:hover {
+        transform: none;
+    }
+
+    .polyclinic-rate-pagination > a,
+    .polyclinic-rate-pagination > span:not(.polyclinic-rate-page-count) {
+        min-height: 48px;
+    }
+}
+
+@media (max-width: 479.98px) {
+    .page-content:has(.polyclinic-rate-page) {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .polyclinic-rate-breadcrumb {
+        padding-left: 2px;
+    }
+
+    .polyclinic-rate-hero {
+        border-radius: 15px;
+        padding: 1.15rem 1rem;
+    }
+
+    .polyclinic-rate-hero h1 {
+        font-size: 1.65rem;
+    }
+
+    .polyclinic-rate-hero-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .polyclinic-rate-hero-actions > span,
+    .polyclinic-rate-hero-actions > a {
+        border-radius: 11px;
+        justify-content: center;
+        min-height: 44px;
+        width: 100%;
+    }
+
+    .polyclinic-rate-overview {
+        grid-template-columns: 1fr;
+    }
+
+    .polyclinic-rate-overview > div:last-child {
+        grid-column: auto;
+    }
+
+    .polyclinic-rate-content {
+        border-radius: 16px;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    .polyclinic-rate-content-heading h2 {
+        font-size: 1.08rem;
+    }
+
+    .polyclinic-rate-content-heading > a span {
+        display: none;
+    }
+
+    .polyclinic-rate-search {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .polyclinic-rate-search > button {
+        min-width: 52px;
+        padding: 0;
+    }
+
+    .polyclinic-rate-search > button span {
+        display: none;
+    }
+
+    .polyclinic-rate-card {
+        border-radius: 17px;
+        padding: 0.9rem;
+    }
+
+    .polyclinic-rate-card-main {
+        min-height: 110px;
+        padding: 0.85rem 0;
+    }
+
+    .polyclinic-rate-card-icon {
+        height: 52px;
+        width: 52px;
+    }
+
+    .polyclinic-rate-fees {
+        grid-template-columns: 1fr;
+    }
+
+    .polyclinic-rate-fee {
+        min-height: 58px;
+    }
+
+    .polyclinic-rate-fee small {
+        font-size: 0.61rem;
+    }
+
+    .polyclinic-rate-fee strong {
+        font-size: 0.84rem;
+    }
+
+    .polyclinic-rate-pagination {
+        display: grid;
+        gap: 0.4rem;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    }
+
+    .polyclinic-rate-pagination > a,
+    .polyclinic-rate-pagination > span:not(.polyclinic-rate-page-count) {
+        padding: 0 0.65rem;
+        width: 100%;
+    }
+
+    .polyclinic-rate-page-count {
+        min-width: 56px;
+    }
+}
+
+@media (max-width: 359.98px) {
+    .polyclinic-rate-pagination > a span,
+    .polyclinic-rate-pagination > span:not(.polyclinic-rate-page-count) span {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .polyclinic-rate-card,
+    .polyclinic-rate-content-heading > a,
+    .polyclinic-rate-search > button {
+        transition: none;
+    }
+}
