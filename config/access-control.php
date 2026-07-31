@@ -29,6 +29,10 @@ return [
 
     'patient_role' => 'Patient',
 
+    'patient_role_aliases' => [
+        'Pasien',
+    ],
+
     'sidebar_permissions' => $sidebarPermissions,
 
     'protected_permissions' => [

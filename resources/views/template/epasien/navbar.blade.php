@@ -1,7 +1,7 @@
 @php
     $navbarUser = auth()->user();
     $navbarUserName = $navbarUser?->name ?? "Guest";
-    $navbarDefaultPhoto = asset("epasien/assets/images/avatars/avatar-1.png");
+    $navbarDefaultPhoto = asset("epasien/assets/images/avatars/avatar-patient-default.webp");
     $navbarUserPhoto = $navbarUser?->profile_photo_url ?? $navbarDefaultPhoto;
     $navbarUserRole = $navbarUser ? ($navbarUser->getRoleNames()->implode(", ") ?: "User E-Pasien") : "Guest";
 @endphp

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -19,6 +20,33 @@ class ProfileTest extends TestCase
             ->get('/profile');
 
         $response->assertOk();
+    }
+
+    public function test_patient_email_onboarding_opens_account_view_and_hides_placeholder_email(): void
+    {
+        $placeholderEmail = 'pasien-003-def456@e-pasien.local';
+        $user = User::factory()->create([
+            'email' => $placeholderEmail,
+            'username' => '003',
+        ]);
+        $user->assignRole(Role::create([
+            'name' => 'Pasien',
+            'guard_name' => 'web',
+            'email_onboarding_enabled' => true,
+        ]));
+
+        $response = $this
+            ->actingAs($user)
+            ->withSession(['patient_email_onboarding' => true])
+            ->get('/profile');
+
+        $response
+            ->assertOk()
+            ->assertSee('data-initial-view="account"', false)
+            ->assertSee('data-email-onboarding="true"', false)
+            ->assertSee('id="profile_email_guide"', false)
+            ->assertSee('placeholder="contoh: nama@email.com"', false)
+            ->assertDontSee('value="'.$placeholderEmail.'"', false);
     }
 
     public function test_profile_information_can_be_updated(): void

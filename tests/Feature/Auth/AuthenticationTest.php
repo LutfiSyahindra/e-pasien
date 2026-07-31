@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -28,6 +29,74 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
+        $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_patient_with_placeholder_email_is_directed_to_email_onboarding(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'pasien-001-abc123@e-pasien.local',
+            'username' => '001',
+        ]);
+        $user->assignRole(Role::create([
+            'name' => 'Pasien',
+            'guard_name' => 'web',
+            'email_onboarding_enabled' => true,
+        ]));
+
+        $response = $this->withSession(['login_captcha_answer' => 'A7B2C'])->post('/login', [
+            'login' => $user->username,
+            'password' => 'password',
+            'captcha_answer' => 'A7B2C',
+        ]);
+
+        $this->assertAuthenticatedAs($user);
+        $response
+            ->assertRedirect(route('profile.edit'))
+            ->assertSessionHas('patient_email_onboarding', true);
+    }
+
+    public function test_patient_with_personal_email_continues_to_dashboard(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'pasien@example.com',
+            'username' => '002',
+        ]);
+        $user->assignRole(Role::create([
+            'name' => 'Pasien',
+            'guard_name' => 'web',
+            'email_onboarding_enabled' => true,
+        ]));
+
+        $response = $this->withSession(['login_captcha_answer' => 'A7B2C'])->post('/login', [
+            'login' => $user->username,
+            'password' => 'password',
+            'captcha_answer' => 'A7B2C',
+        ]);
+
+        $this->assertAuthenticatedAs($user);
+        $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_patient_with_disabled_email_onboarding_continues_to_dashboard(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'pasien-004-ghi789@e-pasien.local',
+            'username' => '004',
+        ]);
+        $user->assignRole(Role::create([
+            'name' => 'Pasien',
+            'guard_name' => 'web',
+            'email_onboarding_enabled' => false,
+        ]));
+
+        $response = $this->withSession(['login_captcha_answer' => 'A7B2C'])->post('/login', [
+            'login' => $user->username,
+            'password' => 'password',
+            'captcha_answer' => 'A7B2C',
+        ]);
+
+        $this->assertAuthenticatedAs($user);
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 

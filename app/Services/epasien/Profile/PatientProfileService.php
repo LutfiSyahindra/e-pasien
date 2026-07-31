@@ -113,7 +113,7 @@ class PatientProfileService
         return [
             [
                 'title' => 'Identitas Pasien',
-                'icon' => 'bi-person-vcard',
+                'icon' => 'bi-person-badge',
                 'items' => [
                     $this->item($patient, 'nm_pasien', 'Nama lengkap', 'bi-person'),
                     $this->item($patient, 'no_ktp', 'NIK / No. KTP', 'bi-card-text'),

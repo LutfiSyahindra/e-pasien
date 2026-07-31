@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Repositories\epasien\menu\DaftarOnlineRepository;
 use App\Services\epasien\menu\DaftarOnlineService;
 use App\Services\epasien\settings\RegistrationRoleConfigurationService;
+use App\Services\epasien\settings\RoleConfigurationService;
 use PDO;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -42,6 +43,61 @@ class RegistrationRoleConfigurationTest extends TestCase
             'role_id' => $role->id,
             'configured_by' => $user->id,
         ]);
+    }
+
+    public function test_central_role_configuration_syncs_bpjs_and_email_onboarding_features(): void
+    {
+        $configuredBy = User::factory()->create(['username' => 'ADMIN01']);
+        $bpjsRole = Role::create([
+            'name' => 'Petugas BPJS',
+            'guard_name' => 'web',
+        ]);
+        $patientRole = Role::create([
+            'name' => 'Pasien',
+            'guard_name' => 'web',
+        ]);
+
+        app(RoleConfigurationService::class)->sync(
+            [$bpjsRole->id],
+            [$patientRole->id],
+            $configuredBy,
+        );
+
+        $this->assertDatabaseHas('registration_role_configurations', [
+            'role_id' => $bpjsRole->id,
+            'configured_by' => $configuredBy->id,
+        ]);
+        $this->assertDatabaseMissing('registration_role_configurations', [
+            'role_id' => $patientRole->id,
+        ]);
+        $this->assertFalse((bool) $bpjsRole->fresh()->email_onboarding_enabled);
+        $this->assertTrue((bool) $patientRole->fresh()->email_onboarding_enabled);
+    }
+
+    public function test_role_configuration_page_exposes_bpjs_and_email_feature_matrix(): void
+    {
+        $admin = User::factory()->create(['username' => 'ADMIN02']);
+        $admin->assignRole(Role::create([
+            'name' => config('access-control.super_admin_role', 'Super Admin'),
+            'guard_name' => 'web',
+        ]));
+        Role::create([
+            'name' => 'Pasien',
+            'guard_name' => 'web',
+            'email_onboarding_enabled' => true,
+        ]);
+
+        $response = $this
+            ->actingAs($admin)
+            ->get(route('roleConfiguration.index'));
+
+        $response
+            ->assertOk()
+            ->assertSeeText('Konfigurasi Roles')
+            ->assertSeeText('Pendaftaran BPJS')
+            ->assertSeeText('Animasi Onboarding Email')
+            ->assertSee('name="registration_role_ids[]"', false)
+            ->assertSee('name="email_onboarding_role_ids[]"', false);
     }
 
     public function test_registration_by_configured_role_is_audited_in_application_database(): void

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\epasien\Profile\PatientEmailOnboardingService;
 use App\Services\epasien\Profile\PatientProfileService;
 use App\Services\epasien\Profile\ProfilePhotoService;
 use Illuminate\Http\RedirectResponse;
@@ -18,8 +19,11 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request, PatientProfileService $patientProfileService): View
-    {
+    public function edit(
+        Request $request,
+        PatientProfileService $patientProfileService,
+        PatientEmailOnboardingService $patientEmailOnboardingService
+    ): View {
         $user = $request->user()->loadMissing('roles');
         $patient = $patientProfileService->findForUser($user);
 
@@ -29,6 +33,8 @@ class ProfileController extends Controller
             'patientOverview' => $patientProfileService->overview($patient),
             'patientGroups' => $patientProfileService->detailGroups($patient),
             'patientCompletion' => $patientProfileService->completion($patient),
+            'showEmailOnboarding' => $request->session()->get('patient_email_onboarding', false)
+                && $patientEmailOnboardingService->shouldPrompt($user),
         ]);
     }
 

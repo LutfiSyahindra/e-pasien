@@ -1,0 +1,761 @@
+/*
+ * Centralized role feature configuration.
+ * Built as a role × feature matrix so new feature columns can be added later.
+ */
+
+.auth-role-configurations-page {
+    --role-config-accent: #0f7f87;
+    --role-config-accent-hover: #0b6970;
+    --role-config-accent-soft: #eaf7f8;
+    --role-config-border: #dfe5eb;
+}
+
+.role-config-header-actions {
+    gap: 8px;
+}
+
+.role-config-live-state,
+.role-config-manage-link {
+    align-items: center;
+    border-radius: 7px;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 700;
+    gap: 7px;
+    min-height: 44px;
+    padding: 0 13px;
+}
+
+.role-config-live-state {
+    background: #ecf8f5;
+    border: 1px solid #cfe9e2;
+    color: #176f5e;
+}
+
+.role-config-live-state strong {
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.role-config-live-dot {
+    background: #20a779;
+    border: 3px solid #ccefe4;
+    border-radius: 50%;
+    height: 10px;
+    width: 10px;
+}
+
+.role-config-manage-link {
+    background: #fff;
+    border: 1px solid var(--auth-border-strong);
+    color: #4a566a;
+    text-decoration: none;
+    transition: border-color 160ms ease, box-shadow 160ms ease, color 160ms ease;
+}
+
+.role-config-manage-link:hover {
+    border-color: #b9d9db;
+    box-shadow: 0 7px 18px rgba(30, 49, 70, .08);
+    color: var(--role-config-accent);
+}
+
+.role-config-alert-success {
+    align-items: center;
+    background: #eefaf6;
+    border: 1px solid #cbeadd;
+    border-radius: 8px;
+    color: #176e59;
+    display: flex;
+    gap: 11px;
+    margin-bottom: 18px;
+    padding: 12px 14px;
+}
+
+.role-config-alert-success > span {
+    align-items: center;
+    background: #d9f3e9;
+    border-radius: 6px;
+    display: inline-flex;
+    flex: 0 0 34px;
+    height: 34px;
+    justify-content: center;
+    width: 34px;
+}
+
+.role-config-alert-success strong,
+.role-config-alert-success small {
+    display: block;
+}
+
+.role-config-alert-success strong {
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.role-config-alert-success small {
+    color: #4d7f72;
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+.role-config-feature-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 18px 0;
+}
+
+.role-config-feature-card {
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--role-config-border);
+    border-radius: 10px;
+    box-shadow: 0 7px 22px rgba(29, 47, 69, .045);
+    display: grid;
+    gap: 14px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    min-height: 132px;
+    overflow: hidden;
+    padding: 18px;
+    position: relative;
+}
+
+.role-config-feature-card::before {
+    bottom: 15px;
+    content: "";
+    left: 0;
+    position: absolute;
+    top: 15px;
+    width: 4px;
+}
+
+.role-config-feature-card.tone-bpjs::before {
+    background: #128568;
+}
+
+.role-config-feature-card.tone-email::before {
+    background: #3573d4;
+}
+
+.role-config-feature-icon {
+    align-items: center;
+    border-radius: 9px;
+    display: inline-flex;
+    flex: 0 0 44px;
+    font-size: 19px;
+    height: 44px;
+    justify-content: center;
+    width: 44px;
+}
+
+.tone-bpjs .role-config-feature-icon {
+    background: #e9f8f3;
+    border: 1px solid #cce9df;
+    color: #128568;
+}
+
+.tone-email .role-config-feature-icon {
+    background: #edf4ff;
+    border: 1px solid #d2e1f7;
+    color: #3573d4;
+}
+
+.role-config-feature-kicker {
+    color: #7b8797;
+    display: block;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.role-config-feature-card h2 {
+    color: #263549;
+    font-size: 14px;
+    font-weight: 850;
+    margin: 3px 0 4px;
+}
+
+.role-config-feature-card p {
+    color: #6e7b8d;
+    font-size: 10px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.role-config-feature-count {
+    align-items: center;
+    background: #f7f9fb;
+    border: 1px solid #e7ebf0;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    min-width: 74px;
+    padding: 10px;
+}
+
+.role-config-feature-count strong {
+    color: #25364b;
+    font-size: 20px;
+    font-weight: 850;
+}
+
+.role-config-feature-count small {
+    color: #7e8998;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.role-config-panel {
+    overflow: hidden;
+}
+
+.role-config-selection-summary {
+    align-items: center;
+    background: #f5faf9;
+    border: 1px solid #d7e8e4;
+    border-radius: 8px;
+    display: flex;
+    gap: 10px;
+    padding: 9px 12px;
+}
+
+.role-config-selection-summary > span {
+    align-items: center;
+    background: #e2f4ef;
+    border-radius: 6px;
+    color: #17745e;
+    display: inline-flex;
+    height: 34px;
+    justify-content: center;
+    width: 34px;
+}
+
+.role-config-selection-summary small,
+.role-config-selection-summary strong {
+    display: block;
+}
+
+.role-config-selection-summary small {
+    color: #718078;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.role-config-selection-summary strong {
+    color: #31534a;
+    font-size: 12px;
+    font-weight: 800;
+    margin-top: 1px;
+}
+
+.role-config-alert-error {
+    align-items: center;
+    background: #fff4f4;
+    border: 1px solid #f4cece;
+    border-radius: 7px;
+    color: #a64040;
+    display: flex;
+    font-size: 12px;
+    font-weight: 700;
+    gap: 9px;
+    margin: 16px 20px 0;
+    padding: 12px 13px;
+}
+
+.role-config-matrix-wrap {
+    overflow-x: auto;
+    padding: 18px 20px 20px;
+}
+
+.role-config-matrix {
+    border: 1px solid #e0e5eb;
+    border-radius: 9px;
+    min-width: 850px;
+    overflow: hidden;
+}
+
+.role-config-matrix-header,
+.role-config-matrix-row {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.25fr) 105px repeat(2, minmax(220px, 1fr));
+}
+
+.role-config-matrix-header {
+    background: #f4f6f9;
+    border-bottom: 1px solid #dfe4ea;
+    color: #536174;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .025em;
+    text-transform: uppercase;
+}
+
+.role-config-matrix-header > span {
+    align-items: center;
+    display: flex;
+    gap: 7px;
+    min-height: 46px;
+    padding: 0 15px;
+}
+
+.role-config-matrix-header > span + span {
+    border-left: 1px solid #e1e6ec;
+}
+
+.role-config-matrix-header i {
+    color: var(--role-config-accent);
+}
+
+.role-config-matrix-row {
+    background: #fff;
+    transition: background 150ms ease;
+}
+
+.role-config-matrix-row + .role-config-matrix-row {
+    border-top: 1px solid #e8ebef;
+}
+
+.role-config-matrix-row:hover {
+    background: #fbfcfd;
+}
+
+.role-config-matrix-row > div {
+    align-items: center;
+    display: flex;
+    min-height: 82px;
+    padding: 13px 15px;
+}
+
+.role-config-matrix-row > div + div {
+    border-left: 1px solid #eef0f3;
+}
+
+.role-config-role {
+    gap: 11px;
+    min-width: 0;
+}
+
+.role-config-role-icon {
+    align-items: center;
+    background: #eef3fb;
+    border: 1px solid #dae3f1;
+    border-radius: 8px;
+    color: #506f9f;
+    display: inline-flex;
+    flex: 0 0 38px;
+    height: 38px;
+    justify-content: center;
+    width: 38px;
+}
+
+.role-config-role strong,
+.role-config-role small {
+    display: block;
+}
+
+.role-config-role strong {
+    color: #263346;
+    font-size: 12px;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.role-config-role small {
+    color: #8a94a3;
+    font-size: 9px;
+    margin-top: 3px;
+}
+
+.role-config-users {
+    color: #6f7b8c;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.role-config-users i {
+    color: #8c98a8;
+    font-size: 13px;
+}
+
+.role-config-users strong {
+    color: #344358;
+    font-size: 13px;
+}
+
+.role-config-users span {
+    display: block;
+    flex-basis: 100%;
+    font-size: 9px;
+    padding-left: 17px;
+}
+
+.role-config-cell {
+    position: relative;
+}
+
+.role-config-mobile-label {
+    display: none;
+}
+
+.role-config-toggle {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+    margin: 0;
+    min-width: 0;
+}
+
+.role-config-checkbox {
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    width: 1px;
+}
+
+.role-config-switch {
+    background: #cfd5de;
+    border: 1px solid #bec6d1;
+    border-radius: 999px;
+    display: inline-flex;
+    flex: 0 0 43px;
+    height: 24px;
+    padding: 2px;
+    transition: background 170ms ease, border-color 170ms ease, box-shadow 170ms ease;
+    width: 43px;
+}
+
+.role-config-switch > span {
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(33, 43, 58, .2);
+    display: block;
+    height: 18px;
+    transform: translateX(0);
+    transition: transform 170ms ease;
+    width: 18px;
+}
+
+.role-config-checkbox:focus-visible + .role-config-switch {
+    outline: 3px solid rgba(15, 127, 135, .2);
+    outline-offset: 2px;
+}
+
+.role-config-checkbox:checked + .role-config-switch {
+    background: var(--role-config-accent);
+    border-color: var(--role-config-accent);
+    box-shadow: 0 0 0 3px rgba(15, 127, 135, .1);
+}
+
+.role-config-checkbox:checked + .role-config-switch > span {
+    transform: translateX(18px);
+}
+
+.role-config-toggle-copy {
+    min-width: 0;
+}
+
+.role-config-toggle-copy strong,
+.role-config-toggle-copy small {
+    display: block;
+}
+
+.role-config-toggle-copy strong {
+    color: #8a94a4;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.role-config-toggle.is-active .role-config-toggle-copy strong {
+    color: #158366;
+}
+
+.role-config-toggle-copy small {
+    color: #8993a1;
+    font-size: 9px;
+    line-height: 1.4;
+    margin-top: 2px;
+}
+
+.role-config-empty {
+    align-items: center;
+    background: #fafbfc;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 250px;
+    padding: 30px;
+    text-align: center;
+}
+
+.role-config-empty > span {
+    align-items: center;
+    background: #eef2f6;
+    border-radius: 8px;
+    color: #758296;
+    display: inline-flex;
+    font-size: 22px;
+    height: 50px;
+    justify-content: center;
+    width: 50px;
+}
+
+.role-config-empty strong {
+    color: var(--auth-ink);
+    font-size: 14px;
+    margin-top: 13px;
+}
+
+.role-config-empty p {
+    color: var(--auth-muted);
+    font-size: 12px;
+    margin: 5px 0 14px;
+}
+
+.role-config-empty a {
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--auth-border-strong);
+    border-radius: 6px;
+    color: var(--role-config-accent);
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 800;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 12px;
+    text-decoration: none;
+}
+
+.role-config-action-bar {
+    align-items: center;
+    background: #f8f9fb;
+    border-radius: 0 0 8px 8px;
+    border-top: 1px solid #e6e9ee;
+    bottom: 0;
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+    padding: 14px 20px;
+    position: sticky;
+    z-index: 5;
+}
+
+.role-config-change-state {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    min-width: 0;
+}
+
+.role-config-change-state > span:first-child {
+    align-items: center;
+    background: #eaf8f3;
+    border: 1px solid #d0ebe1;
+    border-radius: 6px;
+    color: #198164;
+    display: inline-flex;
+    flex: 0 0 34px;
+    height: 34px;
+    justify-content: center;
+    width: 34px;
+}
+
+.role-config-change-state > span:first-child.is-dirty {
+    background: #fff6e8;
+    border-color: #f1ddba;
+    color: #ad6a18;
+}
+
+.role-config-change-state strong,
+.role-config-change-state small {
+    display: block;
+}
+
+.role-config-change-state strong {
+    color: #344054;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.role-config-change-state small {
+    color: #7c8798;
+    font-size: 10px;
+    margin-top: 2px;
+}
+
+.role-config-form-actions {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    gap: 8px;
+}
+
+.role-config-reset-button {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #d5dbe4;
+    border-radius: 6px;
+    color: #596679;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 800;
+    gap: 7px;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0 13px;
+}
+
+.auth-role-configurations-page .btn-access-primary.is-loading i {
+    animation: role-config-spin 750ms linear infinite;
+}
+
+@keyframes role-config-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 991.98px) {
+    .role-config-feature-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .role-config-header-actions,
+    .role-config-live-state,
+    .role-config-manage-link {
+        width: 100%;
+    }
+
+    .role-config-live-state,
+    .role-config-manage-link {
+        justify-content: center;
+    }
+
+    .role-config-feature-card {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .role-config-feature-count {
+        align-items: baseline;
+        flex-direction: row;
+        gap: 5px;
+        grid-column: 2;
+        justify-self: start;
+        min-width: 0;
+        padding: 7px 9px;
+    }
+
+    .role-config-feature-count strong {
+        font-size: 15px;
+    }
+
+    .role-config-panel .access-panel-header {
+        align-items: stretch;
+    }
+
+    .role-config-selection-summary {
+        width: 100%;
+    }
+
+    .role-config-matrix-wrap {
+        overflow: visible;
+        padding: 14px;
+    }
+
+    .role-config-matrix {
+        border: 0;
+        min-width: 0;
+        overflow: visible;
+    }
+
+    .role-config-matrix-header {
+        display: none;
+    }
+
+    .role-config-matrix-row {
+        border: 1px solid #dfe5eb;
+        border-radius: 9px;
+        box-shadow: 0 5px 16px rgba(30, 42, 62, .035);
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        margin-bottom: 11px;
+        overflow: hidden;
+    }
+
+    .role-config-matrix-row + .role-config-matrix-row {
+        border-top: 1px solid #dfe5eb;
+    }
+
+    .role-config-matrix-row > div {
+        min-height: 66px;
+        padding: 12px;
+    }
+
+    .role-config-matrix-row > div + div {
+        border-left: 0;
+    }
+
+    .role-config-users {
+        justify-content: flex-end;
+    }
+
+    .role-config-users span {
+        flex-basis: auto;
+        padding-left: 0;
+    }
+
+    .role-config-cell {
+        align-items: flex-start !important;
+        border-top: 1px solid #edf0f3;
+        display: flex !important;
+        flex-direction: column;
+        gap: 8px;
+        grid-column: 1 / -1;
+    }
+
+    .role-config-mobile-label {
+        color: #657386;
+        display: block;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .role-config-action-bar {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 13px 16px;
+    }
+
+    .role-config-form-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .role-config-form-actions > button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 479.98px) {
+    .role-config-stats > [class*="col-"] {
+        width: 100%;
+    }
+
+    .role-config-form-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .auth-role-configurations-page .btn-access-primary.is-loading i {
+        animation: none;
+    }
+}

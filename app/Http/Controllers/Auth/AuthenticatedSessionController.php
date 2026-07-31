@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\epasien\Profile\PatientEmailOnboardingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,12 +27,22 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
-    {
+    public function store(
+        LoginRequest $request,
+        PatientEmailOnboardingService $patientEmailOnboardingService
+    ): RedirectResponse {
         $request->authenticate();
 
         $request->session()->forget(['login_captcha_question', 'login_captcha_answer']);
         $request->session()->regenerate();
+
+        $user = $request->user();
+
+        if ($user && $patientEmailOnboardingService->shouldPrompt($user)) {
+            return redirect()
+                ->route('profile.edit')
+                ->with('patient_email_onboarding', true);
+        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

@@ -87,6 +87,6 @@ class User extends Authenticatable
             return asset('storage/'.$path);
         }
 
-        return asset('epasien/assets/images/avatars/avatar-1.png');
+        return asset('epasien/assets/images/avatars/avatar-patient-default.webp');
     }
 }

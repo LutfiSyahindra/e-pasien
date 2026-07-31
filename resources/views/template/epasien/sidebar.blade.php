@@ -41,9 +41,9 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route("registrationRoleConfiguration.index") }}">
-                                    <i class="bi bi-person-check"></i>
-                                    Role Pendaftaran
+                                <a href="{{ route("roleConfiguration.index") }}">
+                                    <i class="bi bi-sliders"></i>
+                                    Konfigurasi Roles
                                 </a>
                             </li>
                         </ul>
