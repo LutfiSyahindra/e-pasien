@@ -18,6 +18,7 @@ use App\Http\Controllers\Epasien\menu\Surat\SuratRujukanController;
 use App\Http\Controllers\Epasien\settings\auth\permissionsController;
 use App\Http\Controllers\Epasien\settings\auth\rolesController;
 use App\Http\Controllers\Epasien\settings\auth\usersController;
+use App\Http\Controllers\Epasien\settings\DoctorScheduleController;
 use App\Http\Controllers\Epasien\settings\RegistrationRoleConfigurationController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -87,6 +88,14 @@ Route::middleware('auth')->group(function () {
             Route::put('/registration-roles', [RegistrationRoleConfigurationController::class, 'update'])
                 ->middleware('role_or_permission:Super Admin|roles.update')
                 ->name('registrationRoleConfiguration.update');
+
+            // Pengaturan jadwal dokter
+            Route::middleware('permission:EPASIEN.SETTINGS.JADWAL_DOKTER')->group(function () {
+                Route::get('/jadwal-dokter', [DoctorScheduleController::class, 'index'])
+                    ->name('doctorScheduleSettings.index');
+                Route::put('/jadwal-dokter', [DoctorScheduleController::class, 'update'])
+                    ->name('doctorScheduleSettings.update');
+            });
         });
 
     Route::prefix('e-pasien/menu')

@@ -48,6 +48,16 @@
                             </li>
                         </ul>
                     </li>
+                    @can("EPASIEN.SETTINGS.JADWAL_DOKTER")
+                        <li class="{{ request()->routeIs("doctorScheduleSettings.*") ? "mm-active" : "" }}">
+                            <a href="{{ route("doctorScheduleSettings.index") }}">
+                                <div class="parent-icon">
+                                    <i class="bi bi-calendar2-check"></i>
+                                </div>
+                                <div class="menu-title">Atur Jadwal Dokter</div>
+                            </a>
+                        </li>
+                    @endcan
                 @endcan
 
                 @can("EPASIEN.MENU")
