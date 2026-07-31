@@ -1,5 +1,18 @@
 <?php
 
+$sidebarPermissions = [
+    'EPASIEN.SETTINGS',
+    'EPASIEN.MENU',
+    'EPASIEN.MENU.DASHBOARD',
+    'EPASIEN.MENU.JADWAL_DOKTER',
+    'EPASIEN.MENU.RIWAYAT_PEMERIKSAAN',
+    'EPASIEN.MENU.RIWAYAT_MCU',
+    'EPASIEN.MENU.SURAT',
+    'EPASIEN.MENU.PERMINTAAN_DAN_TINDAKAN',
+    'EPASIEN.MENU.FASILITAS_TARIF',
+    'EPASIEN.MENU.PENDAFTARAN_ONLINE',
+];
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -15,6 +28,8 @@ return [
 
     'patient_role' => 'Patient',
 
+    'sidebar_permissions' => $sidebarPermissions,
+
     'protected_permissions' => [
         'users.view',
         'users.create',
@@ -28,5 +43,6 @@ return [
         'permissions.create',
         'permissions.update',
         'permissions.delete',
+        ...$sidebarPermissions,
     ],
 ];
