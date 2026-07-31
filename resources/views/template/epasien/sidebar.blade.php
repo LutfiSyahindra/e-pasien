@@ -57,6 +57,13 @@
                 </li>
 
                 <li class="menu-label">Menu</li>
+                <li class="{{ request()->routeIs("jadwalDokter.*") ? "mm-active" : "" }}">
+                    <a href="{{ route("jadwalDokter.index") }}">
+                        <div class="parent-icon"><i class="bi bi-calendar2-week"></i>
+                        </div>
+                        <div class="menu-title">Jadwal Dokter</div>
+                    </a>
+                </li>
                 <li>
                     <a href="{{ route("riwayatPemeriksaan.index") }}">
                         <div class="parent-icon"><i class="bi bi-clipboard2-pulse"></i>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Epasien\menu\FasilitasTarif\KamarController;
 use App\Http\Controllers\Epasien\menu\FasilitasTarif\LaboratoriumController;
 use App\Http\Controllers\Epasien\menu\FasilitasTarif\PoliklinikController;
 use App\Http\Controllers\Epasien\menu\FasilitasTarif\RadiologiController;
+use App\Http\Controllers\Epasien\menu\JadwalDokterController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\OperasiController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\PemeriksaanLaboratController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\PemeriksaanRadiologiController;
@@ -80,6 +81,8 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('e-pasien/menu')->group(function () {
+        Route::get('/jadwal-dokter', [JadwalDokterController::class, 'index'])
+            ->name('jadwalDokter.index');
         Route::get('/fasilitas-tarif/kamar', [KamarController::class, 'index'])
             ->name('kamar.index');
         Route::get('/fasilitas-tarif/laboratorium', [LaboratoriumController::class, 'index'])

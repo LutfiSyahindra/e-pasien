@@ -81,13 +81,13 @@
                 </div>
                 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 wow fadeInRight" data-wow-delay=".4s"
                     data-wow-duration=".8s">
-                    <a href="doctors-one.html" class="single-short-service">
+                    <a href="{{ route("jadwalDokter.index") }}" class="single-short-service">
                         <div class="icon">
                             <img src="{{ asset("landing/assets/images/service/02.svg") }}" alt="service">
                         </div>
                         <h5 class="title">
-                            Find <br>
-                            Doctors
+                            Jadwal <br>
+                            Dokter
                         </h5>
                     </a>
                 </div>
