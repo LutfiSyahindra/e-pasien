@@ -13,6 +13,8 @@ use App\Http\Controllers\Epasien\menu\PermintaanTindakan\PemeriksaanRadiologiCon
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\ResepObatController;
 use App\Http\Controllers\Epasien\menu\RiwayatMcuController;
 use App\Http\Controllers\Epasien\menu\RiwayatPemeriksaanController;
+use App\Http\Controllers\Epasien\menu\Surat\SuratKontrolController;
+use App\Http\Controllers\Epasien\menu\Surat\SuratRujukanController;
 use App\Http\Controllers\Epasien\settings\auth\permissionsController;
 use App\Http\Controllers\Epasien\settings\auth\rolesController;
 use App\Http\Controllers\Epasien\settings\auth\usersController;
@@ -121,6 +123,16 @@ Route::middleware('auth')->group(function () {
             ->name('riwayatMcu.index');
         Route::get('/riwayat-mcu/detail', [RiwayatMcuController::class, 'detail'])
             ->name('riwayatMcu.detail');
+        Route::get('/surat/surat-kontrol', [SuratKontrolController::class, 'index'])
+            ->name('suratKontrol.index');
+        Route::get('/surat/surat-kontrol/bpjs', [SuratKontrolController::class, 'bpjs'])
+            ->name('suratKontrol.bpjs');
+        Route::get('/surat/surat-rujukan', [SuratRujukanController::class, 'index'])
+            ->name('suratRujukan.index');
+        Route::get('/surat/surat-rujukan/bpjs/masuk', [SuratRujukanController::class, 'incomingBpjs'])
+            ->name('suratRujukan.bpjs.masuk');
+        Route::get('/surat/surat-rujukan/bpjs/keluar', [SuratRujukanController::class, 'outgoingBpjs'])
+            ->name('suratRujukan.bpjs.keluar');
         Route::get('/daftar-online', [DaftarOnlineController::class, 'index'])->name('daftarOnline.index');
         Route::get('/daftar-online/riwayat', [DaftarOnlineController::class, 'history'])->name('daftarOnline.history');
         Route::get('/daftar-online/jadwal', [DaftarOnlineController::class, 'schedules'])->name('daftarOnline.schedules');

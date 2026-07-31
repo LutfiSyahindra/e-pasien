@@ -19,14 +19,24 @@ class RencanaKontrolService
     public function listByCardNumber(
         string $plannedDate,
         string $cardNumber,
-        int $filter = 2
+        int $filter = 2,
+        bool $includeReferralFallback = true,
+        int $monthsBefore = 1,
+        int $monthsAfter = 0
     ): array {
         $registrationDate = Carbon::createFromFormat('Y-m-d', $plannedDate)->startOfDay();
         $cardNumber = trim($cardNumber);
-        $searchDates = [
-            $registrationDate->copy()->subMonthNoOverflow(),
-            $registrationDate->copy(),
-        ];
+        $monthsBefore = max(0, min($monthsBefore, 12));
+        $monthsAfter = max(0, min($monthsAfter, 12));
+        $searchDates = collect(range(-$monthsBefore, $monthsAfter))
+            ->map(
+                fn (int $offset): Carbon => $registrationDate
+                    ->copy()
+                    ->addMonthsNoOverflow($offset)
+                    ->startOfMonth()
+            )
+            ->values()
+            ->all();
         $periods = [];
         $controlLetters = [];
         $successfulResponseFound = false;
@@ -83,9 +93,10 @@ class RencanaKontrolService
             'periode' => [
                 'bulan_awal' => $searchDates[0]->format('m'),
                 'tahun_awal' => $searchDates[0]->format('Y'),
-                'bulan_akhir' => $searchDates[1]->format('m'),
-                'tahun_akhir' => $searchDates[1]->format('Y'),
-                'label' => $this->periodLabel($searchDates[0]).' dan '.$this->periodLabel($searchDates[1]),
+                'bulan_akhir' => $searchDates[array_key_last($searchDates)]->format('m'),
+                'tahun_akhir' => $searchDates[array_key_last($searchDates)]->format('Y'),
+                'label' => $this->periodRangeLabel($searchDates),
+                'jumlah_bulan' => count($searchDates),
             ],
             'periode_pencarian' => $periods,
             'filter' => $filter,
@@ -103,6 +114,7 @@ class RencanaKontrolService
 
         if (
             $formattedControlLetters !== []
+            || ! $includeReferralFallback
             || ! $this->allowsReferralFallback($controlLetterMetadata)
         ) {
             return $result;
@@ -166,6 +178,25 @@ class RencanaKontrolService
     private function periodLabel(Carbon $date): string
     {
         return $date->locale('id')->translatedFormat('F Y');
+    }
+
+    /**
+     * @param  array<int, Carbon>  $dates
+     */
+    private function periodRangeLabel(array $dates): string
+    {
+        $first = $dates[0];
+        $last = $dates[array_key_last($dates)];
+
+        if (count($dates) === 1) {
+            return $this->periodLabel($first);
+        }
+
+        if (count($dates) === 2) {
+            return $this->periodLabel($first).' dan '.$this->periodLabel($last);
+        }
+
+        return $this->periodLabel($first).' sampai '.$this->periodLabel($last);
     }
 
     /**

@@ -245,6 +245,52 @@ class RencanaKontrolServiceTest extends TestCase
         ], $calls);
     }
 
+    public function test_it_can_search_a_custom_seven_month_window(): void
+    {
+        $calls = [];
+        $repository = $this->createStub(RencanaKontrolRepository::class);
+        $repository
+            ->method('listByCardNumber')
+            ->willReturnCallback(function (string $month, string $year) use (&$calls): array {
+                $calls[] = [$month, $year];
+
+                return [
+                    'metaData' => [
+                        'code' => '201',
+                        'message' => 'Data tidak ditemukan.',
+                    ],
+                    'response' => null,
+                ];
+            });
+
+        $result = (new RencanaKontrolService($repository, $this->referralRepository()))
+            ->listByCardNumber(
+                '2026-07-29',
+                '0002035874204',
+                2,
+                false,
+                3,
+                3
+            );
+
+        $this->assertSame([
+            ['04', '2026'],
+            ['05', '2026'],
+            ['06', '2026'],
+            ['07', '2026'],
+            ['08', '2026'],
+            ['09', '2026'],
+            ['10', '2026'],
+        ], $calls);
+        $this->assertSame('04', $result['periode']['bulan_awal']);
+        $this->assertSame('10', $result['periode']['bulan_akhir']);
+        $this->assertSame(7, $result['periode']['jumlah_bulan']);
+        $this->assertSame(
+            'April 2026 sampai Oktober 2026',
+            $result['periode']['label']
+        );
+    }
+
     public function test_it_falls_back_to_pcare_when_control_letter_is_not_found(): void
     {
         $controlLetterRepository = $this->createStub(RencanaKontrolRepository::class);

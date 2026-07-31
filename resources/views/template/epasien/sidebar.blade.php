@@ -78,6 +78,29 @@
                         <div class="menu-title">Riwayat MCU</div>
                     </a>
                 </li>
+                <li class="{{ request()->routeIs("suratKontrol.*", "suratRujukan.*") ? "mm-active" : "" }}">
+                    <a href="javascript:;" class="has-arrow">
+                        <div class="parent-icon"><i class="bi bi-file-earmark-medical"></i>
+                        </div>
+                        <div class="menu-title">Surat</div>
+                    </a>
+                    <ul class="{{ request()->routeIs("suratKontrol.*", "suratRujukan.*") ? "mm-show" : "" }}">
+                        <li>
+                            <a href="{{ route("suratKontrol.index") }}"
+                                class="{{ request()->routeIs("suratKontrol.*") ? "mm-active" : "" }}">
+                                <i class="bi bi-calendar2-check"></i>
+                                Surat Kontrol
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route("suratRujukan.index") }}"
+                                class="{{ request()->routeIs("suratRujukan.*") ? "mm-active" : "" }}">
+                                <i class="bi bi-send-check"></i>
+                                Surat Rujukan
+                            </a>
+                        </li>
+                    </ul>
+                </li>
                 <li>
                     <a href="javascript:;" class="has-arrow">
                         <div class="parent-icon"><i class="bi bi-clipboard2-plus"></i>

@@ -27,4 +27,19 @@ class RujukanRepository
             'Rujukan/RS/Peserta/'.rawurlencode(trim($cardNumber))
         );
     }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function listOutgoingHospitalReferrals(
+        string $startDate,
+        string $endDate
+    ): array {
+        return $this->getVclaim(
+            'Rujukan/Keluar/List/tglMulai/'
+                .rawurlencode(trim($startDate))
+                .'/tglAkhir/'
+                .rawurlencode(trim($endDate))
+        );
+    }
 }

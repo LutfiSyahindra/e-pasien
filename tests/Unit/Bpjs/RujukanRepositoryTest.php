@@ -59,6 +59,26 @@ class RujukanRepositoryTest extends TestCase
         });
     }
 
+    public function test_it_lists_outgoing_hospital_referrals_by_date_range(): void
+    {
+        Http::fake([
+            'https://vclaim.test/*' => Http::response([
+                'metaData' => ['code' => '200', 'message' => 'Sukses'],
+                'response' => ['list' => []],
+            ]),
+        ]);
+
+        (new RujukanRepository)->listOutgoingHospitalReferrals(
+            '2026-07-01',
+            '2026-07-31'
+        );
+
+        Http::assertSent(function (Request $request): bool {
+            return $request->method() === 'GET'
+                && $request->url() === 'https://vclaim.test/root/Rujukan/Keluar/List/tglMulai/2026-07-01/tglAkhir/2026-07-31';
+        });
+    }
+
     /**
      * @return array<string, mixed>
      */
