@@ -28,6 +28,7 @@
     <link href="{{ asset("epasien/assets/css/semi-dark.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/css/header-colors.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/css/access-control.css") }}" rel="stylesheet" />
+    <link href="{{ asset("epasien/assets/css/sidebar-premium.css") }}" rel="stylesheet" />
 
     <title>@yield("title", "E-Pasien")</title>
 </head>
