@@ -87,6 +87,7 @@ html .sidebar-wrapper.ep-premium-sidebar .sidebar-header {
 }
 
 .ep-premium-sidebar .ep-sidebar-logo {
+    display: block;
     filter: none !important;
 }
 
@@ -99,6 +100,7 @@ html .sidebar-wrapper.ep-premium-sidebar .sidebar-header {
 
 .ep-premium-sidebar .ep-sidebar-logo-compact {
     border-radius: 9px;
+    display: none;
     height: 34px;
     max-width: 34px;
     width: 34px;
