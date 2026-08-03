@@ -89,6 +89,26 @@ class JadwalDokterPageTest extends TestCase
             ->assertSessionHasErrors('hari');
     }
 
+    public function test_patient_can_filter_sunday_using_minggu_code(): void
+    {
+        $page = $this->pageData(new LengthAwarePaginator([], 0, 12));
+
+        $this->mock(JadwalDokterService::class, function (MockInterface $mock) use ($page): void {
+            $mock->shouldReceive('emptyPage')
+                ->once()
+                ->with('', 'MINGGU', '')
+                ->andReturn($page);
+            $mock->shouldReceive('page')
+                ->once()
+                ->with('', 'MINGGU', '')
+                ->andReturn($page);
+        });
+
+        $this->actingAs($this->patientUser())
+            ->get(route('jadwalDokter.index', ['hari' => 'MINGGU']))
+            ->assertOk();
+    }
+
     private function pageData(LengthAwarePaginator $schedules): array
     {
         return [

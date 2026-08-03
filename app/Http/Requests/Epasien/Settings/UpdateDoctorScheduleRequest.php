@@ -2,21 +2,12 @@
 
 namespace App\Http\Requests\Epasien\Settings;
 
+use App\Support\Epasien\DoctorScheduleDay;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdateDoctorScheduleRequest extends FormRequest
 {
-    private const DAYS = [
-        'SENIN',
-        'SELASA',
-        'RABU',
-        'KAMIS',
-        'JUMAT',
-        'SABTU',
-        'AKHAD',
-    ];
-
     public function authorize(): bool
     {
         return true;
@@ -29,9 +20,17 @@ class UpdateDoctorScheduleRequest extends FormRequest
     {
         return [
             'original_doctor_code' => ['required', 'string', 'max:20'],
-            'original_day' => ['required', 'string', Rule::in(self::DAYS)],
+            'original_day' => [
+                'required',
+                'string',
+                Rule::in(DoctorScheduleDay::EPASIEN_DAYS),
+            ],
             'original_start_time' => ['required', 'date_format:H:i'],
-            'day' => ['required', 'string', Rule::in(self::DAYS)],
+            'day' => [
+                'required',
+                'string',
+                Rule::in(DoctorScheduleDay::EPASIEN_DAYS),
+            ],
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
             'quota' => ['required', 'integer', 'min:0', 'max:9999'],
@@ -39,7 +38,7 @@ class UpdateDoctorScheduleRequest extends FormRequest
             'filter_day' => [
                 'nullable',
                 'string',
-                Rule::in(['SEMUA', ...self::DAYS]),
+                Rule::in(['SEMUA', ...DoctorScheduleDay::EPASIEN_DAYS]),
             ],
             'filter_clinic' => ['nullable', 'string', 'max:5'],
             'filter_page' => ['nullable', 'integer', 'min:1'],
@@ -75,10 +74,14 @@ class UpdateDoctorScheduleRequest extends FormRequest
     {
         $this->merge([
             'original_doctor_code' => trim((string) $this->input('original_doctor_code')),
-            'original_day' => strtoupper(trim((string) $this->input('original_day'))),
-            'day' => strtoupper(trim((string) $this->input('day'))),
+            'original_day' => DoctorScheduleDay::toEpasien(
+                $this->input('original_day')
+            ),
+            'day' => DoctorScheduleDay::toEpasien($this->input('day')),
             'filter_q' => trim((string) $this->input('filter_q')),
-            'filter_day' => strtoupper(trim((string) $this->input('filter_day'))),
+            'filter_day' => DoctorScheduleDay::toEpasien(
+                $this->input('filter_day')
+            ),
             'filter_clinic' => trim((string) $this->input('filter_clinic')),
         ]);
     }

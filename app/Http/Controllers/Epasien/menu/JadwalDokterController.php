@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Epasien\menu;
 
 use App\Http\Controllers\Controller;
 use App\Services\epasien\menu\JadwalDokterService;
+use App\Support\Epasien\DoctorScheduleDay;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -22,16 +23,7 @@ class JadwalDokterController extends Controller
             'hari' => [
                 'nullable',
                 'string',
-                Rule::in([
-                    'SEMUA',
-                    'SENIN',
-                    'SELASA',
-                    'RABU',
-                    'KAMIS',
-                    'JUMAT',
-                    'SABTU',
-                    'AKHAD',
-                ]),
+                Rule::in(DoctorScheduleDay::ACCEPTED_FILTER_DAYS),
             ],
             'poli' => ['nullable', 'string', 'max:5'],
         ]);

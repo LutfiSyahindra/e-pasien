@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Epasien\settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Epasien\Settings\UpdateDoctorScheduleRequest;
 use App\Services\epasien\settings\DoctorScheduleService;
+use App\Support\Epasien\DoctorScheduleDay;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -13,17 +14,6 @@ use Throwable;
 
 class DoctorScheduleController extends Controller
 {
-    private const DAYS = [
-        'SEMUA',
-        'SENIN',
-        'SELASA',
-        'RABU',
-        'KAMIS',
-        'JUMAT',
-        'SABTU',
-        'AKHAD',
-    ];
-
     public function __construct(
         private readonly DoctorScheduleService $doctorScheduleService
     ) {}
@@ -32,7 +22,11 @@ class DoctorScheduleController extends Controller
     {
         $validated = $request->validate([
             'q' => ['nullable', 'string', 'max:80'],
-            'hari' => ['nullable', 'string', Rule::in(self::DAYS)],
+            'hari' => [
+                'nullable',
+                'string',
+                Rule::in(DoctorScheduleDay::ACCEPTED_FILTER_DAYS),
+            ],
             'poli' => ['nullable', 'string', 'max:5'],
         ]);
 

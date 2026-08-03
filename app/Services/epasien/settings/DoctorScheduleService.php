@@ -3,6 +3,7 @@
 namespace App\Services\epasien\settings;
 
 use App\Repositories\epasien\settings\DoctorScheduleRepository;
+use App\Support\Epasien\DoctorScheduleDay;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class DoctorScheduleService
@@ -14,7 +15,7 @@ class DoctorScheduleService
         'KAMIS' => 'Kamis',
         'JUMAT' => 'Jumat',
         'SABTU' => 'Sabtu',
-        'AKHAD' => 'Minggu',
+        'MINGGU' => 'Minggu',
     ];
 
     public function __construct(
@@ -31,7 +32,9 @@ class DoctorScheduleService
         int $perPage = 15
     ): array {
         $filters = $this->filters($search, $day, $clinicCode);
-        $queryDay = $filters['day'] === 'SEMUA' ? null : $filters['day'];
+        $queryDay = $filters['day'] === 'SEMUA'
+            ? null
+            : DoctorScheduleDay::toDatabase($filters['day']);
         $schedules = $this->doctorScheduleRepository->paginate(
             $filters['search'] !== '' ? $filters['search'] : null,
             $queryDay,
@@ -96,6 +99,9 @@ class DoctorScheduleService
      */
     public function update(array $original, array $changes): void
     {
+        $original['day'] = DoctorScheduleDay::toDatabase($original['day']);
+        $changes['day'] = DoctorScheduleDay::toDatabase($changes['day']);
+
         $this->doctorScheduleRepository->update($original, $changes);
     }
 
@@ -104,7 +110,7 @@ class DoctorScheduleService
      */
     private function filters(?string $search, ?string $day, ?string $clinicCode): array
     {
-        $day = strtoupper(trim((string) $day));
+        $day = DoctorScheduleDay::toEpasien($day);
 
         return [
             'search' => trim((string) $search),
@@ -118,7 +124,9 @@ class DoctorScheduleService
      */
     private function formatSchedule(object $schedule): array
     {
-        $day = strtoupper($this->text($schedule->hari_kerja ?? null));
+        $day = DoctorScheduleDay::toEpasien(
+            $this->text($schedule->hari_kerja ?? null)
+        );
         $startTime = $this->timeInput($schedule->jam_mulai ?? null);
         $endTime = $this->timeInput($schedule->jam_selesai ?? null);
         $quota = max(0, (int) ($schedule->kuota ?? 0));

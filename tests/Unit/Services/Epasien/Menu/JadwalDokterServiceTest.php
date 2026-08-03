@@ -101,6 +101,50 @@ class JadwalDokterServiceTest extends TestCase
         $this->assertSame(0, $page['schedules']->total());
     }
 
+    public function test_sunday_uses_minggu_in_epasien_and_akhad_in_database(): void
+    {
+        $repository = $this->createMock(JadwalDokterRepository::class);
+        $repository
+            ->expects($this->once())
+            ->method('paginateSchedules')
+            ->with(null, 'AKHAD', null, 12)
+            ->willReturn(new LengthAwarePaginator([
+                (object) [
+                    'kd_dokter' => 'drminggu',
+                    'nm_dokter' => 'dr. Dokter Minggu',
+                    'jk' => 'L',
+                    'kd_poli' => 'INT',
+                    'nm_poli' => 'Poliklinik Penyakit Dalam',
+                    'hari_kerja' => 'Akhad',
+                    'jam_mulai' => '08:00:00',
+                    'jam_selesai' => '10:00:00',
+                    'kuota' => 20,
+                ],
+            ], 1, 12));
+        $repository
+            ->expects($this->once())
+            ->method('summary')
+            ->willReturn(null);
+        $repository
+            ->expects($this->once())
+            ->method('clinics')
+            ->willReturn(new Collection);
+
+        $page = (new JadwalDokterService($repository))->page(
+            null,
+            'MINGGU',
+            null
+        );
+        $schedule = $page['schedules']->items()[0];
+
+        $this->assertSame('MINGGU', $page['day']);
+        $this->assertSame('Minggu', $page['day_label']);
+        $this->assertArrayHasKey('MINGGU', $page['days']);
+        $this->assertArrayNotHasKey('AKHAD', $page['days']);
+        $this->assertSame('MINGGU', $schedule['day']);
+        $this->assertSame('Minggu', $schedule['day_label']);
+    }
+
     public function test_schedule_list_summary_and_clinics_are_cached(): void
     {
         $repository = $this->createMock(JadwalDokterRepository::class);

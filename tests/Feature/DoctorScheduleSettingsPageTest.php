@@ -79,7 +79,7 @@ class DoctorScheduleSettingsPageTest extends TestCase
                         'start_time' => '12:00',
                     ],
                     [
-                        'day' => 'RABU',
+                        'day' => 'MINGGU',
                         'start_time' => '13:00',
                         'end_time' => '14:30',
                         'quota' => 35,
@@ -92,7 +92,7 @@ class DoctorScheduleSettingsPageTest extends TestCase
                 'original_doctor_code' => 'dryunus',
                 'original_day' => 'SELASA',
                 'original_start_time' => '12:00',
-                'day' => 'RABU',
+                'day' => 'MINGGU',
                 'start_time' => '13:00',
                 'end_time' => '14:30',
                 'quota' => 35,

@@ -3,6 +3,7 @@
 namespace App\Services\epasien\menu;
 
 use App\Repositories\epasien\menu\JadwalDokterRepository;
+use App\Support\Epasien\DoctorScheduleDay;
 use Carbon\CarbonInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -27,7 +28,7 @@ class JadwalDokterService
         'KAMIS' => ['label' => 'Kamis', 'short' => 'Kam'],
         'JUMAT' => ['label' => 'Jumat', 'short' => 'Jum'],
         'SABTU' => ['label' => 'Sabtu', 'short' => 'Sab'],
-        'AKHAD' => ['label' => 'Minggu', 'short' => 'Min'],
+        'MINGGU' => ['label' => 'Minggu', 'short' => 'Min'],
     ];
 
     public function __construct(
@@ -47,7 +48,7 @@ class JadwalDokterService
         $perPage = max(6, min($perPage, 24));
         $queryDay = $filters['day'] === 'SEMUA'
             ? null
-            : $filters['day'];
+            : DoctorScheduleDay::toDatabase($filters['day']);
         $search = $filters['search'] !== '' ? $filters['search'] : null;
         $clinicCode = $filters['clinic_code'] !== ''
             ? $filters['clinic_code']
@@ -126,7 +127,7 @@ class JadwalDokterService
             'page' => LengthAwarePaginator::resolveCurrentPage(),
         ], JSON_THROW_ON_ERROR);
 
-        return 'epasien:khanza:doctor-schedules:list:v2:'.hash('sha256', $filters);
+        return 'epasien:khanza:doctor-schedules:list:v3:'.hash('sha256', $filters);
     }
 
     /**
@@ -165,7 +166,7 @@ class JadwalDokterService
             CarbonInterface::THURSDAY => 'KAMIS',
             CarbonInterface::FRIDAY => 'JUMAT',
             CarbonInterface::SATURDAY => 'SABTU',
-            default => 'AKHAD',
+            default => 'MINGGU',
         };
     }
 
@@ -193,7 +194,7 @@ class JadwalDokterService
         ?string $day,
         ?string $clinicCode
     ): array {
-        $day = strtoupper(trim((string) $day));
+        $day = DoctorScheduleDay::toEpasien($day);
         $day = isset(self::DAYS[$day]) || $day === 'SEMUA'
             ? $day
             : $this->currentDay();
@@ -214,7 +215,9 @@ class JadwalDokterService
     private function formatSchedule(object $schedule): array
     {
         $doctorName = $this->text($schedule->nm_dokter ?? null);
-        $day = strtoupper($this->text($schedule->hari_kerja ?? null));
+        $day = DoctorScheduleDay::toEpasien(
+            $this->text($schedule->hari_kerja ?? null)
+        );
         $quota = max(0, (int) ($schedule->kuota ?? 0));
 
         return [
