@@ -25,7 +25,7 @@
 body {
     background: var(--ep-canvas);
     color: var(--ep-ink);
-    font-family: "Roboto", Arial, sans-serif;
+    font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
     font-smooth: always;
@@ -1640,7 +1640,7 @@ body {
 /* Premium compact SweetAlert2 */
 .swal2-container.ep-swal-container {
     box-sizing: border-box;
-    font-family: "Roboto", Arial, sans-serif;
+    font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
     padding: 16px;
     z-index: 2060;
     -moz-osx-font-smoothing: grayscale;
@@ -1982,7 +1982,7 @@ body.swal2-toast-shown .swal2-container.ep-swal-container.swal2-backdrop-show,
 
 /* Font readability polish for Users, Roles, and Permissions pages */
 .access-page {
-    font-family: "Roboto", Arial, sans-serif;
+    font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
     font-size: 13px;
     line-height: 1.5;
     -moz-osx-font-smoothing: grayscale;
@@ -1991,7 +1991,7 @@ body.swal2-toast-shown .swal2-container.ep-swal-container.swal2-backdrop-show,
 }
 
 .access-crud-modal {
-    font-family: "Roboto", Arial, sans-serif;
+    font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
     font-size: 13px;
     line-height: 1.5;
 }

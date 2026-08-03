@@ -16,7 +16,7 @@
     --schedule-surface: #fff;
     --schedule-shadow: 0 16px 38px rgba(25, 66, 54, 0.08);
     color: var(--schedule-ink);
-    font-family: "Roboto", sans-serif;
+    font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
     margin: 0 auto;
     max-width: 1440px;
     padding-bottom: 1rem;

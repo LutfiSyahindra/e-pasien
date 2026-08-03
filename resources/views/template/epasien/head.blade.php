@@ -3,6 +3,8 @@
         $usesDataTables = request()->routeIs("users.*", "roles.*", "permissions.*");
         $usesSelect2 = request()->routeIs("users.*", "roles.*", "daftarOnline.index");
         $usesDashboardCharts = request()->routeIs("dashboard");
+        $usesAccessControl = request()->routeIs("users.*", "roles.*", "permissions.*", "roleConfiguration.*");
+        $usesSweetAlert = request()->routeIs("profile.*", "users.*", "roles.*", "permissions.*", "daftarOnline.*");
     @endphp
 
     <!-- Required meta tags -->
@@ -28,18 +30,18 @@
     <link href="{{ asset("epasien/assets/css/bootstrap-extended.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/css/style.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/css/icons.css") }}" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
 
     <link href="{{ asset("epasien/assets/css/navigation-loader.css") }}" rel="stylesheet" />
     <script src="{{ asset("epasien/assets/js/navigation-loader.js") }}" defer></script>
 
-    <!--Theme Styles-->
-    <link href="{{ asset("epasien/assets/css/dark-theme.css") }}" rel="stylesheet" />
-    <link href="{{ asset("epasien/assets/css/light-theme.css") }}" rel="stylesheet" />
-    <link href="{{ asset("epasien/assets/css/semi-dark.css") }}" rel="stylesheet" />
-    <link href="{{ asset("epasien/assets/css/header-colors.css") }}" rel="stylesheet" />
-    <link href="{{ asset("epasien/assets/css/access-control.css") }}" rel="stylesheet" />
+    @if ($usesAccessControl)
+        <link href="{{ asset("epasien/assets/css/access-control.css") }}" rel="stylesheet" />
+    @elseif ($usesSweetAlert)
+        <link href="{{ asset("epasien/assets/css/sweetalert-premium.css") }}" rel="stylesheet" />
+    @endif
     <link href="{{ asset("epasien/assets/css/sidebar-premium.css") }}" rel="stylesheet" />
 
     <title>@yield("title", "E-Pasien")</title>

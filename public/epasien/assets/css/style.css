@@ -30,7 +30,7 @@ body {
     font-size: 14px;
 	color: #4c5258;
 	letter-spacing: .5px;
-    font-family: Roboto, sans-serif;
+    font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
     background-color: #f7f8fa;
     overflow-x: hidden;
 }

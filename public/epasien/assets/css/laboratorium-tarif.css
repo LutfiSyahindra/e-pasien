@@ -15,7 +15,7 @@
     --lab-surface: #fff;
     --lab-shadow: 0 15px 36px rgba(25, 59, 58, 0.08);
     color: var(--lab-ink);
-    font-family: "Roboto", sans-serif;
+    font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
     margin: 0 auto;
     max-width: 1440px;
     padding-bottom: 1rem;

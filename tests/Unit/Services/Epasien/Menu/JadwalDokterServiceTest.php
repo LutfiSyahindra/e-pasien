@@ -11,6 +11,13 @@ use Tests\TestCase;
 
 class JadwalDokterServiceTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Cache::flush();
+    }
+
     public function test_schedule_is_formatted_for_patient_display(): void
     {
         $repository = $this->createMock(JadwalDokterRepository::class);
@@ -96,8 +103,6 @@ class JadwalDokterServiceTest extends TestCase
 
     public function test_schedule_summary_and_clinics_are_cached(): void
     {
-        Cache::flush();
-
         $repository = $this->createMock(JadwalDokterRepository::class);
         $repository
             ->expects($this->exactly(2))
