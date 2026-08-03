@@ -743,6 +743,12 @@ class DaftarOnlineService
             'status_poli' => 'Lama',
         ];
         $payload = $preview['payload'];
+        $formattedQueueNumber = str_pad(
+            (string) ((int) $payload['angkaantrean']),
+            3,
+            '0',
+            STR_PAD_LEFT
+        );
         $mobileJknReference = [
             'nobooking' => (string) $payload['kodebooking'],
             'nomorkartu' => (string) $payload['nomorkartu'],
@@ -758,8 +764,8 @@ class DaftarOnlineService
                 (int) $payload['jeniskunjungan']
             ),
             'nomorreferensi' => (string) $payload['nomorreferensi'],
-            'nomorantrean' => (string) $payload['nomorantrean'],
-            'angkaantrean' => (string) $payload['angkaantrean'],
+            'nomorantrean' => $formattedQueueNumber,
+            'angkaantrean' => $formattedQueueNumber,
             'estimasidilayani' => (string) $payload['estimasidilayani'],
             'sisakuotajkn' => (int) $payload['sisakuotajkn'],
             'kuotajkn' => (int) $payload['kuotajkn'],
