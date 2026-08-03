@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Cache;
 
 class RadiologiService
 {
-    private const REFERENCE_CACHE_SECONDS = 900;
+    private const CACHE_FRESH_SECONDS = 900;
+
+    private const CACHE_STALE_SECONDS = 86400;
 
     public function __construct(
         private readonly RadiologiRepository $radiologiRepository
@@ -21,17 +23,27 @@ class RadiologiService
         int $perPage = 12
     ): LengthAwarePaginator {
         $perPage = max(6, min($perPage, 24));
-        $rates = $this->radiologiRepository->paginateRates(
-            $this->nullableText($class),
-            $this->nullableText($search),
-            $perPage
-        );
+        $class = $this->nullableText($class);
+        $search = $this->nullableText($search);
+        $rates = Cache::flexible(
+            $this->ratesCacheKey($class, $search, $perPage),
+            [self::CACHE_FRESH_SECONDS, self::CACHE_STALE_SECONDS],
+            function () use ($class, $search, $perPage): LengthAwarePaginator {
+                $rates = $this->radiologiRepository->paginateRates(
+                    $class,
+                    $search,
+                    $perPage
+                );
+                $rates->setCollection(
+                    $rates->getCollection()->map(
+                        fn (object $rate): array => $this->formatRate($rate)
+                    )
+                );
 
-        $rates->setCollection(
-            $rates->getCollection()->map(
-                fn (object $rate): array => $this->formatRate($rate)
-            )
+                return $rates;
+            }
         );
+        $rates->setPath(LengthAwarePaginator::resolveCurrentPath());
 
         return $rates;
     }
@@ -41,9 +53,9 @@ class RadiologiService
      */
     public function classes(): Collection
     {
-        return Cache::remember(
+        return Cache::flexible(
             'epasien:khanza:radiology:classes:v1',
-            now()->addSeconds(self::REFERENCE_CACHE_SECONDS),
+            [self::CACHE_FRESH_SECONDS, self::CACHE_STALE_SECONDS],
             fn (): Collection => $this->radiologiRepository
                 ->classes()
                 ->map(fn (mixed $class): array => [
@@ -66,9 +78,9 @@ class RadiologiService
      */
     public function summary(): array
     {
-        $summary = Cache::remember(
+        $summary = Cache::flexible(
             'epasien:khanza:radiology:summary:v1',
-            now()->addSeconds(self::REFERENCE_CACHE_SECONDS),
+            [self::CACHE_FRESH_SECONDS, self::CACHE_STALE_SECONDS],
             fn (): ?object => $this->radiologiRepository->summary()
         );
         $minimum = max(0, (float) ($summary?->minimum ?? 0));
@@ -81,6 +93,21 @@ class RadiologiService
             'minimum_formatted' => $this->formatCurrency($minimum),
             'maximum_formatted' => $this->formatCurrency($maximum),
         ];
+    }
+
+    private function ratesCacheKey(
+        ?string $class,
+        ?string $search,
+        int $perPage
+    ): string {
+        $filters = json_encode([
+            'class' => $class,
+            'search' => $search,
+            'per_page' => $perPage,
+            'page' => LengthAwarePaginator::resolveCurrentPage(),
+        ], JSON_THROW_ON_ERROR);
+
+        return 'epasien:khanza:radiology:list:v2:'.hash('sha256', $filters);
     }
 
     /**

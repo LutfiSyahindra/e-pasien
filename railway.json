@@ -2,7 +2,7 @@
     "$schema": "https://railway.com/railway.schema.json",
     "deploy": {
         "preDeployCommand": [
-            "php artisan migrate --force && php artisan optimize"
+            "php artisan migrate --force && php artisan optimize && php artisan epasien:warm-khanza-cache"
         ],
         "healthcheckPath": "/up",
         "healthcheckTimeout": 100,

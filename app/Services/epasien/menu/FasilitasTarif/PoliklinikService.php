@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Cache;
 
 class PoliklinikService
 {
-    private const SUMMARY_CACHE_SECONDS = 900;
+    private const CACHE_FRESH_SECONDS = 900;
+
+    private const CACHE_STALE_SECONDS = 86400;
 
     public function __construct(
         private readonly PoliklinikRepository $poliklinikRepository
@@ -19,16 +21,25 @@ class PoliklinikService
         int $perPage = 12
     ): LengthAwarePaginator {
         $perPage = max(6, min($perPage, 24));
-        $clinics = $this->poliklinikRepository->paginateClinics(
-            $this->nullableText($search),
-            $perPage
-        );
+        $search = $this->nullableText($search);
+        $clinics = Cache::flexible(
+            $this->clinicsCacheKey($search, $perPage),
+            [self::CACHE_FRESH_SECONDS, self::CACHE_STALE_SECONDS],
+            function () use ($search, $perPage): LengthAwarePaginator {
+                $clinics = $this->poliklinikRepository->paginateClinics(
+                    $search,
+                    $perPage
+                );
+                $clinics->setCollection(
+                    $clinics->getCollection()->map(
+                        fn (object $clinic): array => $this->formatClinic($clinic)
+                    )
+                );
 
-        $clinics->setCollection(
-            $clinics->getCollection()->map(
-                fn (object $clinic): array => $this->formatClinic($clinic)
-            )
+                return $clinics;
+            }
         );
+        $clinics->setPath(LengthAwarePaginator::resolveCurrentPath());
 
         return $clinics;
     }
@@ -45,9 +56,9 @@ class PoliklinikService
      */
     public function summary(): array
     {
-        $summary = Cache::remember(
+        $summary = Cache::flexible(
             'epasien:khanza:clinics:summary:v1',
-            now()->addSeconds(self::SUMMARY_CACHE_SECONDS),
+            [self::CACHE_FRESH_SECONDS, self::CACHE_STALE_SECONDS],
             fn (): ?object => $this->poliklinikRepository->summary()
         );
         $minimum = max(0, (float) ($summary?->minimum ?? 0));
@@ -61,6 +72,19 @@ class PoliklinikService
             'minimum_formatted' => $this->formatCurrency($minimum),
             'maximum_formatted' => $this->formatCurrency($maximum),
         ];
+    }
+
+    private function clinicsCacheKey(
+        ?string $search,
+        int $perPage
+    ): string {
+        $filters = json_encode([
+            'search' => $search,
+            'per_page' => $perPage,
+            'page' => LengthAwarePaginator::resolveCurrentPage(),
+        ], JSON_THROW_ON_ERROR);
+
+        return 'epasien:khanza:clinics:list:v2:'.hash('sha256', $filters);
     }
 
     /**

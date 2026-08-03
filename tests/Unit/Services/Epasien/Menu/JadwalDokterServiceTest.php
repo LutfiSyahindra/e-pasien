@@ -101,11 +101,11 @@ class JadwalDokterServiceTest extends TestCase
         $this->assertSame(0, $page['schedules']->total());
     }
 
-    public function test_schedule_summary_and_clinics_are_cached(): void
+    public function test_schedule_list_summary_and_clinics_are_cached(): void
     {
         $repository = $this->createMock(JadwalDokterRepository::class);
         $repository
-            ->expects($this->exactly(2))
+            ->expects($this->once())
             ->method('paginateSchedules')
             ->willReturnCallback(
                 fn () => new LengthAwarePaginator([], 0, 12)

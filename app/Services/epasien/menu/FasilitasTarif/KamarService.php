@@ -9,9 +9,13 @@ use Illuminate\Support\Facades\Cache;
 
 class KamarService
 {
-    private const COUNTS_CACHE_SECONDS = 15;
+    private const LIVE_CACHE_FRESH_SECONDS = 10;
 
-    private const CLASSES_CACHE_SECONDS = 900;
+    private const LIVE_CACHE_STALE_SECONDS = 60;
+
+    private const REFERENCE_CACHE_FRESH_SECONDS = 900;
+
+    private const REFERENCE_CACHE_STALE_SECONDS = 3600;
 
     private const STATUS_MAP = [
         'tersedia' => 'KOSONG',
@@ -31,18 +35,32 @@ class KamarService
         int $perPage = 12
     ): LengthAwarePaginator {
         $perPage = max(6, min($perPage, 24));
-        $rooms = $this->kamarRepository->paginateRooms(
-            $this->databaseStatus($status),
-            $this->nullableText($class),
-            $this->nullableText($search),
-            $perPage
-        );
+        $databaseStatus = $this->databaseStatus($status);
+        $class = $this->nullableText($class);
+        $search = $this->nullableText($search);
+        $rooms = Cache::flexible(
+            $this->roomsCacheKey($databaseStatus, $class, $search, $perPage),
+            [
+                self::LIVE_CACHE_FRESH_SECONDS,
+                self::LIVE_CACHE_STALE_SECONDS,
+            ],
+            function () use ($databaseStatus, $class, $search, $perPage): LengthAwarePaginator {
+                $rooms = $this->kamarRepository->paginateRooms(
+                    $databaseStatus,
+                    $class,
+                    $search,
+                    $perPage
+                );
+                $rooms->setCollection(
+                    $rooms->getCollection()->map(
+                        fn (object $room): array => $this->formatRoom($room)
+                    )
+                );
 
-        $rooms->setCollection(
-            $rooms->getCollection()->map(
-                fn (object $room): array => $this->formatRoom($room)
-            )
+                return $rooms;
+            }
         );
+        $rooms->setPath(LengthAwarePaginator::resolveCurrentPath());
 
         return $rooms;
     }
@@ -58,9 +76,12 @@ class KamarService
      */
     public function counts(): array
     {
-        return Cache::remember(
+        return Cache::flexible(
             'epasien:khanza:rooms:counts:v1',
-            now()->addSeconds(self::COUNTS_CACHE_SECONDS),
+            [
+                self::LIVE_CACHE_FRESH_SECONDS,
+                self::LIVE_CACHE_STALE_SECONDS,
+            ],
             fn (): array => $this->kamarRepository->roomCounts()
         );
     }
@@ -70,11 +91,31 @@ class KamarService
      */
     public function classes(): Collection
     {
-        return Cache::remember(
+        return Cache::flexible(
             'epasien:khanza:rooms:classes:v1',
-            now()->addSeconds(self::CLASSES_CACHE_SECONDS),
+            [
+                self::REFERENCE_CACHE_FRESH_SECONDS,
+                self::REFERENCE_CACHE_STALE_SECONDS,
+            ],
             fn (): Collection => $this->kamarRepository->roomClasses()
         );
+    }
+
+    private function roomsCacheKey(
+        ?string $status,
+        ?string $class,
+        ?string $search,
+        int $perPage
+    ): string {
+        $filters = json_encode([
+            'status' => $status,
+            'class' => $class,
+            'search' => $search,
+            'per_page' => $perPage,
+            'page' => LengthAwarePaginator::resolveCurrentPage(),
+        ], JSON_THROW_ON_ERROR);
+
+        return 'epasien:khanza:rooms:list:v2:'.hash('sha256', $filters);
     }
 
     /**

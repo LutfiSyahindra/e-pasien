@@ -5,10 +5,18 @@ namespace Tests\Unit\Services\Epasien\Menu;
 use App\Repositories\epasien\menu\FasilitasTarif\PoliklinikRepository;
 use App\Services\epasien\menu\FasilitasTarif\PoliklinikService;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class PoliklinikServiceTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Cache::flush();
+    }
+
     public function test_clinic_fees_are_formatted_for_new_and_returning_patients(): void
     {
         $repository = $this->createMock(PoliklinikRepository::class);
@@ -25,7 +33,9 @@ class PoliklinikServiceTest extends TestCase
                 ],
             ], 1, 12));
 
-        $clinics = (new PoliklinikService($repository))->clinics(' anak ');
+        $service = new PoliklinikService($repository);
+        $clinics = $service->clinics(' anak ');
+        $cachedClinics = $service->clinics(' anak ');
         $clinic = $clinics->items()[0];
 
         $this->assertSame('ANA', $clinic['code']);
@@ -37,6 +47,7 @@ class PoliklinikServiceTest extends TestCase
         $this->assertSame(3000.0, $clinic['returning_fee']);
         $this->assertSame('Rp 3.000', $clinic['returning_fee_formatted']);
         $this->assertTrue($clinic['returning_fee_available']);
+        $this->assertSame($clinics->items(), $cachedClinics->items());
     }
 
     public function test_zero_fee_is_not_presented_as_free(): void

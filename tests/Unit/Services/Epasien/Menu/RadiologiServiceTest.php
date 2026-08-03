@@ -5,10 +5,18 @@ namespace Tests\Unit\Services\Epasien\Menu;
 use App\Repositories\epasien\menu\FasilitasTarif\RadiologiRepository;
 use App\Services\epasien\menu\FasilitasTarif\RadiologiService;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class RadiologiServiceTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Cache::flush();
+    }
+
     public function test_rates_are_trimmed_and_formatted_for_patients(): void
     {
         $repository = $this->createMock(RadiologiRepository::class);
@@ -25,10 +33,12 @@ class RadiologiServiceTest extends TestCase
                 ],
             ], 1, 12));
 
-        $rates = (new RadiologiService($repository))->rates(
+        $service = new RadiologiService($repository);
+        $rates = $service->rates(
             ' Rawat Jalan ',
             ' thorax '
         );
+        $cachedRates = $service->rates(' Rawat Jalan ', ' thorax ');
         $rate = $rates->items()[0];
 
         $this->assertSame('RAD001', $rate['code']);
@@ -36,6 +46,7 @@ class RadiologiServiceTest extends TestCase
         $this->assertSame('Rawat Jalan', $rate['class_label']);
         $this->assertSame(175000.0, $rate['tariff']);
         $this->assertSame('Rp 175.000', $rate['tariff_formatted']);
+        $this->assertSame($rates->items(), $cachedRates->items());
     }
 
     public function test_dash_class_has_a_patient_friendly_label(): void

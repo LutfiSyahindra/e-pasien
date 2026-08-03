@@ -5,10 +5,18 @@ namespace Tests\Unit\Services\Epasien\Menu;
 use App\Repositories\epasien\menu\FasilitasTarif\LaboratoriumRepository;
 use App\Services\epasien\menu\FasilitasTarif\LaboratoriumService;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class LaboratoriumServiceTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Cache::flush();
+    }
+
     public function test_items_use_template_price_and_are_formatted_for_patients(): void
     {
         $repository = $this->createMock(LaboratoriumRepository::class);
@@ -27,10 +35,12 @@ class LaboratoriumServiceTest extends TestCase
                 ],
             ], 1, 16));
 
-        $items = (new LaboratoriumService($repository))->items(
+        $service = new LaboratoriumService($repository);
+        $items = $service->items(
             ' J000111 ',
             ' hemoglobin '
         );
+        $cachedItems = $service->items(' J000111 ', ' hemoglobin ');
         $item = $items->items()[0];
 
         $this->assertSame('J000111', $item['code']);
@@ -42,6 +52,7 @@ class LaboratoriumServiceTest extends TestCase
         $this->assertSame(15000.0, $item['tariff']);
         $this->assertTrue($item['has_tariff']);
         $this->assertSame('Rp 15.000', $item['tariff_formatted']);
+        $this->assertSame($items->items(), $cachedItems->items());
     }
 
     public function test_zero_template_price_asks_patient_to_confirm(): void

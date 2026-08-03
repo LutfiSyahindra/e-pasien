@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Cache;
 
 class LaboratoriumService
 {
-    private const REFERENCE_CACHE_SECONDS = 900;
+    private const CACHE_FRESH_SECONDS = 900;
+
+    private const CACHE_STALE_SECONDS = 86400;
 
     public function __construct(
         private readonly LaboratoriumRepository $laboratoriumRepository
@@ -21,17 +23,27 @@ class LaboratoriumService
         int $perPage = 16
     ): LengthAwarePaginator {
         $perPage = max(8, min($perPage, 32));
-        $items = $this->laboratoriumRepository->paginateItems(
-            $this->nullableText($group),
-            $this->nullableText($search),
-            $perPage
-        );
+        $group = $this->nullableText($group);
+        $search = $this->nullableText($search);
+        $items = Cache::flexible(
+            $this->itemsCacheKey($group, $search, $perPage),
+            [self::CACHE_FRESH_SECONDS, self::CACHE_STALE_SECONDS],
+            function () use ($group, $search, $perPage): LengthAwarePaginator {
+                $items = $this->laboratoriumRepository->paginateItems(
+                    $group,
+                    $search,
+                    $perPage
+                );
+                $items->setCollection(
+                    $items->getCollection()->map(
+                        fn (object $item): array => $this->formatItem($item)
+                    )
+                );
 
-        $items->setCollection(
-            $items->getCollection()->map(
-                fn (object $item): array => $this->formatItem($item)
-            )
+                return $items;
+            }
         );
+        $items->setPath(LengthAwarePaginator::resolveCurrentPath());
 
         return $items;
     }
@@ -45,9 +57,9 @@ class LaboratoriumService
      */
     public function groups(): Collection
     {
-        return Cache::remember(
+        return Cache::flexible(
             'epasien:khanza:laboratory:groups:v1',
-            now()->addSeconds(self::REFERENCE_CACHE_SECONDS),
+            [self::CACHE_FRESH_SECONDS, self::CACHE_STALE_SECONDS],
             fn (): Collection => $this->laboratoriumRepository
                 ->groups()
                 ->map(fn (object $group): array => [
@@ -73,9 +85,9 @@ class LaboratoriumService
      */
     public function summary(): array
     {
-        $summary = Cache::remember(
+        $summary = Cache::flexible(
             'epasien:khanza:laboratory:summary:v1',
-            now()->addSeconds(self::REFERENCE_CACHE_SECONDS),
+            [self::CACHE_FRESH_SECONDS, self::CACHE_STALE_SECONDS],
             fn (): ?object => $this->laboratoriumRepository->summary()
         );
         $minimum = max(0, (float) ($summary?->minimum ?? 0));
@@ -90,6 +102,21 @@ class LaboratoriumService
             'minimum_formatted' => $this->formatCurrency($minimum),
             'maximum_formatted' => $this->formatCurrency($maximum),
         ];
+    }
+
+    private function itemsCacheKey(
+        ?string $group,
+        ?string $search,
+        int $perPage
+    ): string {
+        $filters = json_encode([
+            'group' => $group,
+            'search' => $search,
+            'per_page' => $perPage,
+            'page' => LengthAwarePaginator::resolveCurrentPage(),
+        ], JSON_THROW_ON_ERROR);
+
+        return 'epasien:khanza:laboratory:list:v2:'.hash('sha256', $filters);
     }
 
     /**

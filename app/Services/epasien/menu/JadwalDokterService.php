@@ -12,7 +12,13 @@ class JadwalDokterService
 {
     private const PATIENT_TIMEZONE = 'Asia/Jakarta';
 
-    private const REFERENCE_CACHE_SECONDS = 300;
+    private const LIST_CACHE_FRESH_SECONDS = 60;
+
+    private const LIST_CACHE_STALE_SECONDS = 900;
+
+    private const REFERENCE_CACHE_FRESH_SECONDS = 300;
+
+    private const REFERENCE_CACHE_STALE_SECONDS = 3600;
 
     private const DAYS = [
         'SENIN' => ['label' => 'Senin', 'short' => 'Sen'],
@@ -42,27 +48,48 @@ class JadwalDokterService
         $queryDay = $filters['day'] === 'SEMUA'
             ? null
             : $filters['day'];
-        $schedules = $this->jadwalDokterRepository->paginateSchedules(
-            $filters['search'] !== '' ? $filters['search'] : null,
-            $queryDay,
-            $filters['clinic_code'] !== '' ? $filters['clinic_code'] : null,
-            $perPage
-        );
+        $search = $filters['search'] !== '' ? $filters['search'] : null;
+        $clinicCode = $filters['clinic_code'] !== ''
+            ? $filters['clinic_code']
+            : null;
+        $schedules = Cache::flexible(
+            $this->scheduleCacheKey($search, $queryDay, $clinicCode, $perPage),
+            [
+                self::LIST_CACHE_FRESH_SECONDS,
+                self::LIST_CACHE_STALE_SECONDS,
+            ],
+            function () use ($search, $queryDay, $clinicCode, $perPage): LengthAwarePaginator {
+                $schedules = $this->jadwalDokterRepository->paginateSchedules(
+                    $search,
+                    $queryDay,
+                    $clinicCode,
+                    $perPage
+                );
+                $schedules->setCollection(
+                    $schedules->getCollection()->map(
+                        fn (object $schedule): array => $this->formatSchedule($schedule)
+                    )
+                );
 
-        $schedules->setCollection(
-            $schedules->getCollection()->map(
-                fn (object $schedule): array => $this->formatSchedule($schedule)
-            )
+                return $schedules;
+            }
         );
+        $schedules->setPath(LengthAwarePaginator::resolveCurrentPath());
 
-        $summary = Cache::remember(
+        $summary = Cache::flexible(
             'epasien:khanza:doctor-schedules:summary:v1',
-            now()->addSeconds(self::REFERENCE_CACHE_SECONDS),
+            [
+                self::REFERENCE_CACHE_FRESH_SECONDS,
+                self::REFERENCE_CACHE_STALE_SECONDS,
+            ],
             fn (): ?object => $this->jadwalDokterRepository->summary()
         );
-        $clinics = Cache::remember(
+        $clinics = Cache::flexible(
             'epasien:khanza:doctor-schedules:clinics:v1',
-            now()->addSeconds(self::REFERENCE_CACHE_SECONDS),
+            [
+                self::REFERENCE_CACHE_FRESH_SECONDS,
+                self::REFERENCE_CACHE_STALE_SECONDS,
+            ],
             fn (): Collection => $this->jadwalDokterRepository->clinics()
         );
 
@@ -83,6 +110,23 @@ class JadwalDokterService
                 'clinics' => (int) ($summary?->clinics ?? 0),
             ],
         ];
+    }
+
+    private function scheduleCacheKey(
+        ?string $search,
+        ?string $day,
+        ?string $clinicCode,
+        int $perPage
+    ): string {
+        $filters = json_encode([
+            'search' => $search,
+            'day' => $day,
+            'clinic' => $clinicCode,
+            'per_page' => $perPage,
+            'page' => LengthAwarePaginator::resolveCurrentPage(),
+        ], JSON_THROW_ON_ERROR);
+
+        return 'epasien:khanza:doctor-schedules:list:v2:'.hash('sha256', $filters);
     }
 
     /**

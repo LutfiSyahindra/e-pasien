@@ -11,6 +11,13 @@ use Tests\TestCase;
 
 class KamarServiceTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Cache::flush();
+    }
+
     public function test_rooms_are_filtered_and_formatted_for_patients(): void
     {
         $repository = $this->createMock(KamarRepository::class);
@@ -34,7 +41,13 @@ class KamarServiceTest extends TestCase
                 ],
             ], 1, 12));
 
-        $rooms = (new KamarService($repository))->rooms(
+        $service = new KamarService($repository);
+        $rooms = $service->rooms(
+            'tersedia',
+            ' Kelas VVIP ',
+            ' aisyah '
+        );
+        $cachedRooms = $service->rooms(
             'tersedia',
             ' Kelas VVIP ',
             ' aisyah '
@@ -47,6 +60,7 @@ class KamarServiceTest extends TestCase
         $this->assertSame('tersedia', $room['status']);
         $this->assertSame('Tersedia', $room['status_label']);
         $this->assertSame('bi-check-circle-fill', $room['status_icon']);
+        $this->assertSame($rooms->items(), $cachedRooms->items());
     }
 
     public function test_all_database_room_statuses_have_patient_friendly_labels(): void
@@ -71,8 +85,6 @@ class KamarServiceTest extends TestCase
 
     public function test_room_counts_and_classes_are_cached(): void
     {
-        Cache::flush();
-
         $repository = $this->createMock(KamarRepository::class);
         $repository
             ->expects($this->once())
