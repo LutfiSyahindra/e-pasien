@@ -336,7 +336,7 @@
                         </div>
                     </div>
                 </li>
-                <li class="nav-item dropdown dropdown-large d-none d-sm-block">
+                <li class="nav-item dropdown dropdown-large d-none">
                     <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="#"
                         data-bs-toggle="dropdown">
                         <div class="notifications">
@@ -498,6 +498,31 @@
                             <a class="dropdown-item" href="#">
                                 <div class="text-center">View All Notifications</div>
                             </a>
+                        </div>
+                    </div>
+                </li>
+                <li class="nav-item dropdown ep-notification-nav">
+                    <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="#" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false" aria-label="Buka notifikasi">
+                        <div class="notifications ep-notification-bell">
+                            <span class="notify-badge" data-notification-badge hidden>0</span>
+                            <i class="bi bi-bell-fill" aria-hidden="true"></i>
+                        </div>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end ep-notification-menu p-0">
+                        <div class="ep-notification-header">
+                            <div><span>Kabar terbaru</span><h5>Notifikasi</h5></div>
+                            <button type="button" data-notification-read-all>Tandai dibaca</button>
+                        </div>
+                        <div class="ep-notification-list" data-notification-list aria-live="polite">
+                            <div class="ep-notification-loading"><span></span><span></span><span></span></div>
+                        </div>
+                        <div class="ep-notification-footer">
+                            <button type="button" data-push-toggle>
+                                <i class="bi bi-phone-vibrate"></i>
+                                <span>Aktifkan notifikasi perangkat</span>
+                            </button>
+                            <small data-push-hint>Terima kabar meskipun E-Pasien sedang ditutup.</small>
                         </div>
                     </div>
                 </li>

@@ -5,7 +5,7 @@
  @if (request()->routeIs("users.*", "roles.*", "daftarOnline.index"))
      <script src="{{ asset("epasien/assets/plugins/select2/js/select2.min.js") }}"></script>
  @endif
- @if (request()->routeIs("profile.*", "users.*", "roles.*", "permissions.*", "daftarOnline.*"))
+ @if (request()->routeIs("profile.*", "users.*", "roles.*", "permissions.*", "daftarOnline.*", "promotions.*"))
      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
      <script>
      (function() {

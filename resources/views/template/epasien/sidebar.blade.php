@@ -113,6 +113,17 @@
                             </li>
                         @endcan
 
+                        @can("EPASIEN.MENU.PROMOSI")
+                            <li class="{{ request()->routeIs("promotions.*") ? "mm-active" : "" }}">
+                                <a href="{{ route("promotions.index") }}"
+                                    @if (request()->routeIs("promotions.*")) aria-current="page" @endif>
+                                    <div class="parent-icon"><i class="bi bi-stars"></i></div>
+                                    <div class="menu-title">Promo Sehat</div>
+                                    <span class="ep-sidebar-menu-badge">Baru</span>
+                                </a>
+                            </li>
+                        @endcan
+
                         @can("EPASIEN.MENU.PENDAFTARAN_ONLINE")
                             <li class="{{ $registrationMenuActive ? "mm-active" : "" }}">
                                 <a href="javascript:;" class="has-arrow"

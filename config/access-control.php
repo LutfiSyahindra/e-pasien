@@ -33,6 +33,12 @@ return [
         'Pasien',
     ],
 
+    'marketing_role' => 'Marketing',
+
+    'marketing_role_aliases' => [
+        'Pemasaran',
+    ],
+
     'sidebar_permissions' => $sidebarPermissions,
 
     'protected_permissions' => [
@@ -48,6 +54,8 @@ return [
         'permissions.create',
         'permissions.update',
         'permissions.delete',
+        'EPASIEN.MENU.PROMOSI',
+        'EPASIEN.MENU.PROMOSI.KELOLA',
         ...$sidebarPermissions,
     ],
 ];

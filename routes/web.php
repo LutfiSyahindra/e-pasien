@@ -11,10 +11,13 @@ use App\Http\Controllers\Epasien\menu\PermintaanTindakan\OperasiController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\PemeriksaanLaboratController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\PemeriksaanRadiologiController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\ResepObatController;
+use App\Http\Controllers\Epasien\menu\PromotionController;
 use App\Http\Controllers\Epasien\menu\RiwayatMcuController;
 use App\Http\Controllers\Epasien\menu\RiwayatPemeriksaanController;
 use App\Http\Controllers\Epasien\menu\Surat\SuratKontrolController;
 use App\Http\Controllers\Epasien\menu\Surat\SuratRujukanController;
+use App\Http\Controllers\Epasien\NotificationController;
+use App\Http\Controllers\Epasien\PushSubscriptionController;
 use App\Http\Controllers\Epasien\settings\auth\permissionsController;
 use App\Http\Controllers\Epasien\settings\auth\rolesController;
 use App\Http\Controllers\Epasien\settings\auth\usersController;
@@ -37,6 +40,13 @@ Route::get('/dashboard', function () {
 ])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/e-pasien/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/e-pasien/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.readAll');
+    Route::patch('/e-pasien/notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
+    Route::get('/e-pasien/push/config', [PushSubscriptionController::class, 'config'])->name('push.config');
+    Route::post('/e-pasien/push/subscriptions', [PushSubscriptionController::class, 'store'])->name('push.store');
+    Route::delete('/e-pasien/push/subscriptions', [PushSubscriptionController::class, 'destroy'])->name('push.destroy');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo.update');
@@ -101,6 +111,27 @@ Route::middleware('auth')->group(function () {
     Route::prefix('e-pasien/menu')
         ->middleware('permission:EPASIEN.MENU')
         ->group(function () {
+            Route::middleware('permission:EPASIEN.MENU.PROMOSI')->group(function () {
+                Route::get('/promo-sehat', [PromotionController::class, 'index'])->name('promotions.index');
+                Route::get('/promo-sehat/{promotion}', [PromotionController::class, 'show'])
+                    ->whereNumber('promotion')->name('promotions.show');
+
+                Route::middleware('permission:EPASIEN.MENU.PROMOSI.KELOLA')->group(function () {
+                    Route::get('/promo-sehat-baru', [PromotionController::class, 'create'])->name('promotions.create');
+                    Route::post('/promo-sehat', [PromotionController::class, 'store'])->name('promotions.store');
+                    Route::get('/promo-sehat/{promotion}/edit', [PromotionController::class, 'edit'])
+                        ->whereNumber('promotion')->name('promotions.edit');
+                    Route::put('/promo-sehat/{promotion}', [PromotionController::class, 'update'])
+                        ->whereNumber('promotion')->name('promotions.update');
+                    Route::patch('/promo-sehat/{promotion}/archive', [PromotionController::class, 'archive'])
+                        ->whereNumber('promotion')->name('promotions.archive');
+                    Route::patch('/promo-sehat/{promotion}/restore', [PromotionController::class, 'restore'])
+                        ->whereNumber('promotion')->name('promotions.restore');
+                    Route::delete('/promo-sehat/{promotion}', [PromotionController::class, 'destroy'])
+                        ->whereNumber('promotion')->name('promotions.destroy');
+                });
+            });
+
             Route::middleware('permission:EPASIEN.MENU.JADWAL_DOKTER')->group(function () {
                 Route::get('/jadwal-dokter', [JadwalDokterController::class, 'index'])
                     ->name('jadwalDokter.index');
