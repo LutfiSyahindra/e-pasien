@@ -1700,14 +1700,91 @@
 }
 
 .online-history-filter {
-    align-items: center;
+    align-items: end;
     background: #f8fafc;
     border: 1px solid var(--online-border);
     border-radius: 8px;
     display: grid;
     gap: 10px;
-    grid-template-columns: minmax(0, 1fr) minmax(210px, 0.45fr) auto auto;
+    grid-template-columns: minmax(260px, 1fr) minmax(190px, 0.42fr) minmax(390px, 0.78fr) auto;
     padding: 12px;
+}
+
+.online-history-filter-field {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+}
+
+.online-history-filter-field > label {
+    color: #526078;
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1.2;
+    margin: 0;
+}
+
+.online-history-date-range {
+    align-items: end;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(175px, 1fr) auto minmax(175px, 1fr);
+    min-width: 0;
+}
+
+.online-history-date-range-separator {
+    color: var(--online-muted);
+    font-size: 11px;
+    font-weight: 900;
+    min-height: 44px;
+    padding-top: 15px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.online-history-date-control .form-control {
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+    padding-right: 14px;
+    text-overflow: clip;
+}
+
+.online-history-date-control .form-control::placeholder {
+    color: #8a96a8;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.online-history-filter-actions {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    min-height: 44px;
+    white-space: nowrap;
+}
+
+.online-history-date-control .picker {
+    left: 0;
+    max-width: calc(100vw - 32px);
+    right: auto;
+    top: calc(100% + 6px);
+    width: 320px;
+    z-index: 1090;
+}
+
+.online-history-date-control #onlineHistoryEndDate_root {
+    left: auto;
+    right: 0;
+}
+
+.online-history-page .picker__input {
+    background-color: var(--online-surface);
+}
+
+.online-history-page .picker__input.picker__input--active {
+    border-color: #8bb4f4;
+    box-shadow: 0 0 0 4px rgba(47, 101, 213, 0.12);
 }
 
 .online-history-list-heading {
@@ -3569,6 +3646,25 @@
     white-space: pre;
 }
 
+@media (max-width: 1399.98px) {
+    .online-history-filter {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .online-history-date-range,
+    .online-history-filter-actions {
+        grid-column: 1 / -1;
+    }
+
+    .online-history-filter-actions {
+        justify-content: stretch;
+    }
+
+    .online-history-filter-actions .online-button {
+        flex: 1 1 0;
+    }
+}
+
 @media (max-width: 1199.98px) {
     .online-layout {
         grid-template-columns: 1fr;
@@ -3833,6 +3929,19 @@
 }
 
 @media (max-width: 575.98px) {
+    .online-history-date-range {
+        grid-template-columns: 1fr;
+    }
+
+    .online-history-date-range-separator {
+        display: none;
+    }
+
+    .online-history-filter-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
     .online-patient-panel .online-panel-title {
         flex-wrap: wrap;
     }
@@ -4530,6 +4639,34 @@
 
 /* Smartphone registration history */
 @media (max-width: 767.98px) {
+    .online-history-date-control .picker__holder,
+    .online-history-date-control .picker--opened .picker__holder {
+        -ms-filter: none;
+        -webkit-backface-visibility: visible;
+        -webkit-transform: none;
+        backface-visibility: visible;
+        filter: none;
+        transform: none;
+    }
+
+    .online-history-date-control .picker__holder {
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        transition: opacity 120ms ease-out, max-height 0s 120ms, border-width 0s 120ms;
+    }
+
+    .online-history-date-control .picker--opened .picker__holder {
+        transition: opacity 120ms ease-out, max-height 0s, border-width 0s;
+    }
+
+    .online-history-date-control .picker__frame,
+    .online-history-date-control .picker__wrap,
+    .online-history-date-control .picker__box {
+        -webkit-transform: none;
+        filter: none;
+        transform: none;
+    }
+
     .online-history-panel {
         gap: 12px;
         padding: 12px;

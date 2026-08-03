@@ -337,9 +337,23 @@ class DaftarOnlinePageTest extends TestCase
             $mock->shouldReceive('isConfigured')->once()->andReturnTrue();
         });
         $this->mock(DaftarOnlineService::class, function (MockInterface $mock): void {
-            $mock->shouldReceive('registrationHistory')->once()->andReturn(
-                new LengthAwarePaginator([], 0, 8)
-            );
+            $mock->shouldReceive('registrationHistory')
+                ->once()
+                ->withArgs(fn (
+                    User $user,
+                    string $searchQuery,
+                    int $perPage,
+                    string $guarantorCode,
+                    bool $viewAllPatients,
+                    string $startDate,
+                    string $endDate
+                ): bool => $searchQuery === ''
+                    && $perPage === 8
+                    && $guarantorCode === ''
+                    && $viewAllPatients
+                    && $startDate === ''
+                    && $endDate === '')
+                ->andReturn(new LengthAwarePaginator([], 0, 8));
             $mock->shouldReceive('penjaminOptions')->once()->with(true)->andReturn([
                 ['kd_pj' => 'BPJ', 'png_jawab' => 'BPJS Kesehatan'],
                 ['kd_pj' => 'UMU', 'png_jawab' => 'Umum'],
@@ -366,8 +380,61 @@ class DaftarOnlinePageTest extends TestCase
             ->assertSeeText('0 hasil')
             ->assertSee('historyPage.classList.add(\'is-filter-enhanced\')', false)
             ->assertSee('name="kd_pj"', false)
+            ->assertSee('name="tanggal_mulai"', false)
+            ->assertSee('name="tanggal_selesai"', false)
+            ->assertSee('class="form-control online-history-date-picker"', false)
+            ->assertSee('picker.date.js', false)
+            ->assertSee("formatSubmit: 'yyyy-mm-dd'", false)
+            ->assertDontSee("container: 'body'", false)
+            ->assertDontSee('type="date"', false)
+            ->assertSeeText('Semua data')
             ->assertSeeText('Semua Penjamin')
             ->assertSeeText('BPJS Kesehatan');
+    }
+
+    public function test_history_can_be_filtered_by_date_range(): void
+    {
+        $this->mock(RegistrationRoleConfigurationService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('isConfigured')->once()->andReturnTrue();
+        });
+        $this->mock(DaftarOnlineService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('registrationHistory')
+                ->once()
+                ->withArgs(fn (
+                    User $user,
+                    string $searchQuery,
+                    int $perPage,
+                    string $guarantorCode,
+                    bool $viewAllPatients,
+                    string $startDate,
+                    string $endDate
+                ): bool => $viewAllPatients
+                    && $startDate === '2026-07-01'
+                    && $endDate === '2026-07-31')
+                ->andReturn(new LengthAwarePaginator([], 0, 8));
+            $mock->shouldReceive('penjaminOptions')->once()->with(true)->andReturn([]);
+        });
+
+        $user = new User([
+            'name' => 'Petugas',
+            'username' => 'PETUGAS01',
+            'email' => 'petugas@example.test',
+            'status' => true,
+        ]);
+        $user->setRelation('roles', collect());
+
+        $response = $this->actingAs($user)->get(route('daftarOnline.history', [
+            'tanggal_mulai' => '2026-07-01',
+            'tanggal_selesai' => '2026-07-31',
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertSee('name="tanggal_mulai"', false)
+            ->assertSee('value="2026-07-01"', false)
+            ->assertSee('name="tanggal_selesai"', false)
+            ->assertSee('value="2026-07-31"', false)
+            ->assertSeeText('1 filter sedang aktif');
     }
 
     public function test_bpjs_registration_requires_card_number(): void

@@ -292,7 +292,9 @@ class DaftarOnlineService
         string $searchQuery = '',
         int $perPage = 8,
         string $guarantorCode = '',
-        bool $viewAllPatients = false
+        bool $viewAllPatients = false,
+        string $startDate = '',
+        string $endDate = ''
     ): LengthAwarePaginator {
         $medicalRecordNumber = $viewAllPatients
             ? null
@@ -307,7 +309,9 @@ class DaftarOnlineService
             $medicalRecordNumber,
             trim($searchQuery),
             $perPage,
-            trim($guarantorCode)
+            trim($guarantorCode),
+            trim($startDate),
+            trim($endDate)
         );
 
         $audits = OnlineRegistrationAudit::query()

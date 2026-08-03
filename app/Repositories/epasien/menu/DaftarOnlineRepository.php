@@ -310,12 +310,18 @@ class DaftarOnlineRepository
         ?string $medicalRecordNumber,
         string $searchQuery,
         int $perPage,
-        string $guarantorCode = ''
+        string $guarantorCode = '',
+        string $startDate = '',
+        string $endDate = ''
     ): LengthAwarePaginator {
         $query = $this->registrationQuery($medicalRecordNumber);
 
         if ($guarantorCode !== '') {
             $query->where('reg_periksa.kd_pj', $guarantorCode);
+        }
+
+        if ($startDate !== '' && $endDate !== '') {
+            $query->whereBetween('reg_periksa.tgl_registrasi', [$startDate, $endDate]);
         }
 
         if ($searchQuery !== '') {

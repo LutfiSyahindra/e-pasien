@@ -3,6 +3,8 @@
 @section("title", "Riwayat Pendaftaran Online | E-Pasien")
 
 @push("style")
+    <link href="{{ asset("epasien/assets/plugins/datetimepicker/css/classic.css") }}" rel="stylesheet" />
+    <link href="{{ asset("epasien/assets/plugins/datetimepicker/css/classic.date.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/css/daftar-online.css") }}" rel="stylesheet" />
 @endpush
 
@@ -17,8 +19,11 @@
             : trim((string) ($patient->no_rkm_medis ?? $user->username ?? "-"));
         $patientPhone = $viewAllPatients ? "Seluruh penjamin" : trim((string) ($patient->no_tlp ?? "-"));
         $historyItems = collect($registrations->items())->values();
-        $hasFilter = $searchQuery !== "" || $guarantorCode !== "";
-        $activeFilterCount = ($searchQuery !== "" ? 1 : 0) + ($guarantorCode !== "" ? 1 : 0);
+        $hasDateRange = $startDate !== "" || $endDate !== "";
+        $hasFilter = $searchQuery !== "" || $guarantorCode !== "" || $hasDateRange;
+        $activeFilterCount = ($searchQuery !== "" ? 1 : 0)
+            + ($guarantorCode !== "" ? 1 : 0)
+            + ($hasDateRange ? 1 : 0);
         $historyReady = $viewAllPatients || (bool) $patient;
     @endphp
 
@@ -92,7 +97,7 @@
                     <small>
                         {{ $hasFilter
                             ? $activeFilterCount." filter sedang aktif"
-                            : "Cari kunjungan atau pilih penjamin" }}
+                            : "Semua data" }}
                     </small>
                 </span>
                 @if ($hasFilter)
@@ -103,34 +108,68 @@
 
             <div class="online-history-filter-panel" id="onlineHistoryFilterPanel">
                 <form class="online-history-filter" method="GET" action="{{ route("daftarOnline.history") }}">
-                    <div class="online-field-control">
-                        <i class="bi bi-search"></i>
-                        <input type="search" name="q" class="form-control" value="{{ $searchQuery }}"
-                            placeholder="{{ $viewAllPatients ? "Cari pasien, no. RM, no. rawat, poli, dokter" : "Cari no. rawat, poli, dokter, status" }}"
-                            @disabled($connectionError || ! $historyReady)>
+                    <div class="online-history-filter-field">
+                        <label for="onlineHistorySearch">Pencarian</label>
+                        <div class="online-field-control">
+                            <i class="bi bi-search"></i>
+                            <input type="search" id="onlineHistorySearch" name="q" class="form-control"
+                                value="{{ $searchQuery }}"
+                                placeholder="{{ $viewAllPatients ? "Cari pasien, no. RM, no. rawat, poli, dokter" : "Cari no. rawat, poli, dokter, status" }}"
+                                @disabled($connectionError || ! $historyReady)>
+                        </div>
                     </div>
-                    <div class="online-field-control">
-                        <i class="bi bi-shield-check"></i>
-                        <select name="kd_pj" class="form-select" aria-label="Filter penjamin"
-                            @disabled($connectionError || ! $historyReady)>
-                            <option value="">Semua Penjamin</option>
-                            @foreach ($penjaminOptions as $penjamin)
-                                <option value="{{ $penjamin["kd_pj"] }}" @selected($guarantorCode === $penjamin["kd_pj"])>
-                                    {{ $penjamin["png_jawab"] }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <div class="online-history-filter-field">
+                        <label for="onlineHistoryGuarantor">Penjamin</label>
+                        <div class="online-field-control">
+                            <i class="bi bi-shield-check"></i>
+                            <select id="onlineHistoryGuarantor" name="kd_pj" class="form-select"
+                                @disabled($connectionError || ! $historyReady)>
+                                <option value="">Semua Penjamin</option>
+                                @foreach ($penjaminOptions as $penjamin)
+                                    <option value="{{ $penjamin["kd_pj"] }}" @selected($guarantorCode === $penjamin["kd_pj"])>
+                                        {{ $penjamin["png_jawab"] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
-                    <button type="submit" class="online-button primary" @disabled($connectionError || ! $historyReady)>
-                        <i class="bi bi-funnel"></i>
-                        <span>Terapkan Filter</span>
-                    </button>
-                    @if ($hasFilter)
-                        <a href="{{ route("daftarOnline.history") }}" class="online-button secondary">
-                            <i class="bi bi-x-lg"></i>
-                            <span>Reset</span>
-                        </a>
-                    @endif
+                    <div class="online-history-date-range" role="group" aria-label="Rentang tanggal pendaftaran">
+                        <div class="online-history-filter-field">
+                            <label for="onlineHistoryStartDate">Dari tanggal</label>
+                            <div class="online-field-control online-history-date-control">
+                                <i class="bi bi-calendar-event"></i>
+                                <input type="text" id="onlineHistoryStartDate" name="tanggal_mulai"
+                                    class="form-control online-history-date-picker" value="{{ $startDate }}"
+                                    data-value="{{ $startDate }}" placeholder="Pilih tanggal"
+                                    autocomplete="off" inputmode="none"
+                                    @disabled($connectionError || ! $historyReady)>
+                            </div>
+                        </div>
+                        <span class="online-history-date-range-separator">s.d.</span>
+                        <div class="online-history-filter-field">
+                            <label for="onlineHistoryEndDate">Sampai tanggal</label>
+                            <div class="online-field-control online-history-date-control">
+                                <i class="bi bi-calendar-check"></i>
+                                <input type="text" id="onlineHistoryEndDate" name="tanggal_selesai"
+                                    class="form-control online-history-date-picker" value="{{ $endDate }}"
+                                    data-value="{{ $endDate }}" placeholder="Pilih tanggal"
+                                    autocomplete="off" inputmode="none"
+                                    @disabled($connectionError || ! $historyReady)>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="online-history-filter-actions">
+                        <button type="submit" class="online-button primary" @disabled($connectionError || ! $historyReady)>
+                            <i class="bi bi-funnel"></i>
+                            <span>Terapkan Filter</span>
+                        </button>
+                        @if ($hasFilter)
+                            <a href="{{ route("daftarOnline.history") }}" class="online-button secondary">
+                                <i class="bi bi-x-lg"></i>
+                                <span>Reset</span>
+                            </a>
+                        @endif
+                    </div>
                 </form>
             </div>
 
@@ -333,6 +372,8 @@
 @endsection
 
 @push("script")
+    <script src="{{ asset("epasien/assets/plugins/datetimepicker/js/picker.js") }}"></script>
+    <script src="{{ asset("epasien/assets/plugins/datetimepicker/js/picker.date.js") }}"></script>
     <script>
         $(document).ready(function() {
             const historyItems = @json($historyItems);
@@ -340,6 +381,30 @@
             const historyPage = document.querySelector('.online-history-page');
             const mobileFilterToggle = document.getElementById('onlineHistoryMobileFilterToggle');
             const filterPanel = document.getElementById('onlineHistoryFilterPanel');
+
+            $('.online-history-date-picker').pickadate({
+                monthsFull: [
+                    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+                ],
+                monthsShort: [
+                    'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+                    'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+                ],
+                weekdaysFull: [
+                    'Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'
+                ],
+                weekdaysShort: ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'],
+                today: 'Hari ini',
+                clear: 'Hapus',
+                close: 'Tutup',
+                firstDay: 1,
+                format: 'dd/mm/yyyy',
+                formatSubmit: 'yyyy-mm-dd',
+                hiddenName: true,
+                selectMonths: true,
+                selectYears: 100
+            });
 
             if (historyPage && mobileFilterToggle && filterPanel) {
                 const mobileFilterMedia = window.matchMedia('(max-width: 767.98px)');

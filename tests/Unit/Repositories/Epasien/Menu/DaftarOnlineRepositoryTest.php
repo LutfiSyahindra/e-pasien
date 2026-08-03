@@ -5,12 +5,69 @@ namespace Tests\Unit\Repositories\Epasien\Menu;
 use App\Repositories\epasien\menu\DaftarOnlineRepository;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Mockery;
 use Tests\TestCase;
 
 class DaftarOnlineRepositoryTest extends TestCase
 {
+    public function test_registration_history_applies_date_range(): void
+    {
+        $connection = Mockery::mock(Connection::class);
+        $query = Mockery::mock(Builder::class);
+        $paginator = Mockery::mock(LengthAwarePaginator::class);
+
+        DB::shouldReceive('connection')
+            ->once()
+            ->with('mysql_khanza')
+            ->andReturn($connection);
+        $connection->shouldReceive('table')
+            ->once()
+            ->with('reg_periksa')
+            ->andReturn($query);
+        $query->shouldReceive('leftJoin')->times(4)->andReturnSelf();
+        $query->shouldReceive('select')->once()->andReturnSelf();
+        $query->shouldReceive('when')
+            ->once()
+            ->andReturnUsing(function (bool $condition, \Closure $callback) use ($query): Builder {
+                if ($condition) {
+                    $callback($query);
+                }
+
+                return $query;
+            });
+        $query->shouldReceive('where')
+            ->once()
+            ->with('reg_periksa.no_rkm_medis', '000123')
+            ->andReturnSelf();
+        $query->shouldReceive('whereBetween')
+            ->once()
+            ->with('reg_periksa.tgl_registrasi', ['2026-07-01', '2026-07-31'])
+            ->andReturnSelf();
+        $query->shouldReceive('orderByDesc')
+            ->once()
+            ->with('reg_periksa.tgl_registrasi')
+            ->andReturnSelf();
+        $query->shouldReceive('orderByDesc')
+            ->once()
+            ->with('reg_periksa.jam_reg')
+            ->andReturnSelf();
+        $query->shouldReceive('paginate')->once()->with(8)->andReturn($paginator);
+        $paginator->shouldReceive('withQueryString')->once()->andReturnSelf();
+
+        $result = (new DaftarOnlineRepository)->paginateRegistrationHistory(
+            '000123',
+            '',
+            8,
+            '',
+            '2026-07-01',
+            '2026-07-31'
+        );
+
+        $this->assertSame($paginator, $result);
+    }
+
     public function test_pending_registration_ignores_non_clinical_active_visit_clinics(): void
     {
         $registration = (object) [

@@ -102,6 +102,13 @@ class DaftarOnlineController extends Controller
         $validated = $request->validate([
             'q' => ['nullable', 'string', 'max:80'],
             'kd_pj' => ['nullable', 'string', 'max:10'],
+            'tanggal_mulai' => ['nullable', 'required_with:tanggal_selesai', 'date_format:Y-m-d'],
+            'tanggal_selesai' => [
+                'nullable',
+                'required_with:tanggal_mulai',
+                'date_format:Y-m-d',
+                'after_or_equal:tanggal_mulai',
+            ],
         ]);
 
         $patient = null;
@@ -110,6 +117,8 @@ class DaftarOnlineController extends Controller
         $connectionError = null;
         $searchQuery = trim((string) ($validated['q'] ?? ''));
         $guarantorCode = trim((string) ($validated['kd_pj'] ?? ''));
+        $startDate = trim((string) ($validated['tanggal_mulai'] ?? ''));
+        $endDate = trim((string) ($validated['tanggal_selesai'] ?? ''));
         $viewAllPatients = $this->roleConfigurationService->isConfigured($request->user());
 
         try {
@@ -122,6 +131,8 @@ class DaftarOnlineController extends Controller
                 searchQuery: $searchQuery,
                 guarantorCode: $guarantorCode,
                 viewAllPatients: $viewAllPatients,
+                startDate: $startDate,
+                endDate: $endDate,
             );
             $penjaminOptions = $this->daftarOnlineService->penjaminOptions(true);
         } catch (Throwable $exception) {
@@ -139,6 +150,8 @@ class DaftarOnlineController extends Controller
             'connectionError' => $connectionError,
             'searchQuery' => $searchQuery,
             'guarantorCode' => $guarantorCode,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
             'penjaminOptions' => $penjaminOptions,
             'viewAllPatients' => $viewAllPatients,
         ]);
