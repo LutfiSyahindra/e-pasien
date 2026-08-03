@@ -177,14 +177,24 @@ class DaftarOnlineRepository
 
     public function previewNextTreatmentNumber(string $date): string
     {
+        $connection = $this->connection();
         $prefix = Carbon::parse($date)->format('Y/m/d').'/';
-        $lastTreatmentNumber = $this->connection()
+        $bookingPrefix = Carbon::parse($date)->format('Ymd');
+        $lastTreatmentNumber = $connection
             ->table('reg_periksa')
             ->where('tgl_registrasi', $date)
             ->orderByRaw("CAST(SUBSTRING_INDEX(no_rawat, '/', -1) AS UNSIGNED) DESC")
             ->value('no_rawat');
+        $lastBookingCode = $connection
+            ->table('referensi_mobilejkn_bpjs')
+            ->where('nobooking', 'like', $bookingPrefix.'%')
+            ->orderByRaw('CAST(SUBSTRING(nobooking, 9) AS UNSIGNED) DESC')
+            ->value('nobooking');
 
-        $nextNumber = $this->lastSequenceNumber((string) $lastTreatmentNumber) + 1;
+        $nextNumber = max(
+            $this->lastSequenceNumber((string) $lastTreatmentNumber),
+            $this->bookingSequenceNumber((string) $lastBookingCode, $bookingPrefix)
+        ) + 1;
 
         return $prefix.str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
     }
@@ -623,14 +633,24 @@ class DaftarOnlineRepository
     private function nextTreatmentNumber(Connection $connection, string $date): string
     {
         $prefix = Carbon::parse($date)->format('Y/m/d').'/';
+        $bookingPrefix = Carbon::parse($date)->format('Ymd');
         $lastTreatmentNumber = $connection
             ->table('reg_periksa')
             ->where('tgl_registrasi', $date)
             ->lockForUpdate()
             ->orderByRaw("CAST(SUBSTRING_INDEX(no_rawat, '/', -1) AS UNSIGNED) DESC")
             ->value('no_rawat');
+        $lastBookingCode = $connection
+            ->table('referensi_mobilejkn_bpjs')
+            ->where('nobooking', 'like', $bookingPrefix.'%')
+            ->lockForUpdate()
+            ->orderByRaw('CAST(SUBSTRING(nobooking, 9) AS UNSIGNED) DESC')
+            ->value('nobooking');
 
-        $nextNumber = $this->lastSequenceNumber((string) $lastTreatmentNumber) + 1;
+        $nextNumber = max(
+            $this->lastSequenceNumber((string) $lastTreatmentNumber),
+            $this->bookingSequenceNumber((string) $lastBookingCode, $bookingPrefix)
+        ) + 1;
 
         return $prefix.str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
     }
@@ -650,6 +670,15 @@ class DaftarOnlineRepository
         }
 
         return (int) $value;
+    }
+
+    private function bookingSequenceNumber(string $bookingCode, string $bookingPrefix): int
+    {
+        if (! str_starts_with($bookingCode, $bookingPrefix)) {
+            return 0;
+        }
+
+        return (int) substr($bookingCode, strlen($bookingPrefix));
     }
 
     private function digitWidth(string $value, int $minimumWidth): int

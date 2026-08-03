@@ -12,6 +12,54 @@ use Tests\TestCase;
 
 class DaftarOnlineRepositoryTest extends TestCase
 {
+    public function test_treatment_number_preview_skips_existing_mobile_jkn_booking_code(): void
+    {
+        $connection = Mockery::mock(Connection::class);
+        $registrationQuery = Mockery::mock(Builder::class);
+        $mobileJknQuery = Mockery::mock(Builder::class);
+
+        DB::shouldReceive('connection')
+            ->once()
+            ->with('mysql_khanza')
+            ->andReturn($connection);
+        $connection->shouldReceive('table')
+            ->once()
+            ->with('reg_periksa')
+            ->andReturn($registrationQuery);
+        $registrationQuery->shouldReceive('where')
+            ->once()
+            ->with('tgl_registrasi', '2026-08-15')
+            ->andReturnSelf();
+        $registrationQuery->shouldReceive('orderByRaw')
+            ->once()
+            ->with("CAST(SUBSTRING_INDEX(no_rawat, '/', -1) AS UNSIGNED) DESC")
+            ->andReturnSelf();
+        $registrationQuery->shouldReceive('value')
+            ->once()
+            ->with('no_rawat')
+            ->andReturn('2026/08/15/000028');
+        $connection->shouldReceive('table')
+            ->once()
+            ->with('referensi_mobilejkn_bpjs')
+            ->andReturn($mobileJknQuery);
+        $mobileJknQuery->shouldReceive('where')
+            ->once()
+            ->with('nobooking', 'like', '20260815%')
+            ->andReturnSelf();
+        $mobileJknQuery->shouldReceive('orderByRaw')
+            ->once()
+            ->with('CAST(SUBSTRING(nobooking, 9) AS UNSIGNED) DESC')
+            ->andReturnSelf();
+        $mobileJknQuery->shouldReceive('value')
+            ->once()
+            ->with('nobooking')
+            ->andReturn('20260815000029');
+
+        $result = (new DaftarOnlineRepository)->previewNextTreatmentNumber('2026-08-15');
+
+        $this->assertSame('2026/08/15/000030', $result);
+    }
+
     public function test_registration_history_applies_date_range(): void
     {
         $connection = Mockery::mock(Connection::class);
