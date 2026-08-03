@@ -15,6 +15,15 @@ class DaftarOnlineRepository
 {
     private const EMERGENCY_CLINIC_CODE_PREFIX = 'IGD';
 
+    private const IGNORED_ACTIVE_VISIT_CLINIC_NAMES = [
+        'APOTEK',
+        'MCU',
+        'RADIOLOGI',
+        'UMUM',
+    ];
+
+    private const IGNORED_ACTIVE_VISIT_CLINIC_NAME_FRAGMENT = 'LABORAT';
+
     public const CANCELLATION_CANCELLED = 'cancelled';
 
     public const CANCELLATION_CHECKED_IN = 'checked_in';
@@ -194,6 +203,14 @@ class DaftarOnlineRepository
             ->whereRaw(
                 'UPPER(TRIM(reg_periksa.kd_poli)) NOT LIKE ?',
                 [self::EMERGENCY_CLINIC_CODE_PREFIX.'%']
+            )
+            ->whereRaw(
+                "UPPER(TRIM(COALESCE(poliklinik.nm_poli, ''))) NOT IN (?, ?, ?, ?)",
+                self::IGNORED_ACTIVE_VISIT_CLINIC_NAMES
+            )
+            ->whereRaw(
+                "UPPER(TRIM(COALESCE(poliklinik.nm_poli, ''))) NOT LIKE ?",
+                ['%'.self::IGNORED_ACTIVE_VISIT_CLINIC_NAME_FRAGMENT.'%']
             )
             ->orderByDesc('reg_periksa.tgl_registrasi')
             ->orderByDesc('reg_periksa.jam_reg')

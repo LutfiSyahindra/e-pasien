@@ -11,7 +11,7 @@ use Tests\TestCase;
 
 class DaftarOnlineRepositoryTest extends TestCase
 {
-    public function test_pending_registration_ignores_igd_clinics(): void
+    public function test_pending_registration_ignores_non_clinical_active_visit_clinics(): void
     {
         $registration = (object) [
             'no_reg' => '001',
@@ -51,6 +51,20 @@ class DaftarOnlineRepositoryTest extends TestCase
         $query->shouldReceive('whereRaw')
             ->once()
             ->with('UPPER(TRIM(reg_periksa.kd_poli)) NOT LIKE ?', ['IGD%'])
+            ->andReturnSelf();
+        $query->shouldReceive('whereRaw')
+            ->once()
+            ->with(
+                "UPPER(TRIM(COALESCE(poliklinik.nm_poli, ''))) NOT IN (?, ?, ?, ?)",
+                ['APOTEK', 'MCU', 'RADIOLOGI', 'UMUM']
+            )
+            ->andReturnSelf();
+        $query->shouldReceive('whereRaw')
+            ->once()
+            ->with(
+                "UPPER(TRIM(COALESCE(poliklinik.nm_poli, ''))) NOT LIKE ?",
+                ['%LABORAT%']
+            )
             ->andReturnSelf();
         $query->shouldReceive('orderByDesc')
             ->once()
