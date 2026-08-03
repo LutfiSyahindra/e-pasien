@@ -5,6 +5,8 @@ namespace Tests\Unit\Services\Epasien\Menu;
 use App\Repositories\epasien\menu\FasilitasTarif\KamarRepository;
 use App\Services\epasien\menu\FasilitasTarif\KamarService;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class KamarServiceTest extends TestCase
@@ -65,6 +67,36 @@ class KamarServiceTest extends TestCase
         $this->assertSame('Terisi', $rooms[0]['status_label']);
         $this->assertSame('Sedang dibersihkan', $rooms[1]['status_label']);
         $this->assertSame('Sudah dipesan', $rooms[2]['status_label']);
+    }
+
+    public function test_room_counts_and_classes_are_cached(): void
+    {
+        Cache::flush();
+
+        $repository = $this->createMock(KamarRepository::class);
+        $repository
+            ->expects($this->once())
+            ->method('roomCounts')
+            ->willReturn([
+                'all' => 10,
+                'available' => 4,
+                'occupied' => 5,
+                'cleaning' => 1,
+                'booked' => 0,
+            ]);
+        $repository
+            ->expects($this->once())
+            ->method('roomClasses')
+            ->willReturn(collect(['Kelas 1', 'Kelas VIP']));
+
+        $service = new KamarService($repository);
+
+        $this->assertSame($service->counts(), $service->counts());
+        $this->assertEquals(
+            new Collection(['Kelas 1', 'Kelas VIP']),
+            $service->classes()
+        );
+        $this->assertEquals($service->classes(), $service->classes());
     }
 
     private function room(string $status): object

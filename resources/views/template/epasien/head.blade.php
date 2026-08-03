@@ -1,4 +1,10 @@
 <head>
+    @php
+        $usesDataTables = request()->routeIs("users.*", "roles.*", "permissions.*");
+        $usesSelect2 = request()->routeIs("users.*", "roles.*", "daftarOnline.index");
+        $usesDashboardCharts = request()->routeIs("dashboard");
+    @endphp
+
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,10 +13,16 @@
     <link href="{{ asset("epasien/assets/plugins/simplebar/css/simplebar.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/plugins/perfect-scrollbar/css/perfect-scrollbar.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/plugins/metismenu/css/metisMenu.min.css") }}" rel="stylesheet" />
-    <link href="{{ asset("epasien/assets/plugins/vectormap/jquery-jvectormap-2.0.2.css") }}" rel="stylesheet" />
-    <link href="{{ asset("epasien/assets/plugins/datatable/css/dataTables.bootstrap5.min.css") }}" rel="stylesheet" />
-    <link href="{{ asset("epasien/assets/plugins/select2/css/select2.min.css") }}" rel="stylesheet" />
-    <link href="{{ asset("epasien/assets/plugins/select2/css/select2-bootstrap4.css") }}" rel="stylesheet" />
+    @if ($usesDashboardCharts)
+        <link href="{{ asset("epasien/assets/plugins/vectormap/jquery-jvectormap-2.0.2.css") }}" rel="stylesheet" />
+    @endif
+    @if ($usesDataTables)
+        <link href="{{ asset("epasien/assets/plugins/datatable/css/dataTables.bootstrap5.min.css") }}" rel="stylesheet" />
+    @endif
+    @if ($usesSelect2)
+        <link href="{{ asset("epasien/assets/plugins/select2/css/select2.min.css") }}" rel="stylesheet" />
+        <link href="{{ asset("epasien/assets/plugins/select2/css/select2-bootstrap4.css") }}" rel="stylesheet" />
+    @endif
     <!-- Bootstrap CSS -->
     <link href="{{ asset("epasien/assets/css/bootstrap.min.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/css/bootstrap-extended.css") }}" rel="stylesheet" />
@@ -19,8 +31,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
 
-    <!-- loader-->
-    <link href="{{ asset("epasien/assets/css/pace.min.css") }}" rel="stylesheet" />
+    <link href="{{ asset("epasien/assets/css/navigation-loader.css") }}" rel="stylesheet" />
+    <script src="{{ asset("epasien/assets/js/navigation-loader.js") }}" defer></script>
 
     <!--Theme Styles-->
     <link href="{{ asset("epasien/assets/css/dark-theme.css") }}" rel="stylesheet" />

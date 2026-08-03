@@ -1,0 +1,65 @@
+.ep-navigation-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 20000;
+    display: grid;
+    place-items: center;
+    background: rgba(248, 250, 252, 0.72);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 120ms ease, visibility 120ms ease;
+    backdrop-filter: blur(2px);
+}
+
+.ep-navigation-loader.is-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.ep-navigation-loader__panel {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 11rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 0.9rem;
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
+}
+
+.ep-navigation-loader__spinner {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex: 0 0 auto;
+    border: 0.17rem solid #dbeafe;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: ep-navigation-spin 700ms linear infinite;
+}
+
+.ep-navigation-loader__text {
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+html.ep-navigation-pending,
+html.ep-navigation-pending body {
+    cursor: wait;
+}
+
+@keyframes ep-navigation-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ep-navigation-loader,
+    .ep-navigation-loader__spinner {
+        transition: none;
+        animation-duration: 1.4s;
+    }
+}

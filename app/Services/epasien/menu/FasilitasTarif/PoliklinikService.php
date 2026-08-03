@@ -4,9 +4,12 @@ namespace App\Services\epasien\menu\FasilitasTarif;
 
 use App\Repositories\epasien\menu\FasilitasTarif\PoliklinikRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
 
 class PoliklinikService
 {
+    private const SUMMARY_CACHE_SECONDS = 900;
+
     public function __construct(
         private readonly PoliklinikRepository $poliklinikRepository
     ) {}
@@ -42,7 +45,11 @@ class PoliklinikService
      */
     public function summary(): array
     {
-        $summary = $this->poliklinikRepository->summary();
+        $summary = Cache::remember(
+            'epasien:khanza:clinics:summary:v1',
+            now()->addSeconds(self::SUMMARY_CACHE_SECONDS),
+            fn (): ?object => $this->poliklinikRepository->summary()
+        );
         $minimum = max(0, (float) ($summary?->minimum ?? 0));
         $maximum = max(0, (float) ($summary?->maximum ?? 0));
 

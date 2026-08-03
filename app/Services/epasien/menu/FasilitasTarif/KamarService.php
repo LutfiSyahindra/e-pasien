@@ -5,9 +5,14 @@ namespace App\Services\epasien\menu\FasilitasTarif;
 use App\Repositories\epasien\menu\FasilitasTarif\KamarRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class KamarService
 {
+    private const COUNTS_CACHE_SECONDS = 15;
+
+    private const CLASSES_CACHE_SECONDS = 900;
+
     private const STATUS_MAP = [
         'tersedia' => 'KOSONG',
         'terisi' => 'ISI',
@@ -53,7 +58,11 @@ class KamarService
      */
     public function counts(): array
     {
-        return $this->kamarRepository->roomCounts();
+        return Cache::remember(
+            'epasien:khanza:rooms:counts:v1',
+            now()->addSeconds(self::COUNTS_CACHE_SECONDS),
+            fn (): array => $this->kamarRepository->roomCounts()
+        );
     }
 
     /**
@@ -61,7 +70,11 @@ class KamarService
      */
     public function classes(): Collection
     {
-        return $this->kamarRepository->roomClasses();
+        return Cache::remember(
+            'epasien:khanza:rooms:classes:v1',
+            now()->addSeconds(self::CLASSES_CACHE_SECONDS),
+            fn (): Collection => $this->kamarRepository->roomClasses()
+        );
     }
 
     /**

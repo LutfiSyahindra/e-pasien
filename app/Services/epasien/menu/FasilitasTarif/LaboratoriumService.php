@@ -5,9 +5,12 @@ namespace App\Services\epasien\menu\FasilitasTarif;
 use App\Repositories\epasien\menu\FasilitasTarif\LaboratoriumRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class LaboratoriumService
 {
+    private const REFERENCE_CACHE_SECONDS = 900;
+
     public function __construct(
         private readonly LaboratoriumRepository $laboratoriumRepository
     ) {}
@@ -42,15 +45,19 @@ class LaboratoriumService
      */
     public function groups(): Collection
     {
-        return $this->laboratoriumRepository
-            ->groups()
-            ->map(fn (object $group): array => [
-                'value' => trim((string) ($group->kd_jenis_prw ?? '')),
-                'label' => $this->text($group->nm_perawatan ?? null),
-                'total_items' => (int) ($group->total_items ?? 0),
-            ])
-            ->filter(fn (array $group): bool => $group['value'] !== '')
-            ->values();
+        return Cache::remember(
+            'epasien:khanza:laboratory:groups:v1',
+            now()->addSeconds(self::REFERENCE_CACHE_SECONDS),
+            fn (): Collection => $this->laboratoriumRepository
+                ->groups()
+                ->map(fn (object $group): array => [
+                    'value' => trim((string) ($group->kd_jenis_prw ?? '')),
+                    'label' => $this->text($group->nm_perawatan ?? null),
+                    'total_items' => (int) ($group->total_items ?? 0),
+                ])
+                ->filter(fn (array $group): bool => $group['value'] !== '')
+                ->values()
+        );
     }
 
     /**
@@ -66,7 +73,11 @@ class LaboratoriumService
      */
     public function summary(): array
     {
-        $summary = $this->laboratoriumRepository->summary();
+        $summary = Cache::remember(
+            'epasien:khanza:laboratory:summary:v1',
+            now()->addSeconds(self::REFERENCE_CACHE_SECONDS),
+            fn (): ?object => $this->laboratoriumRepository->summary()
+        );
         $minimum = max(0, (float) ($summary?->minimum ?? 0));
         $maximum = max(0, (float) ($summary?->maximum ?? 0));
 

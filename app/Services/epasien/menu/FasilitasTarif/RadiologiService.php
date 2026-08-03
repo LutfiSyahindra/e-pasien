@@ -5,9 +5,12 @@ namespace App\Services\epasien\menu\FasilitasTarif;
 use App\Repositories\epasien\menu\FasilitasTarif\RadiologiRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class RadiologiService
 {
+    private const REFERENCE_CACHE_SECONDS = 900;
+
     public function __construct(
         private readonly RadiologiRepository $radiologiRepository
     ) {}
@@ -38,14 +41,18 @@ class RadiologiService
      */
     public function classes(): Collection
     {
-        return $this->radiologiRepository
-            ->classes()
-            ->map(fn (mixed $class): array => [
-                'value' => trim((string) $class),
-                'label' => $this->classLabel($class),
-            ])
-            ->filter(fn (array $class): bool => $class['value'] !== '')
-            ->values();
+        return Cache::remember(
+            'epasien:khanza:radiology:classes:v1',
+            now()->addSeconds(self::REFERENCE_CACHE_SECONDS),
+            fn (): Collection => $this->radiologiRepository
+                ->classes()
+                ->map(fn (mixed $class): array => [
+                    'value' => trim((string) $class),
+                    'label' => $this->classLabel($class),
+                ])
+                ->filter(fn (array $class): bool => $class['value'] !== '')
+                ->values()
+        );
     }
 
     /**
@@ -59,7 +66,11 @@ class RadiologiService
      */
     public function summary(): array
     {
-        $summary = $this->radiologiRepository->summary();
+        $summary = Cache::remember(
+            'epasien:khanza:radiology:summary:v1',
+            now()->addSeconds(self::REFERENCE_CACHE_SECONDS),
+            fn (): ?object => $this->radiologiRepository->summary()
+        );
         $minimum = max(0, (float) ($summary?->minimum ?? 0));
         $maximum = max(0, (float) ($summary?->maximum ?? 0));
 

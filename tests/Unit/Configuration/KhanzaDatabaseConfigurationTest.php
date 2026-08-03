@@ -14,4 +14,11 @@ class KhanzaDatabaseConfigurationTest extends TestCase
         $this->assertNotContains('NO_ZERO_DATE', $modes);
         $this->assertNotContains('NO_ZERO_IN_DATE', $modes);
     }
+
+    public function test_khanza_connection_has_a_bounded_connect_timeout(): void
+    {
+        $options = config('database.connections.mysql_khanza.options');
+
+        $this->assertSame(5, $options[\PDO::ATTR_TIMEOUT] ?? null);
+    }
 }

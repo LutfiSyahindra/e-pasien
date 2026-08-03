@@ -5,10 +5,14 @@ namespace App\Services\epasien\menu;
 use App\Repositories\epasien\menu\JadwalDokterRepository;
 use Carbon\CarbonInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class JadwalDokterService
 {
     private const PATIENT_TIMEZONE = 'Asia/Jakarta';
+
+    private const REFERENCE_CACHE_SECONDS = 300;
 
     private const DAYS = [
         'SENIN' => ['label' => 'Senin', 'short' => 'Sen'],
@@ -51,13 +55,22 @@ class JadwalDokterService
             )
         );
 
-        $summary = $this->jadwalDokterRepository->summary();
+        $summary = Cache::remember(
+            'epasien:khanza:doctor-schedules:summary:v1',
+            now()->addSeconds(self::REFERENCE_CACHE_SECONDS),
+            fn (): ?object => $this->jadwalDokterRepository->summary()
+        );
+        $clinics = Cache::remember(
+            'epasien:khanza:doctor-schedules:clinics:v1',
+            now()->addSeconds(self::REFERENCE_CACHE_SECONDS),
+            fn (): Collection => $this->jadwalDokterRepository->clinics()
+        );
 
         return [
             ...$filters,
             'days' => $this->days(),
             'schedules' => $schedules,
-            'clinics' => $this->jadwalDokterRepository->clinics()
+            'clinics' => $clinics
                 ->map(fn (object $clinic): array => [
                     'code' => $this->text($clinic->kd_poli ?? null),
                     'name' => $this->text($clinic->nm_poli ?? null),
