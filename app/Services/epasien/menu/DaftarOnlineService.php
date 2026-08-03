@@ -749,6 +749,8 @@ class DaftarOnlineService
             '0',
             STR_PAD_LEFT
         );
+        $formattedClinicQueueNumber = trim((string) $payload['kodepoli'])
+            .'-'.$formattedQueueNumber;
         $mobileJknReference = [
             'nobooking' => (string) $payload['kodebooking'],
             'nomorkartu' => (string) $payload['nomorkartu'],
@@ -764,7 +766,7 @@ class DaftarOnlineService
                 (int) $payload['jeniskunjungan']
             ),
             'nomorreferensi' => (string) $payload['nomorreferensi'],
-            'nomorantrean' => $formattedQueueNumber,
+            'nomorantrean' => $formattedClinicQueueNumber,
             'angkaantrean' => $formattedQueueNumber,
             'estimasidilayani' => (string) $payload['estimasidilayani'],
             'sisakuotajkn' => (int) $payload['sisakuotajkn'],

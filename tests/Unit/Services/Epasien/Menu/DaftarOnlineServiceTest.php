@@ -650,7 +650,7 @@ class DaftarOnlineServiceTest extends TestCase
                 $this->callback(function (array $reference): bool {
                     return $reference['nobooking'] === '20260727000021'
                         && $reference['jeniskunjungan'] === '3 (Kontrol)'
-                        && $reference['nomorantrean'] === '005'
+                        && $reference['nomorantrean'] === 'ANA-005'
                         && $reference['angkaantrean'] === '005'
                         && $reference['validasi'] === '0000-00-00 00:00:00'
                         && $reference['statuskirim'] === 'Belum';
