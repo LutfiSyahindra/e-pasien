@@ -312,6 +312,147 @@ class RencanaKontrolServiceTest extends TestCase
         );
     }
 
+    public function test_it_falls_back_to_pcare_when_all_control_letters_have_issued_sep(): void
+    {
+        $controlLetterRepository = $this->createStub(RencanaKontrolRepository::class);
+        $controlLetterRepository->method('listByCardNumber')->willReturn([
+            'metaData' => [
+                'code' => '200',
+                'message' => 'Sukses',
+            ],
+            'response' => [
+                'list' => [
+                    [
+                        'noSuratKontrol' => '0117R0770122K000004',
+                        'terbitSEP' => 'Sudah',
+                    ],
+                    [
+                        'noSuratKontrol' => '0117R0770122K000005',
+                        'terbitSEP' => 'sudah terbit',
+                    ],
+                ],
+            ],
+        ]);
+
+        $referralRepository = $this->createMock(RujukanRepository::class);
+        $referralRepository
+            ->expects($this->once())
+            ->method('findPcareByCardNumber')
+            ->with('0000416382632')
+            ->willReturn($this->referralResponse(
+                '030107010217Y001465',
+                'SITEBA',
+                'Hyperplasia of prostate'
+            ));
+        $referralRepository
+            ->expects($this->never())
+            ->method('findHospitalByCardNumber');
+
+        $result = (new RencanaKontrolService(
+            $controlLetterRepository,
+            $referralRepository
+        ))->listByCardNumber('2026-07-29', '0000416382632');
+
+        $this->assertTrue($result['semua_surat_kontrol_sep_terbit']);
+        $this->assertCount(2, $result['surat_kontrol']);
+        $this->assertSame('rujukan_pcare', $result['sumber_dokumen']);
+        $this->assertSame(
+            '030107010217Y001465',
+            $result['rujukan']['no_rujukan']
+        );
+    }
+
+    public function test_it_falls_back_to_hospital_when_all_control_letters_have_issued_sep_and_pcare_is_empty(): void
+    {
+        $controlLetterRepository = $this->createStub(RencanaKontrolRepository::class);
+        $controlLetterRepository->method('listByCardNumber')->willReturn([
+            'metaData' => [
+                'code' => '200',
+                'message' => 'Sukses',
+            ],
+            'response' => [
+                'list' => [[
+                    'noSuratKontrol' => '0117R0770122K000004',
+                    'terbitSEP' => 'Sudah',
+                ]],
+            ],
+        ]);
+
+        $referralRepository = $this->createMock(RujukanRepository::class);
+        $referralRepository
+            ->expects($this->once())
+            ->method('findPcareByCardNumber')
+            ->with('0105986780439')
+            ->willReturn([
+                'metaData' => [
+                    'code' => '201',
+                    'message' => 'Rujukan tidak ditemukan.',
+                ],
+                'response' => null,
+            ]);
+        $referralRepository
+            ->expects($this->once())
+            ->method('findHospitalByCardNumber')
+            ->with('0105986780439')
+            ->willReturn($this->referralResponse(
+                '0304R0050217A000079',
+                'RSI IBNU SINA',
+                'Acute myocardial infarction, unspecified'
+            ));
+
+        $result = (new RencanaKontrolService(
+            $controlLetterRepository,
+            $referralRepository
+        ))->listByCardNumber('2026-07-29', '0105986780439');
+
+        $this->assertTrue($result['semua_surat_kontrol_sep_terbit']);
+        $this->assertSame('rujukan_rumah_sakit', $result['sumber_dokumen']);
+        $this->assertSame(
+            '0304R0050217A000079',
+            $result['rujukan']['no_rujukan']
+        );
+    }
+
+    public function test_it_does_not_fall_back_when_a_control_letter_has_not_issued_sep(): void
+    {
+        $controlLetterRepository = $this->createStub(RencanaKontrolRepository::class);
+        $controlLetterRepository->method('listByCardNumber')->willReturn([
+            'metaData' => [
+                'code' => '200',
+                'message' => 'Sukses',
+            ],
+            'response' => [
+                'list' => [
+                    [
+                        'noSuratKontrol' => '0117R0770122K000004',
+                        'terbitSEP' => 'Sudah',
+                    ],
+                    [
+                        'noSuratKontrol' => '0117R0770122K000005',
+                        'terbitSEP' => 'Belum',
+                    ],
+                ],
+            ],
+        ]);
+
+        $referralRepository = $this->createMock(RujukanRepository::class);
+        $referralRepository
+            ->expects($this->never())
+            ->method('findPcareByCardNumber');
+        $referralRepository
+            ->expects($this->never())
+            ->method('findHospitalByCardNumber');
+
+        $result = (new RencanaKontrolService(
+            $controlLetterRepository,
+            $referralRepository
+        ))->listByCardNumber('2026-07-29', '0000416382632');
+
+        $this->assertFalse($result['semua_surat_kontrol_sep_terbit']);
+        $this->assertSame('surat_kontrol', $result['sumber_dokumen']);
+        $this->assertNull($result['rujukan']);
+    }
+
     public function test_it_falls_back_to_pcare_when_control_letter_is_not_found(): void
     {
         $controlLetterRepository = $this->createStub(RencanaKontrolRepository::class);

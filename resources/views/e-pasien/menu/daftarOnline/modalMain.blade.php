@@ -113,7 +113,7 @@
                             </article>
                             <article data-search-source="rujukan_pcare">
                                 <span><i class="bi bi-building"></i></span>
-                                <div><small>Tahap 2</small><strong>Rujukan PCare</strong><p>Dijalankan bila surat kontrol kosong.</p></div>
+                                <div><small>Tahap 2</small><strong>Rujukan PCare</strong><p>Dijalankan bila surat kontrol tidak tersedia atau semua SEP sudah terbit.</p></div>
                             </article>
                             <article data-search-source="rujukan_rumah_sakit">
                                 <span><i class="bi bi-hospital"></i></span>

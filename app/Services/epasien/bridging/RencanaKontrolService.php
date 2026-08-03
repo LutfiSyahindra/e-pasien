@@ -92,6 +92,9 @@ class RencanaKontrolService
             ?? ($successfulResponseFound
                 ? ['code' => '200', 'message' => 'Sukses']
                 : $lastMetadata);
+        $allControlLettersHaveIssuedSep = $this->allControlLettersHaveIssuedSep(
+            $formattedControlLetters
+        );
         $result = [
             'meta_data' => $controlLetterMetadata,
             'periode' => [
@@ -105,9 +108,11 @@ class RencanaKontrolService
             'periode_pencarian' => $periods,
             'filter' => $filter,
             'surat_kontrol' => $formattedControlLetters,
+            'semua_surat_kontrol_sep_terbit' => $allControlLettersHaveIssuedSep,
             'rujukan' => null,
             'daftar_rujukan' => [],
             'sumber_dokumen' => $formattedControlLetters !== []
+                && ! $allControlLettersHaveIssuedSep
                 ? 'surat_kontrol'
                 : null,
             'pencarian_rujukan' => [
@@ -117,7 +122,7 @@ class RencanaKontrolService
         ];
 
         if (
-            $formattedControlLetters !== []
+            ($formattedControlLetters !== [] && ! $allControlLettersHaveIssuedSep)
             || ! $includeReferralFallback
             || ! $this->allowsReferralFallback($controlLetterMetadata)
         ) {
@@ -125,6 +130,30 @@ class RencanaKontrolService
         }
 
         return $this->findReferral($result, $cardNumber);
+    }
+
+    /**
+     * Referral fallback is allowed only when every returned control letter has
+     * already been used to issue an SEP. An unknown status remains selectable
+     * and therefore must not trigger the fallback.
+     *
+     * @param  array<int, array<string, mixed>>  $controlLetters
+     */
+    private function allControlLettersHaveIssuedSep(array $controlLetters): bool
+    {
+        if ($controlLetters === []) {
+            return false;
+        }
+
+        foreach ($controlLetters as $controlLetter) {
+            $status = strtolower(trim((string) ($controlLetter['terbit_sep'] ?? '')));
+
+            if (! in_array($status, ['sudah', 'sudah terbit', 'sep sudah terbit'], true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

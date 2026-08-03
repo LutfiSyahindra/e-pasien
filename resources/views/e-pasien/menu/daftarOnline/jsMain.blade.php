@@ -932,6 +932,12 @@
             return value ? `SEP ${value}` : 'Status SEP -';
         }
 
+        function controlLetterHasIssuedSep(value) {
+            const status = String(value || '').trim().toLowerCase();
+
+            return ['sudah', 'sudah terbit', 'sep sudah terbit'].includes(status);
+        }
+
         function controlParticipantGender(value) {
             const gender = String(value || '').toUpperCase();
 
@@ -1355,6 +1361,9 @@
             const controlLetters = Array.isArray(payload.surat_kontrol)
                 ? payload.surat_kontrol
                 : [];
+            const allControlLettersHaveIssuedSep = Boolean(
+                payload.semua_surat_kontrol_sep_terbit
+            );
             const pcare = payload.pencarian_rujukan?.pcare || null;
             const hospital = payload.pencarian_rujukan?.rumah_sakit || null;
             const source = String(payload.sumber_dokumen || '');
@@ -1370,7 +1379,9 @@
                 'surat_kontrol',
                 controlLetters.length ? 'found' : 'not-found',
                 controlLetters.length
-                    ? `${controlLetters.length} surat kontrol ditemukan.`
+                    ? (allControlLettersHaveIssuedSep
+                        ? `${controlLetters.length} surat kontrol ditemukan, tetapi semua SEP sudah terbit. Pencarian dilanjutkan ke rujukan PCare.`
+                        : `${controlLetters.length} surat kontrol ditemukan.`)
                     : 'Tidak ditemukan, pencarian dilanjutkan ke rujukan PCare.'
             );
 
@@ -1378,7 +1389,7 @@
                 updateSource(
                     'rujukan_pcare',
                     'skipped',
-                    controlLetters.length
+                    controlLetters.length && !allControlLettersHaveIssuedSep
                         ? 'Tidak dijalankan karena surat kontrol ditemukan.'
                         : 'Pencarian tidak dijalankan.'
                 );
@@ -1415,6 +1426,9 @@
             const controlLetters = Array.isArray(payload.surat_kontrol)
                 ? payload.surat_kontrol
                 : [];
+            const allControlLettersHaveIssuedSep = Boolean(
+                payload.semua_surat_kontrol_sep_terbit
+            );
             const referrals = Array.isArray(payload.daftar_rujukan) && payload.daftar_rujukan.length
                 ? payload.daftar_rujukan
                 : (payload.rujukan && typeof payload.rujukan === 'object'
@@ -1447,7 +1461,11 @@
 
                 elements.controlLetterTitle.text(`Rujukan ${sourceLabel} BPJS`);
                 elements.controlLetterPeriod.text(
-                    `${message || `Rujukan ${sourceLabel} ditemukan`} · fallback setelah surat kontrol tidak ditemukan`
+                    `${message || `Rujukan ${sourceLabel} ditemukan`} · ${
+                        allControlLettersHaveIssuedSep
+                            ? 'semua surat kontrol telah memiliki SEP terbit'
+                            : 'fallback setelah surat kontrol tidak ditemukan'
+                    }`
                 );
                 elements.controlLetterList.html(referrals.map(function(referral, index) {
                     const participant = referral.peserta || {};
@@ -1537,24 +1555,31 @@
             elements.controlLetterPeriod.text(
                 `${message || 'Surat kontrol ditemukan'} · Periode ${period}`
             );
-            const documents = controlLetters.map(function(controlLetter, index) {
-                return {
-                    key: `surat_kontrol:${controlLetter.no_surat_kontrol || index}`,
-                    type: 'surat_kontrol',
-                    source: 'surat_kontrol',
-                    number: String(controlLetter.no_surat_kontrol || ''),
-                    meta: [
-                        formatControlDate(controlLetter.tgl_rencana_kontrol),
-                        controlLetter.nama_poli_tujuan || controlLetter.poli_tujuan || ''
-                    ].filter(Boolean).join(' · '),
-                    response: controlLetter,
-                };
-            });
+            const documents = controlLetters
+                .filter(function(controlLetter) {
+                    return !controlLetterHasIssuedSep(controlLetter.terbit_sep);
+                })
+                .map(function(controlLetter, index) {
+                    return {
+                        key: `surat_kontrol:${controlLetter.no_surat_kontrol || index}`,
+                        type: 'surat_kontrol',
+                        source: 'surat_kontrol',
+                        number: String(controlLetter.no_surat_kontrol || ''),
+                        meta: [
+                            formatControlDate(controlLetter.tgl_rencana_kontrol),
+                            controlLetter.nama_poli_tujuan || controlLetter.poli_tujuan || ''
+                        ].filter(Boolean).join(' · '),
+                        response: controlLetter,
+                    };
+                });
 
             elements.controlLetterList.html(controlLetters.map(function(controlLetter, index) {
                 const controlType = controlLetter.nama_jenis_kontrol || controlLetter.jenis_pelayanan || 'Surat Kontrol';
                 const destinationClinic = controlLetter.nama_poli_tujuan || controlLetter.poli_tujuan || '-';
                 const originClinic = controlLetter.nama_poli_asal || controlLetter.poli_asal || '-';
+                const selectableDocument = documents.find(function(document) {
+                    return document.response === controlLetter;
+                });
 
                 return `
                     <article class="online-control-card">
@@ -1563,7 +1588,7 @@
                                 <span>${escapeHtml(controlType)}</span>
                                 <strong>${escapeHtml(controlLetter.no_surat_kontrol || '-')}</strong>
                             </div>
-                            <small class="${String(controlLetter.terbit_sep || '').toLowerCase() === 'belum' ? 'pending' : ''}">
+                            <small class="${controlLetterHasIssuedSep(controlLetter.terbit_sep) ? '' : 'pending'}">
                                 ${escapeHtml(controlLetterSepStatus(controlLetter.terbit_sep))}
                             </small>
                         </header>
@@ -1594,7 +1619,9 @@
                             </div>
                         </dl>
                         <footer class="online-control-card-actions">
-                            ${bpjsDocumentChoice(documents[index])}
+                            ${selectableDocument
+                                ? bpjsDocumentChoice(selectableDocument)
+                                : `<span class="online-document-choice unavailable"><span><i class="bi bi-lock"></i> Tidak dapat dipilih, SEP sudah terbit</span></span>`}
                             <button type="button" class="online-control-detail-button"
                                 data-control-letter-number="${escapeHtml(controlLetter.no_surat_kontrol || '')}">
                                 <i class="bi bi-eye"></i>
