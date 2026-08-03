@@ -218,6 +218,27 @@ class RencanaKontrolServiceTest extends TestCase
         $this->assertSame([], $result['surat_kontrol']);
     }
 
+    public function test_technical_failure_stops_the_multi_month_search(): void
+    {
+        $repository = $this->createMock(RencanaKontrolRepository::class);
+        $repository
+            ->expects($this->once())
+            ->method('listByCardNumber')
+            ->willReturn([
+                'metaData' => [
+                    'code' => 504,
+                    'message' => 'Tidak dapat terhubung ke layanan VClaim BPJS.',
+                ],
+            ]);
+
+        $result = (new RencanaKontrolService($repository, $this->referralRepository()))
+            ->listByCardNumber('2026-07-29', '0002035874204');
+
+        $this->assertSame('504', $result['meta_data']['code']);
+        $this->assertCount(1, $result['periode_pencarian']);
+        $this->assertSame([], $result['surat_kontrol']);
+    }
+
     public function test_previous_month_search_handles_year_rollover(): void
     {
         $calls = [];

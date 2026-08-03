@@ -42,16 +42,20 @@ return [
         'antrol' => [
             'base_url' => env('BPJS_BASE_URL_ANTROL'),
             'user_key' => env('BPJS_USERKEY_ANTROL'),
-            'connect_timeout' => (int) env('BPJS_ANTROL_CONNECT_TIMEOUT', 10),
-            'timeout' => (int) env('BPJS_ANTROL_TIMEOUT', 30),
+            'connect_timeout' => (int) env('BPJS_ANTROL_CONNECT_TIMEOUT', 3),
+            'timeout' => (int) env('BPJS_ANTROL_TIMEOUT', 8),
             'database_logging' => (bool) env('BPJS_DATABASE_LOGGING', true),
         ],
 
         'vclaim' => [
             'base_url' => env('BPJS_BASE_URL_VCLAIM'),
             'user_key' => env('BPJS_USERKEY_VCLAIM'),
-            'connect_timeout' => (int) env('BPJS_VCLAIM_CONNECT_TIMEOUT', 10),
-            'timeout' => (int) env('BPJS_VCLAIM_TIMEOUT', 30),
+            'connect_timeout' => (int) env('BPJS_VCLAIM_CONNECT_TIMEOUT', 3),
+            'timeout' => (int) env('BPJS_VCLAIM_TIMEOUT', 8),
+            'circuit_breaker_seconds' => (int) env(
+                'BPJS_VCLAIM_CIRCUIT_BREAKER_SECONDS',
+                30
+            ),
             'database_logging' => (bool) env('BPJS_DATABASE_LOGGING', true),
         ],
     ],

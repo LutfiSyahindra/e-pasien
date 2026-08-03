@@ -73,6 +73,10 @@ class RencanaKontrolService
                 'meta_data' => $metadata,
             ];
             $controlLetters = array_merge($controlLetters, $responseControlLetters);
+
+            if (! $this->allowsReferralFallback($metadata)) {
+                break;
+            }
         }
 
         $formattedControlLetters = collect($controlLetters)

@@ -6,6 +6,7 @@ use App\Support\Bpjs\LzString;
 use App\Support\Bpjs\VClaimResponseDecoder;
 use App\Traits\Bpjs\VClaimTrait;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -26,9 +27,11 @@ class VClaimTraitTest extends TestCase
             'services.bpjs.vclaim.user_key' => 'user-key-test',
             'services.bpjs.vclaim.connect_timeout' => 5,
             'services.bpjs.vclaim.timeout' => 15,
+            'services.bpjs.vclaim.circuit_breaker_seconds' => 30,
             'services.bpjs.vclaim.database_logging' => false,
         ]);
 
+        Cache::flush();
         Http::preventStrayRequests();
         $this->client = new VClaimTestClient;
     }
@@ -127,6 +130,24 @@ class VClaimTraitTest extends TestCase
             'Tidak dapat terhubung ke layanan VClaim BPJS.',
             $result['metaData']['message']
         );
+    }
+
+    public function test_circuit_breaker_skips_repeated_requests_after_connection_failure(): void
+    {
+        Http::fake([
+            'https://vclaim.test/*' => Http::failedConnection('Connection refused'),
+        ]);
+
+        $first = $this->client->get('Peserta/nokartu/0000000000001');
+        $second = $this->client->get('Peserta/nokartu/0000000000002');
+
+        $this->assertSame(504, $first['metaData']['code']);
+        $this->assertSame(504, $second['metaData']['code']);
+        $this->assertSame(
+            'Koneksi VClaim BPJS sedang dipulihkan. Silakan coba kembali.',
+            $second['metaData']['message']
+        );
+        Http::assertSentCount(1);
     }
 
     public function test_lz_string_fixture_matches_the_official_javascript_implementation(): void

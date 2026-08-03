@@ -47,11 +47,19 @@ class AntrolRepository
         $errorMessage = null;
 
         try {
+            $connectTimeout = max(1, min(
+                5,
+                (int) config('services.bpjs.antrol.connect_timeout', 3)
+            ));
+            $requestTimeout = max($connectTimeout, min(
+                10,
+                (int) config('services.bpjs.antrol.timeout', 8)
+            ));
             $response = Http::withHeaders($this->headers($timestamp))
                 ->acceptJson()
                 ->asJson()
-                ->connectTimeout(max(1, (int) config('services.bpjs.antrol.connect_timeout', 10)))
-                ->timeout(max(1, (int) config('services.bpjs.antrol.timeout', 30)))
+                ->connectTimeout($connectTimeout)
+                ->timeout($requestTimeout)
                 ->post($this->url($endpoint), $payload);
             $httpCode = $response->status();
 

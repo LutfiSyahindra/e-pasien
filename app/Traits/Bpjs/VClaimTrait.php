@@ -6,6 +6,7 @@ use App\Models\BpjsApiLog;
 use App\Support\Bpjs\VClaimResponseDecoder;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -16,6 +17,8 @@ use Throwable;
 
 trait VClaimTrait
 {
+    private const VCLAIM_CIRCUIT_CACHE_KEY = 'epasien:bpjs:vclaim:circuit-open:v1';
+
     protected function baseUrl(string $type): string
     {
         $baseUrl = match (strtolower($type)) {
@@ -83,14 +86,51 @@ trait VClaimTrait
         $responseMetadata = null;
         $errorMessage = null;
 
+        if ($this->vclaimCircuitIsOpen()) {
+            $result = $this->vclaimErrorResponse(
+                504,
+                'Koneksi VClaim BPJS sedang dipulihkan. Silakan coba kembali.'
+            );
+            $responseMetadata = $result['metaData'];
+
+            Log::warning('Permintaan BPJS VClaim dilewati sementara.', [
+                'request_id' => $requestId,
+                'endpoint' => $this->redactSensitiveString($endpoint),
+                'method' => $method,
+                'reason' => 'circuit_breaker_open',
+            ]);
+
+            $this->writeVclaimLog([
+                'request_id' => $requestId,
+                'service' => 'vclaim',
+                'endpoint' => $this->redactSensitiveString($endpoint),
+                'method' => $method,
+                'request_payload' => $this->redactVclaimPayload($payload),
+                'response_metadata' => $responseMetadata,
+                'http_code' => null,
+                'duration_ms' => (int) round((hrtime(true) - $startedAt) / 1_000_000),
+                'error_message' => null,
+            ]);
+
+            return $result;
+        }
+
         try {
             $url = $this->buildUrl($this->baseUrl('vclaim'), $endpoint);
             $headers = $this->generateVclaimHeaders($timestamp);
+            $connectTimeout = max(1, min(
+                5,
+                (int) config('services.bpjs.vclaim.connect_timeout', 3)
+            ));
+            $requestTimeout = max($connectTimeout, min(
+                10,
+                (int) config('services.bpjs.vclaim.timeout', 8)
+            ));
 
             $request = Http::withHeaders($headers)
                 ->acceptJson()
-                ->connectTimeout(max(1, (int) config('services.bpjs.vclaim.connect_timeout', 10)))
-                ->timeout(max(1, (int) config('services.bpjs.vclaim.timeout', 30)));
+                ->connectTimeout($connectTimeout)
+                ->timeout($requestTimeout);
             $request = $method === 'GET'
                 ? $request->asForm()
                 : $request->asJson();
@@ -100,6 +140,7 @@ trait VClaimTrait
                 : ['json' => $payload];
 
             $response = $request->send($method, $url, $options);
+            $this->closeVclaimCircuit();
             $httpCode = $response->status();
             $result = $this->parseVclaimResponse($response, $timestamp);
             $responseMetadata = $this->extractVclaimMetadata($result);
@@ -118,6 +159,9 @@ trait VClaimTrait
             $statusCode = $exception instanceof ConnectionException
                 ? 504
                 : 500;
+            if ($exception instanceof ConnectionException) {
+                $this->openVclaimCircuit();
+            }
             $result = $this->vclaimErrorResponse(
                 $statusCode,
                 $statusCode === 504
@@ -146,6 +190,43 @@ trait VClaimTrait
                 'duration_ms' => (int) round((hrtime(true) - $startedAt) / 1_000_000),
                 'error_message' => $errorMessage,
             ]);
+        }
+    }
+
+    private function vclaimCircuitIsOpen(): bool
+    {
+        try {
+            return Cache::has(self::VCLAIM_CIRCUIT_CACHE_KEY);
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
+    private function openVclaimCircuit(): void
+    {
+        try {
+            Cache::put(
+                self::VCLAIM_CIRCUIT_CACHE_KEY,
+                true,
+                now()->addSeconds(max(
+                    1,
+                    (int) config(
+                        'services.bpjs.vclaim.circuit_breaker_seconds',
+                        30
+                    )
+                ))
+            );
+        } catch (Throwable) {
+            // Cache failure must not replace the original BPJS error.
+        }
+    }
+
+    private function closeVclaimCircuit(): void
+    {
+        try {
+            Cache::forget(self::VCLAIM_CIRCUIT_CACHE_KEY);
+        } catch (Throwable) {
+            // A successful BPJS response remains authoritative.
         }
     }
 
