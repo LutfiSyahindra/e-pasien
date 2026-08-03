@@ -2559,6 +2559,16 @@
     outline-offset: 2px;
 }
 
+.online-document-choice.unavailable {
+    cursor: default;
+}
+
+.online-document-choice.unavailable > span {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #64748b;
+}
+
 .online-control-detail-button {
     align-items: center;
     background: #ffffff;

@@ -47,6 +47,9 @@ class RencanaKontrolController extends Controller
             ? count($data['daftar_rujukan'])
             : ($referral !== null ? 1 : 0);
         $documentSource = (string) ($data['sumber_dokumen'] ?? '');
+        $allControlLettersHaveIssuedSep = (bool) (
+            $data['semua_surat_kontrol_sep_terbit'] ?? false
+        );
         $isSuccessful = in_array($metadataCode, ['200', '201', '204'], true);
 
         if (! $isSuccessful) {
@@ -59,18 +62,20 @@ class RencanaKontrolController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => $controlLetterCount > 0
-                ? "{$controlLetterCount} surat kontrol ditemukan."
-                : ($referral !== null
-                    ? ($referralCount > 1
-                        ? "{$referralCount} rujukan "
-                            .($documentSource === 'rujukan_pcare' ? 'PCare' : 'rumah sakit')
-                            .' ditemukan.'
-                        : ($documentSource === 'rujukan_pcare'
-                            ? 'Rujukan PCare ditemukan.'
-                            : 'Rujukan rumah sakit ditemukan.'))
-                    : ($data['meta_data']['message']
-                        ?: 'Surat kontrol dan rujukan tidak ditemukan.')),
+            'message' => $referral !== null
+                ? ($referralCount > 1
+                    ? "{$referralCount} rujukan "
+                        .($documentSource === 'rujukan_pcare' ? 'PCare' : 'rumah sakit')
+                        .' ditemukan.'
+                    : ($documentSource === 'rujukan_pcare'
+                        ? 'Rujukan PCare ditemukan.'
+                        : 'Rujukan rumah sakit ditemukan.'))
+                : ($controlLetterCount > 0 && ! $allControlLettersHaveIssuedSep
+                    ? "{$controlLetterCount} surat kontrol ditemukan."
+                    : ($allControlLettersHaveIssuedSep
+                        ? 'Semua surat kontrol sudah memiliki SEP terbit dan rujukan tidak ditemukan.'
+                        : ($data['meta_data']['message']
+                            ?: 'Surat kontrol dan rujukan tidak ditemukan.'))),
             'data' => $data,
         ]);
     }

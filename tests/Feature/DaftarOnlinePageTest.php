@@ -237,6 +237,7 @@ class DaftarOnlinePageTest extends TestCase
             ->assertDontSee('class="online-antrol-preview-request"', false)
             ->assertSeeText('SEP Sudah Terbit')
             ->assertSeeText('SEP Belum Terbit')
+            ->assertSeeText('Tidak dapat dipilih, SEP sudah terbit')
             ->assertSeeInOrder(['Data Pasien', 'Ringkasan Kunjungan'])
             ->assertSee('class="online-patient-profile"', false)
             ->assertSee('class="online-patient-meta"', false)
@@ -889,7 +890,7 @@ class DaftarOnlinePageTest extends TestCase
             );
     }
 
-    public function test_control_letter_search_returns_pcare_referral_fallback(): void
+    public function test_control_letter_search_returns_pcare_referral_fallback_when_all_sep_have_issued(): void
     {
         $date = now()->toDateString();
 
@@ -910,7 +911,11 @@ class DaftarOnlinePageTest extends TestCase
                         'label' => 'Juni 2026 dan Juli 2026',
                     ],
                     'filter' => 2,
-                    'surat_kontrol' => [],
+                    'surat_kontrol' => [[
+                        'no_surat_kontrol' => '0117R0770122K000004',
+                        'terbit_sep' => 'Sudah',
+                    ]],
+                    'semua_surat_kontrol_sep_terbit' => true,
                     'rujukan' => [
                         'no_rujukan' => '030107010217Y001465',
                         'peserta' => [
@@ -940,6 +945,7 @@ class DaftarOnlinePageTest extends TestCase
             ->assertJsonPath('status', 'success')
             ->assertJsonPath('message', 'Rujukan PCare ditemukan.')
             ->assertJsonPath('data.sumber_dokumen', 'rujukan_pcare')
+            ->assertJsonPath('data.semua_surat_kontrol_sep_terbit', true)
             ->assertJsonPath(
                 'data.rujukan.no_rujukan',
                 '030107010217Y001465'
