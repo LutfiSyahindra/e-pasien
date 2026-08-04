@@ -23,10 +23,22 @@ class AccessControlSeeder extends Seeder
 
         $superAdmin = Role::findOrCreate(config('access-control.super_admin_role'), 'web');
         $administrator = Role::findOrCreate('Administrator', 'web');
-        Role::findOrCreate(config('access-control.patient_role'), 'web');
+        $patient = Role::findOrCreate(config('access-control.patient_role'), 'web');
+        $marketing = Role::findOrCreate(config('access-control.marketing_role'), 'web');
 
         // Ini untuk memberi Administrator seluruh permission eksplisit yang tersedia.
         $administrator->syncPermissions($permissions);
+
+        $patient->givePermissionTo([
+            'EPASIEN.MENU',
+            'EPASIEN.MENU.PROMOSI',
+        ]);
+
+        $marketing->givePermissionTo([
+            'EPASIEN.MENU',
+            'EPASIEN.MENU.PROMOSI',
+            'EPASIEN.MENU.PROMOSI.KELOLA',
+        ]);
 
         // Ini untuk menyediakan akun awal setelah database di-seed.
         $admin = User::query()->firstOrCreate(

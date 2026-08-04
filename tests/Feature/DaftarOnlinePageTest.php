@@ -8,10 +8,13 @@ use App\Services\epasien\menu\DaftarOnlineService;
 use App\Services\epasien\settings\RegistrationRoleConfigurationService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Mockery\MockInterface;
+use Tests\Concerns\AuthorizesEpasienMenuRoutes;
 use Tests\TestCase;
 
 class DaftarOnlinePageTest extends TestCase
 {
+    use AuthorizesEpasienMenuRoutes;
+
     public function test_new_registration_page_shows_guarantor_notice_and_visit_fields(): void
     {
         $patient = (object) [

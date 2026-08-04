@@ -7,10 +7,13 @@ use App\Services\epasien\menu\PermintaanTindakan\PemeriksaanRadiologiService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Http;
 use Mockery\MockInterface;
+use Tests\Concerns\AuthorizesEpasienMenuRoutes;
 use Tests\TestCase;
 
 class PemeriksaanRadiologiPageTest extends TestCase
 {
+    use AuthorizesEpasienMenuRoutes;
+
     public function test_guest_cannot_access_radiology_routes(): void
     {
         $this->get(route('pemeriksaanRadiologi.index'))

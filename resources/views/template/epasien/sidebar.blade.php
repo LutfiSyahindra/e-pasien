@@ -20,9 +20,9 @@
             <div class="sidebar-header">
                 <a href="{{ route("dashboard") }}" class="ep-sidebar-brand" aria-label="E-Pasien - ke dashboard">
                     <img src="{{ asset("landing/assets/imagesArsy/epasien.png") }}"
-                        class="ep-sidebar-logo ep-sidebar-logo-full" alt="E-Pasien">
+                        class="ep-sidebar-logo ep-sidebar-logo-full" alt="E-Pasien" decoding="async">
                     <img src="{{ asset("landing/assets/imagesArsy/logoarsy.png") }}"
-                        class="ep-sidebar-logo ep-sidebar-logo-compact" alt="RS-Arsy">
+                        class="ep-sidebar-logo ep-sidebar-logo-compact" alt="RS-Arsy" loading="lazy" decoding="async">
                 </a>
                 <button type="button" class="toggle-icon ms-auto" aria-label="Ciutkan sidebar" aria-expanded="true"
                     title="Ciutkan sidebar">
@@ -111,6 +111,44 @@
                                     <div class="menu-title">Dashboard</div>
                                 </a>
                             </li>
+                        @endcan
+
+                        @can("EPASIEN.MENU.PROMOSI")
+                            @can("EPASIEN.MENU.PROMOSI.KELOLA")
+                                <li class="{{ request()->routeIs("promotions.*") ? "mm-active" : "" }}">
+                                    <a href="javascript:;" class="has-arrow"
+                                        aria-expanded="{{ request()->routeIs("promotions.*") ? "true" : "false" }}">
+                                        <div class="parent-icon"><i class="bi bi-stars"></i></div>
+                                        <div class="menu-title">Promosi &amp; Informasi</div>
+                                    </a>
+                                    <ul class="{{ request()->routeIs("promotions.*") ? "mm-show" : "" }}">
+                                        <li>
+                                            <a href="{{ route("promotions.index") }}"
+                                                class="{{ request()->routeIs("promotions.index", "promotions.create", "promotions.edit", "promotions.show") ? "mm-active" : "" }}"
+                                                @if (request()->routeIs("promotions.index", "promotions.create", "promotions.edit", "promotions.show")) aria-current="page" @endif>
+                                                <i class="bi bi-megaphone"></i>
+                                                Daftar Konten
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ route("promotions.configuration.edit") }}"
+                                                class="{{ request()->routeIs("promotions.configuration.*") ? "mm-active" : "" }}"
+                                                @if (request()->routeIs("promotions.configuration.*")) aria-current="page" @endif>
+                                                <i class="bi bi-sliders"></i>
+                                                Konfigurasi Konten
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            @else
+                                <li class="{{ request()->routeIs("promotions.*") ? "mm-active" : "" }}">
+                                    <a href="{{ route("promotions.index") }}"
+                                        @if (request()->routeIs("promotions.*")) aria-current="page" @endif>
+                                        <div class="parent-icon"><i class="bi bi-stars"></i></div>
+                                        <div class="menu-title">Promosi &amp; Informasi</div>
+                                    </a>
+                                </li>
+                            @endcan
                         @endcan
 
                         @can("EPASIEN.MENU.PENDAFTARAN_ONLINE")

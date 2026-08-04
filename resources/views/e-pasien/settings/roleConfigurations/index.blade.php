@@ -19,11 +19,20 @@
             ->pluck("id")
             ->map(fn ($roleId) => (int) $roleId)
             ->values();
+        $promotionNotificationConfiguredIds = $roles
+            ->where("promotion_notifications_enabled", true)
+            ->pluck("id")
+            ->map(fn ($roleId) => (int) $roleId)
+            ->values();
         $selectedRegistrationIds = collect(old("registration_role_ids", $registrationConfiguredIds->all()))
             ->map(fn ($roleId) => (int) $roleId)
             ->values()
             ->all();
         $selectedEmailOnboardingIds = collect(old("email_onboarding_role_ids", $emailOnboardingConfiguredIds->all()))
+            ->map(fn ($roleId) => (int) $roleId)
+            ->values()
+            ->all();
+        $selectedPromotionNotificationIds = collect(old("promotion_notification_role_ids", $promotionNotificationConfiguredIds->all()))
             ->map(fn ($roleId) => (int) $roleId)
             ->values()
             ->all();
@@ -77,7 +86,7 @@
             <div class="auth-header-actions role-config-header-actions">
                 <span class="role-config-live-state">
                     <span class="role-config-live-dot"></span>
-                    <strong>2</strong>
+                    <strong>3</strong>
                     <span>fitur tersedia</span>
                 </span>
                 <a href="{{ route("roles.roles") }}" class="role-config-manage-link">
@@ -98,7 +107,7 @@
         @endif
 
         <div class="row g-3 access-stats role-config-stats">
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-6 col-xl-3">
                 <div class="access-stat-card tone-indigo">
                     <span class="access-stat-icon purple"><i class="bi bi-collection"></i></span>
                     <span class="access-stat-copy">
@@ -108,7 +117,7 @@
                     </span>
                 </div>
             </div>
-            <div class="col-6 col-md-4">
+            <div class="col-6 col-md-6 col-xl-3">
                 <div class="access-stat-card tone-green">
                     <span class="access-stat-icon green"><i class="bi bi-heart-pulse"></i></span>
                     <span class="access-stat-copy">
@@ -118,13 +127,23 @@
                     </span>
                 </div>
             </div>
-            <div class="col-6 col-md-4">
+            <div class="col-6 col-md-6 col-xl-3">
                 <div class="access-stat-card tone-cyan">
                     <span class="access-stat-icon cyan"><i class="bi bi-envelope-check"></i></span>
                     <span class="access-stat-copy">
                         <small>Onboarding Email</small>
                         <strong id="emailOnboardingRoleCount">{{ $emailOnboardingRoleCount }}</strong>
                         <em><span id="emailOnboardingUserCount">{{ $emailOnboardingUserCount }}</span> pengguna tercakup</em>
+                    </span>
+                </div>
+            </div>
+            <div class="col-6 col-md-6 col-xl-3">
+                <div class="access-stat-card tone-orange">
+                    <span class="access-stat-icon orange"><i class="bi bi-megaphone"></i></span>
+                    <span class="access-stat-copy">
+                        <small>Penerima Konten</small>
+                        <strong id="promotionRecipientCount" data-saved-count="{{ $promotionNotificationRecipientCount }}">{{ $promotionNotificationRecipientCount }}</strong>
+                        <em><span id="promotionDirectUserCount">{{ $promotionNotificationUserCount }}</span> user dipilih langsung</em>
                     </span>
                 </div>
             </div>
@@ -156,6 +175,19 @@
                     <small>role aktif</small>
                 </span>
             </article>
+
+            <article class="role-config-feature-card tone-promotion">
+                <span class="role-config-feature-icon"><i class="bi bi-megaphone"></i></span>
+                <div>
+                    <span class="role-config-feature-kicker">Target Komunikasi</span>
+                    <h2>Notifikasi Promosi &amp; Informasi</h2>
+                    <p>Kirim promosi dan informasi hanya kepada role yang dipilih atau akun uji tertentu agar antrean tetap ringkas.</p>
+                </div>
+                <span class="role-config-feature-count">
+                    <strong data-promotion-summary>{{ $promotionNotificationRoleCount }}</strong>
+                    <small>role aktif</small>
+                </span>
+            </article>
         </div>
 
         <section class="access-panel role-config-panel">
@@ -171,7 +203,7 @@
                     <span><i class="bi bi-toggles"></i></span>
                     <div>
                         <small>Konfigurasi aktif</small>
-                        <strong><span id="activeConfigurationCount">{{ $registrationRoleCount + $emailOnboardingRoleCount }}</span> assignment</strong>
+                        <strong><span id="activeConfigurationCount">{{ $registrationRoleCount + $emailOnboardingRoleCount + $promotionNotificationRoleCount + $promotionNotificationUserCount }}</span> assignment</strong>
                     </div>
                 </div>
             </div>
@@ -179,7 +211,9 @@
             <form id="roleConfigurationForm" method="POST"
                 action="{{ route("roleConfiguration.update") }}"
                 data-initial-registration="{{ $registrationConfiguredIds->sort()->implode(",") }}"
-                data-initial-email="{{ $emailOnboardingConfiguredIds->sort()->implode(",") }}">
+                data-initial-email="{{ $emailOnboardingConfiguredIds->sort()->implode(",") }}"
+                data-initial-promotion-roles="{{ $promotionNotificationConfiguredIds->sort()->implode(",") }}"
+                data-initial-promotion-users="{{ $configuredPromotionUserIds->sort()->implode(",") }}">
                 @csrf
                 @method("PUT")
 
@@ -187,12 +221,16 @@
                     $errors->has("registration_role_ids") ||
                     $errors->has("registration_role_ids.*") ||
                     $errors->has("email_onboarding_role_ids") ||
-                    $errors->has("email_onboarding_role_ids.*")
+                    $errors->has("email_onboarding_role_ids.*") ||
+                    $errors->has("promotion_notification_role_ids") ||
+                    $errors->has("promotion_notification_role_ids.*") ||
+                    $errors->has("promotion_notification_user_ids") ||
+                    $errors->has("promotion_notification_user_ids.*")
                 )
                     <div class="role-config-alert-error" role="alert">
                         <i class="bi bi-exclamation-triangle"></i>
                         <span>
-                            {{ $errors->first("registration_role_ids") ?: $errors->first("registration_role_ids.*") ?: $errors->first("email_onboarding_role_ids") ?: $errors->first("email_onboarding_role_ids.*") }}
+                            {{ $errors->first("registration_role_ids") ?: $errors->first("registration_role_ids.*") ?: $errors->first("email_onboarding_role_ids") ?: $errors->first("email_onboarding_role_ids.*") ?: $errors->first("promotion_notification_role_ids") ?: $errors->first("promotion_notification_role_ids.*") ?: $errors->first("promotion_notification_user_ids") ?: $errors->first("promotion_notification_user_ids.*") }}
                         </span>
                     </div>
                 @endif
@@ -210,12 +248,17 @@
                                 <i class="bi bi-envelope-check"></i>
                                 Animasi Email
                             </span>
+                            <span role="columnheader">
+                                <i class="bi bi-megaphone"></i>
+                                Notifikasi Konten
+                            </span>
                         </div>
 
                         @forelse ($roles as $role)
                             @php
                                 $registrationSelected = in_array((int) $role->id, $selectedRegistrationIds, true);
                                 $emailSelected = in_array((int) $role->id, $selectedEmailOnboardingIds, true);
+                                $promotionSelected = in_array((int) $role->id, $selectedPromotionNotificationIds, true);
                             @endphp
                             <div class="role-config-matrix-row" role="row">
                                 <div class="role-config-role" role="cell">
@@ -265,6 +308,22 @@
                                         </span>
                                     </label>
                                 </div>
+
+                                <div class="role-config-cell" role="cell">
+                                    <span class="role-config-mobile-label">Notifikasi Promosi &amp; Informasi</span>
+                                    <label class="role-config-toggle" for="promotion-role-{{ $role->id }}">
+                                        <input class="role-config-checkbox" type="checkbox"
+                                            id="promotion-role-{{ $role->id }}"
+                                            name="promotion_notification_role_ids[]" value="{{ $role->id }}"
+                                            data-feature="promotion" data-users="{{ $role->users_count }}"
+                                            @checked($promotionSelected)>
+                                        <span class="role-config-switch" aria-hidden="true"><span></span></span>
+                                        <span class="role-config-toggle-copy">
+                                            <strong data-toggle-state>{{ $promotionSelected ? "Aktif" : "Nonaktif" }}</strong>
+                                            <small>Semua user aktif pada role ini</small>
+                                        </span>
+                                    </label>
+                                </div>
                             </div>
                         @empty
                             <div class="role-config-empty">
@@ -279,6 +338,41 @@
                         @endforelse
                     </div>
                 </div>
+
+                <section class="role-config-recipient-section" aria-labelledby="promotionRecipientTitle">
+                    <div class="role-config-recipient-heading">
+                        <span class="role-config-recipient-icon"><i class="bi bi-person-check"></i></span>
+                        <div>
+                            <span class="access-panel-kicker">Target Individual</span>
+                            <h3 id="promotionRecipientTitle">Pilih Pasien/User Tertentu</h3>
+                            <p>Pilihan ini digabungkan dengan role di atas. Untuk testing satu akun, nonaktifkan seluruh role konten lalu pilih akun uji di sini.</p>
+                        </div>
+                        <span class="role-config-direct-count">
+                            <strong data-direct-user-summary>{{ $selectedPromotionUserIds->count() }}</strong>
+                            <small>user dipilih</small>
+                        </span>
+                    </div>
+
+                    <label class="role-config-user-label" for="promotionNotificationUsers">
+                        Cari berdasarkan nama, username, atau email
+                    </label>
+                    <select id="promotionNotificationUsers"
+                        class="role-config-user-select"
+                        name="promotion_notification_user_ids[]"
+                        multiple
+                        data-search-url="{{ route("roleConfiguration.users") }}"
+                        data-placeholder="Ketik minimal beberapa huruf untuk mencari user...">
+                        @foreach ($selectedPromotionUsers as $selectedUser)
+                            <option value="{{ $selectedUser->id }}" @selected($selectedPromotionUserIds->contains((int) $selectedUser->id))>
+                                {{ $selectedUser->name }}{{ $selectedUser->username ? " ({$selectedUser->username})" : ($selectedUser->email ? " ({$selectedUser->email})" : "") }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="role-config-user-help">
+                        <i class="bi bi-info-circle"></i>
+                        User nonaktif tetap tidak akan menerima notifikasi meskipun pernah dipilih.
+                    </small>
+                </section>
 
                 <div class="role-config-action-bar">
                     <div class="role-config-change-state">
@@ -321,15 +415,23 @@
             const changeIcon = document.getElementById("roleConfigurationChangeIcon");
             const changeTitle = document.getElementById("roleConfigurationChangeTitle");
             const changeHint = document.getElementById("roleConfigurationChangeHint");
+            const userSelect = document.getElementById("promotionNotificationUsers");
+            const promotionRecipientCount = document.getElementById("promotionRecipientCount");
             const initial = {
                 registration: (form.dataset.initialRegistration || "").split(",").filter(Boolean).sort(),
                 email: (form.dataset.initialEmail || "").split(",").filter(Boolean).sort(),
+                promotion: (form.dataset.initialPromotionRoles || "").split(",").filter(Boolean).sort(),
+                promotionUsers: (form.dataset.initialPromotionUsers || "").split(",").filter(Boolean).sort(),
             };
 
             const featureInputs = (feature) => inputs.filter((input) => input.dataset.feature === feature);
             const selectedIds = (feature) => featureInputs(feature)
                 .filter((input) => input.checked)
                 .map((input) => input.value)
+                .sort();
+            const selectedUserIds = () => [...(userSelect?.selectedOptions || [])]
+                .map((option) => option.value)
+                .filter(Boolean)
                 .sort();
 
             const refreshToggle = (input) => {
@@ -350,10 +452,15 @@
             const refreshSummary = () => {
                 const registrationIds = selectedIds("registration");
                 const emailIds = selectedIds("email");
+                const promotionIds = selectedIds("promotion");
+                const promotionUserIds = selectedUserIds();
                 const registrationChanged = registrationIds.join(",") !== initial.registration.join(",");
                 const emailChanged = emailIds.join(",") !== initial.email.join(",");
-                const hasChanges = registrationChanged || emailChanged;
-                const assignmentCount = registrationIds.length + emailIds.length;
+                const promotionChanged = promotionIds.join(",") !== initial.promotion.join(",");
+                const promotionUsersChanged = promotionUserIds.join(",") !== initial.promotionUsers.join(",");
+                const hasChanges = registrationChanged || emailChanged || promotionChanged || promotionUsersChanged;
+                const assignmentCount = registrationIds.length + emailIds.length +
+                    promotionIds.length + promotionUserIds.length;
 
                 inputs.forEach(refreshToggle);
 
@@ -366,8 +473,17 @@
                 document.getElementById("activeConfigurationCount").textContent = assignmentCount;
                 document.querySelector("[data-registration-summary]").textContent = registrationIds.length;
                 document.querySelector("[data-email-summary]").textContent = emailIds.length;
+                document.querySelector("[data-promotion-summary]").textContent = promotionIds.length;
+                document.querySelector("[data-direct-user-summary]").textContent = promotionUserIds.length;
+                document.getElementById("promotionDirectUserCount").textContent = promotionUserIds.length;
 
-                saveButton.disabled = !hasChanges || inputs.length === 0;
+                if (promotionRecipientCount) {
+                    promotionRecipientCount.textContent = hasChanges
+                        ? "—"
+                        : promotionRecipientCount.dataset.savedCount;
+                }
+
+                saveButton.disabled = !hasChanges;
                 resetButton?.classList.toggle("d-none", !hasChanges);
                 changeIcon?.classList.toggle("is-dirty", hasChanges);
 
@@ -381,16 +497,52 @@
                     ? "Ada perubahan yang belum disimpan"
                     : "Konfigurasi sudah tersimpan";
                 changeHint.textContent = hasChanges
-                    ? `${registrationIds.length} role BPJS dan ${emailIds.length} role onboarding email akan disimpan.`
+                    ? `${promotionIds.length} role konten dan ${promotionUserIds.length} user langsung akan menjadi target notifikasi.`
                     : "Ubah sakelar untuk mengaktifkan tombol simpan.";
             };
 
             inputs.forEach((input) => input.addEventListener("change", refreshSummary));
 
+            if (userSelect && window.jQuery?.fn?.select2) {
+                window.jQuery(userSelect).select2({
+                    theme: "bootstrap4",
+                    width: "100%",
+                    placeholder: userSelect.dataset.placeholder,
+                    allowClear: true,
+                    closeOnSelect: false,
+                    minimumInputLength: 1,
+                    ajax: {
+                        url: userSelect.dataset.searchUrl,
+                        dataType: "json",
+                        delay: 250,
+                        data: (params) => ({ q: params.term || "" }),
+                        processResults: (data) => data,
+                        cache: true,
+                    },
+                    language: {
+                        inputTooShort: () => "Ketik nama, username, atau email.",
+                        noResults: () => "User tidak ditemukan.",
+                        searching: () => "Mencari user...",
+                    },
+                }).on("change", refreshSummary);
+            } else {
+                userSelect?.addEventListener("change", refreshSummary);
+            }
+
             resetButton?.addEventListener("click", () => {
                 inputs.forEach((input) => {
                     input.checked = initial[input.dataset.feature].includes(input.value);
                 });
+
+                if (userSelect) {
+                    if (window.jQuery) {
+                        window.jQuery(userSelect).val(initial.promotionUsers).trigger("change");
+                    } else {
+                        [...userSelect.options].forEach((option) => {
+                            option.selected = initial.promotionUsers.includes(option.value);
+                        });
+                    }
+                }
                 refreshSummary();
             });
 

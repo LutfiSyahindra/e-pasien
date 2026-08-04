@@ -335,7 +335,7 @@
                         <div class="best-product-item">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="product-box border">
-                                    <img src="{{ asset("epasien/assets/images/products/01.png") }}" alt="">
+                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/01.png") }}" alt="">
                                 </div>
                                 <div class="product-info">
                                     <h6 class="product-name mb-1">White Polo T-Shirt</h6>
@@ -355,7 +355,7 @@
                         <div class="best-product-item">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="product-box border">
-                                    <img src="{{ asset("epasien/assets/images/products/02.png") }}" alt="">
+                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/02.png") }}" alt="">
                                 </div>
                                 <div class="product-info">
                                     <h6 class="product-name mb-1">Formal Coat Pant</h6>
@@ -375,7 +375,7 @@
                         <div class="best-product-item">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="product-box border">
-                                    <img src="{{ asset("epasien/assets/images/products/03.png") }}" alt="">
+                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/03.png") }}" alt="">
                                 </div>
                                 <div class="product-info">
                                     <h6 class="product-name mb-1">Blue Shade Jeans</h6>
@@ -395,7 +395,7 @@
                         <div class="best-product-item">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="product-box border">
-                                    <img src="{{ asset("epasien/assets/images/products/04.png") }}" alt="">
+                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/04.png") }}" alt="">
                                 </div>
                                 <div class="product-info">
                                     <h6 class="product-name mb-1">Yellow Winter Jacket</h6>
@@ -415,7 +415,7 @@
                         <div class="best-product-item">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="product-box border">
-                                    <img src="{{ asset("epasien/assets/images/products/05.png") }}" alt="">
+                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/05.png") }}" alt="">
                                 </div>
                                 <div class="product-info">
                                     <h6 class="product-name mb-1">Men Sports Shoes</h6>
@@ -435,7 +435,7 @@
                         <div class="best-product-item">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="product-box border">
-                                    <img src="{{ asset("epasien/assets/images/products/06.png") }}" alt="">
+                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/06.png") }}" alt="">
                                 </div>
                                 <div class="product-info">
                                     <h6 class="product-name mb-1">Fancy Home Sofa</h6>
@@ -455,7 +455,7 @@
                         <div class="best-product-item">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="product-box border">
-                                    <img src="{{ asset("epasien/assets/images/products/07.png") }}" alt="">
+                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/07.png") }}" alt="">
                                 </div>
                                 <div class="product-info">
                                     <h6 class="product-name mb-1">Sports Time Watch</h6>
@@ -475,7 +475,7 @@
                         <div class="best-product-item">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="product-box border">
-                                    <img src="{{ asset("epasien/assets/images/products/08.png") }}" alt="">
+                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/08.png") }}" alt="">
                                 </div>
                                 <div class="product-info">
                                     <h6 class="product-name mb-1">Women Blue Heals</h6>
@@ -528,7 +528,7 @@
                 </div>
                 <div class="top-sellers-list p-2 mb-3">
                     <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img src="{{ asset("epasien/assets/images/avatars/avatar-1.png") }}" class="rounded-circle"
+                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-1.png") }}" class="rounded-circle"
                             width="50" height="50" alt="">
                         <div>
                             <h6 class="mb-1">Thomas Hardy</h6>
@@ -539,7 +539,7 @@
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img src="{{ asset("epasien/assets/images/avatars/avatar-2.png") }}" class="rounded-circle"
+                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-2.png") }}" class="rounded-circle"
                             width="50" height="50" alt="">
                         <div>
                             <h6 class="mb-0">Pauline Bird</h6>
@@ -550,7 +550,7 @@
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img src="{{ asset("epasien/assets/images/avatars/avatar-3.png") }}" class="rounded-circle"
+                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-3.png") }}" class="rounded-circle"
                             width="50" height="50" alt="">
                         <div>
                             <h6 class="mb-0">Ralph Alva</h6>
@@ -561,7 +561,7 @@
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img src="{{ asset("epasien/assets/images/avatars/avatar-4.png") }}" class="rounded-circle"
+                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-4.png") }}" class="rounded-circle"
                             width="50" height="50" alt="">
                         <div>
                             <h6 class="mb-0">John Roman</h6>
@@ -572,7 +572,7 @@
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img src="{{ asset("epasien/assets/images/avatars/avatar-5.png") }}" class="rounded-circle"
+                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-5.png") }}" class="rounded-circle"
                             width="50" height="50" alt="">
                         <div>
                             <h6 class="mb-0">David Buckley</h6>
@@ -583,7 +583,7 @@
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img src="{{ asset("epasien/assets/images/avatars/avatar-6.png") }}" class="rounded-circle"
+                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-6.png") }}" class="rounded-circle"
                             width="50" height="50" alt="">
                         <div>
                             <h6 class="mb-0">Maria Anders</h6>
@@ -594,7 +594,7 @@
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img src="{{ asset("epasien/assets/images/avatars/avatar-7.png") }}" class="rounded-circle"
+                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-7.png") }}" class="rounded-circle"
                             width="50" height="50" alt="">
                         <div>
                             <h6 class="mb-0">Martin Loother</h6>
@@ -605,7 +605,7 @@
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img src="{{ asset("epasien/assets/images/avatars/avatar-8.png") }}" class="rounded-circle"
+                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-8.png") }}" class="rounded-circle"
                             width="50" height="50" alt="">
                         <div>
                             <h6 class="mb-0">Victoria Hardy</h6>
@@ -616,7 +616,7 @@
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img src="{{ asset("epasien/assets/images/avatars/avatar-9.png") }}" class="rounded-circle"
+                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-9.png") }}" class="rounded-circle"
                             width="50" height="50" alt="">
                         <div>
                             <h6 class="mb-0">David Buckley</h6>
@@ -627,7 +627,7 @@
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img src="{{ asset("epasien/assets/images/avatars/avatar-10.png") }}" class="rounded-circle"
+                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-10.png") }}" class="rounded-circle"
                             width="50" height="50" alt="">
                         <div>
                             <h6 class="mb-0">Victoria Hardy</h6>
@@ -770,7 +770,7 @@
                             <td>
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="product-box border">
-                                        <img src="{{ asset("epasien/assets/images/products/11.png") }}" alt="">
+                                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/11.png") }}" alt="">
                                     </div>
                                     <div class="product-info">
                                         <h6 class="product-name mb-1">Smart Mobile Phone</h6>
@@ -799,7 +799,7 @@
                             <td>
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="product-box border">
-                                        <img src="{{ asset("epasien/assets/images/products/07.png") }}" alt="">
+                                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/07.png") }}" alt="">
                                     </div>
                                     <div class="product-info">
                                         <h6 class="product-name mb-1">Sports Time Watch</h6>
@@ -828,7 +828,7 @@
                             <td>
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="product-box border">
-                                        <img src="{{ asset("epasien/assets/images/products/17.png") }}" alt="">
+                                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/17.png") }}" alt="">
                                     </div>
                                     <div class="product-info">
                                         <h6 class="product-name mb-1">Women Red Heals</h6>
@@ -857,7 +857,7 @@
                             <td>
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="product-box border">
-                                        <img src="{{ asset("epasien/assets/images/products/04.png") }}" alt="">
+                                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/04.png") }}" alt="">
                                     </div>
                                     <div class="product-info">
                                         <h6 class="product-name mb-1">Yellow Winter Jacket</h6>
@@ -886,7 +886,7 @@
                             <td>
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="product-box border">
-                                        <img src="{{ asset("epasien/assets/images/products/10.png") }}" alt="">
+                                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/10.png") }}" alt="">
                                     </div>
                                     <div class="product-info">
                                         <h6 class="product-name mb-1">Orange Micro Headphone</h6>
@@ -915,7 +915,7 @@
                             <td>
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="product-box border">
-                                        <img src="{{ asset("epasien/assets/images/products/05.png") }}" alt="">
+                                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/05.png") }}" alt="">
                                     </div>
                                     <div class="product-info">
                                         <h6 class="product-name mb-1">Men Sports Shoes Nike</h6>

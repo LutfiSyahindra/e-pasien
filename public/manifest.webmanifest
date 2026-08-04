@@ -1,0 +1,13 @@
+{
+    "name": "E-Pasien RS Arsy",
+    "short_name": "E-Pasien",
+    "description": "Layanan pasien digital RS Arsy",
+    "start_url": "/dashboard",
+    "display": "standalone",
+    "background_color": "#f6f8fb",
+    "theme_color": "#0b766d",
+    "icons": [
+        { "src": "/epasien/assets/images/logo-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+        { "src": "/epasien/assets/images/favicon-32x32.png", "sizes": "32x32", "type": "image/png" }
+    ]
+}

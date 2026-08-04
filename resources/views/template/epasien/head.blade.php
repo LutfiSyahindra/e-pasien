@@ -1,7 +1,7 @@
 <head>
     @php
         $usesDataTables = request()->routeIs("users.*", "roles.*", "permissions.*");
-        $usesSelect2 = request()->routeIs("users.*", "roles.*", "daftarOnline.index");
+        $usesSelect2 = request()->routeIs("users.*", "roles.*", "roleConfiguration.*", "daftarOnline.index");
         $usesDashboardCharts = request()->routeIs("dashboard");
         $usesAccessControl = request()->routeIs("users.*", "roles.*", "permissions.*", "roleConfiguration.*");
         $usesSweetAlert = request()->routeIs("profile.*", "users.*", "roles.*", "permissions.*", "daftarOnline.*");
@@ -10,6 +10,18 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    @auth
+        <meta name="epasien-user-id" content="{{ auth()->id() }}">
+        <meta name="epasien-notifications-url" content="{{ route("notifications.index") }}">
+        <meta name="epasien-notifications-read-url" content="{{ url("/e-pasien/notifications") }}">
+        <meta name="epasien-notifications-read-all-url" content="{{ route("notifications.readAll") }}">
+        <meta name="epasien-push-config-url" content="{{ route("push.config") }}">
+        <meta name="epasien-push-subscription-url" content="{{ route("push.store") }}">
+        <meta name="epasien-notification-sound-url" content="{{ asset("landing/assets/sound/notif.mp3") }}">
+    @endauth
+    <meta name="theme-color" content="#0b766d">
+    <link rel="manifest" href="{{ asset("manifest.webmanifest") }}">
     <link rel="icon" href="{{ asset("epasien/assets/images/favicon-32x32.png") }}" type="image/png" />
     <!--plugins-->
     <link href="{{ asset("epasien/assets/plugins/simplebar/css/simplebar.css") }}" rel="stylesheet" />
@@ -30,9 +42,6 @@
     <link href="{{ asset("epasien/assets/css/bootstrap-extended.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/css/style.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/css/icons.css") }}" rel="stylesheet">
-    <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
 
     <link href="{{ asset("epasien/assets/css/navigation-loader.css") }}" rel="stylesheet" />
     <script src="{{ asset("epasien/assets/js/navigation-loader.js") }}" defer></script>
@@ -43,6 +52,10 @@
         <link href="{{ asset("epasien/assets/css/sweetalert-premium.css") }}" rel="stylesheet" />
     @endif
     <link href="{{ asset("epasien/assets/css/sidebar-premium.css") }}" rel="stylesheet" />
+    <link href="{{ asset("epasien/assets/css/notification-center.css") }}" rel="stylesheet" />
 
     <title>@yield("title", "E-Pasien")</title>
+    @if (file_exists(public_path("build/manifest.json")) || file_exists(public_path("hot")))
+        @vite("resources/js/app.js")
+    @endif
 </head>

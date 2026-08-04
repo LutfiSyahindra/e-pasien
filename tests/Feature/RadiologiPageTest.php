@@ -7,10 +7,13 @@ use App\Services\epasien\menu\FasilitasTarif\RadiologiService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Mockery\MockInterface;
+use Tests\Concerns\AuthorizesEpasienMenuRoutes;
 use Tests\TestCase;
 
 class RadiologiPageTest extends TestCase
 {
+    use AuthorizesEpasienMenuRoutes;
+
     public function test_guest_cannot_access_radiology_rate_page(): void
     {
         $this->get(route('radiologi.index'))

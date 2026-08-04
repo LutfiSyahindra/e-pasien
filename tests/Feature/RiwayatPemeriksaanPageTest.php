@@ -6,10 +6,13 @@ use App\Models\User;
 use App\Services\epasien\menu\RiwayatPemeriksaanService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Mockery\MockInterface;
+use Tests\Concerns\AuthorizesEpasienMenuRoutes;
 use Tests\TestCase;
 
 class RiwayatPemeriksaanPageTest extends TestCase
 {
+    use AuthorizesEpasienMenuRoutes;
+
     public function test_page_shows_completed_examinations_as_mobile_friendly_cards(): void
     {
         $patient = (object) [

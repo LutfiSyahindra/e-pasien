@@ -29,7 +29,7 @@ class RegistrationRoleConfigurationTest extends TestCase
     public function test_configured_role_grants_registration_staff_access(): void
     {
         $user = User::factory()->create(['username' => 'PETUGAS01']);
-        $role = Role::create(['name' => 'Petugas BPJS', 'guard_name' => 'web']);
+        $role = Role::create(['name' => 'Petugas Pendaftaran', 'guard_name' => 'web']);
         $user->assignRole($role);
 
         $service = app(RegistrationRoleConfigurationService::class);
@@ -60,6 +60,8 @@ class RegistrationRoleConfigurationTest extends TestCase
         app(RoleConfigurationService::class)->sync(
             [$bpjsRole->id],
             [$patientRole->id],
+            [$patientRole->id],
+            [$configuredBy->id],
             $configuredBy,
         );
 
@@ -72,6 +74,11 @@ class RegistrationRoleConfigurationTest extends TestCase
         ]);
         $this->assertFalse((bool) $bpjsRole->fresh()->email_onboarding_enabled);
         $this->assertTrue((bool) $patientRole->fresh()->email_onboarding_enabled);
+        $this->assertTrue((bool) $patientRole->fresh()->promotion_notifications_enabled);
+        $this->assertDatabaseHas('promotion_notification_user_configurations', [
+            'user_id' => $configuredBy->id,
+            'configured_by' => $configuredBy->id,
+        ]);
     }
 
     public function test_role_configuration_page_exposes_bpjs_and_email_feature_matrix(): void
@@ -96,8 +103,37 @@ class RegistrationRoleConfigurationTest extends TestCase
             ->assertSeeText('Konfigurasi Roles')
             ->assertSeeText('Pendaftaran BPJS')
             ->assertSeeText('Animasi Onboarding Email')
+            ->assertSeeText('Notifikasi Promosi & Informasi')
+            ->assertSeeText('Pilih Pasien/User Tertentu')
             ->assertSee('name="registration_role_ids[]"', false)
-            ->assertSee('name="email_onboarding_role_ids[]"', false);
+            ->assertSee('name="email_onboarding_role_ids[]"', false)
+            ->assertSee('name="promotion_notification_role_ids[]"', false)
+            ->assertSee('name="promotion_notification_user_ids[]"', false);
+    }
+
+    public function test_role_configuration_update_saves_promotion_roles_and_direct_users(): void
+    {
+        $admin = User::factory()->create(['username' => 'ADMIN03']);
+        $admin->assignRole(Role::create([
+            'name' => config('access-control.super_admin_role', 'Super Admin'),
+            'guard_name' => 'web',
+        ]));
+        $patientRole = Role::create(['name' => 'Pasien Uji', 'guard_name' => 'web']);
+        $target = User::factory()->create(['name' => 'Pasien Target', 'status' => true]);
+
+        $this->actingAs($admin)
+            ->put(route('roleConfiguration.update'), [
+                'promotion_notification_role_ids' => [$patientRole->id],
+                'promotion_notification_user_ids' => [$target->id],
+            ])
+            ->assertRedirect(route('roleConfiguration.index'))
+            ->assertSessionHas('status');
+
+        $this->assertTrue((bool) $patientRole->fresh()->promotion_notifications_enabled);
+        $this->assertDatabaseHas('promotion_notification_user_configurations', [
+            'user_id' => $target->id,
+            'configured_by' => $admin->id,
+        ]);
     }
 
     public function test_registration_by_configured_role_is_audited_in_application_database(): void
@@ -128,8 +164,8 @@ class RegistrationRoleConfigurationTest extends TestCase
             'nm_poli' => 'Poli Umum',
         ];
         $penjamin = (object) [
-            'kd_pj' => 'BPJ',
-            'png_jawab' => 'BPJS Kesehatan',
+            'kd_pj' => 'UMU',
+            'png_jawab' => 'Umum',
         ];
 
         $repository = $this->createMock(DaftarOnlineRepository::class);
@@ -139,7 +175,7 @@ class RegistrationRoleConfigurationTest extends TestCase
         $repository
             ->expects($this->once())
             ->method('findEligiblePenjamin')
-            ->with('BPJ', true)
+            ->with('UMU', true)
             ->willReturn($penjamin);
         $repository->method('createRegistration')->willReturn([
             'no_reg' => '001',
@@ -148,7 +184,7 @@ class RegistrationRoleConfigurationTest extends TestCase
             'jam_reg' => '08:00:00',
             'kd_dokter' => 'D001',
             'kd_poli' => 'POL01',
-            'kd_pj' => 'BPJ',
+            'kd_pj' => 'UMU',
             'stts' => 'Belum',
             'status_bayar' => 'Belum Bayar',
             'umurdaftar' => 36,
@@ -161,15 +197,14 @@ class RegistrationRoleConfigurationTest extends TestCase
             'tgl_registrasi' => '2026-07-27',
             'kd_dokter' => 'D001',
             'kd_poli' => 'POL01',
-            'kd_pj' => 'BPJ',
-            'no_peserta' => '0009998887776',
+            'kd_pj' => 'UMU',
         ], true);
 
         $audit = OnlineRegistrationAudit::query()->sole();
 
         $this->assertSame('2026/07/27/000001', $audit->no_rawat);
         $this->assertSame('000123', $audit->patient_medical_record_number);
-        $this->assertSame('BPJ', $audit->guarantor_code);
+        $this->assertSame('UMU', $audit->guarantor_code);
         $this->assertSame($user->id, $audit->registered_by_user_id);
         $this->assertSame(['Petugas BPJS'], $audit->registered_by_roles);
     }

@@ -6,10 +6,13 @@ use App\Models\User;
 use App\Services\epasien\menu\PermintaanTindakan\PemeriksaanLaboratService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Mockery\MockInterface;
+use Tests\Concerns\AuthorizesEpasienMenuRoutes;
 use Tests\TestCase;
 
 class PemeriksaanLaboratPageTest extends TestCase
 {
+    use AuthorizesEpasienMenuRoutes;
+
     public function test_page_shows_the_authenticated_patients_laboratory_requests(): void
     {
         $patient = (object) [

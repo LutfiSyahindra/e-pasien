@@ -6,10 +6,13 @@ use App\Models\User;
 use App\Services\epasien\menu\JadwalDokterService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Mockery\MockInterface;
+use Tests\Concerns\AuthorizesEpasienMenuRoutes;
 use Tests\TestCase;
 
 class JadwalDokterPageTest extends TestCase
 {
+    use AuthorizesEpasienMenuRoutes;
+
     public function test_guest_cannot_access_doctor_schedule_page(): void
     {
         $this->get(route('jadwalDokter.index'))

@@ -1,8 +1,6 @@
 (function () {
     "use strict";
 
-    var navigationTimer = null;
-
     function loader() {
         return document.getElementById("ep-navigation-loader");
     }
@@ -14,7 +12,6 @@
             return;
         }
 
-        window.clearTimeout(navigationTimer);
         element.hidden = false;
         element.setAttribute("aria-hidden", "false");
         document.documentElement.classList.add("ep-navigation-pending");
@@ -27,7 +24,6 @@
     function hideLoader() {
         var element = loader();
 
-        window.clearTimeout(navigationTimer);
         document.documentElement.classList.remove("ep-navigation-pending");
 
         if (!element) {
@@ -99,12 +95,7 @@
             return;
         }
 
-        event.preventDefault();
         showLoader();
-
-        navigationTimer = window.setTimeout(function () {
-            window.location.assign(url.href);
-        }, 40);
     }, true);
 
     document.addEventListener("submit", function (event) {
