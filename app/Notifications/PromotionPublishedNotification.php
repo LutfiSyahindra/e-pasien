@@ -77,7 +77,7 @@ class PromotionPublishedNotification extends Notification implements ShouldQueue
         return (new WebPushMessage)
             ->title($this->promotion['category_label'].' Terbaru')
             ->body($this->promotion['title'].' — '.$this->promotion['body'])
-            ->icon('/epasien/assets/images/logo-icon.png')
+            ->icon('/epasien/assets/images/pwa-icon-192.png')
             ->badge('/epasien/assets/images/favicon-32x32.png')
             ->image($this->promotion['image_url'])
             ->tag('promotion-'.$this->promotion['id'])

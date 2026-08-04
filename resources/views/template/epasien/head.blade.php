@@ -22,7 +22,8 @@
     @endauth
     <meta name="theme-color" content="#0b766d">
     <link rel="manifest" href="{{ asset("manifest.webmanifest") }}">
-    <link rel="icon" href="{{ asset("epasien/assets/images/favicon-32x32.png") }}" type="image/png" />
+    <link rel="icon" href="{{ asset("epasien/assets/images/pwa-icon-32.png") }}" type="image/png" />
+    <link rel="apple-touch-icon" href="{{ asset("epasien/assets/images/pwa-icon-180.png") }}">
     <!--plugins-->
     <link href="{{ asset("epasien/assets/plugins/simplebar/css/simplebar.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/plugins/perfect-scrollbar/css/perfect-scrollbar.css") }}" rel="stylesheet" />
@@ -44,6 +45,7 @@
     <link href="{{ asset("epasien/assets/css/icons.css") }}" rel="stylesheet">
 
     <link href="{{ asset("epasien/assets/css/navigation-loader.css") }}" rel="stylesheet" />
+    <link href="{{ asset("epasien/assets/css/pwa-splash.css") }}" rel="stylesheet" />
     <script src="{{ asset("epasien/assets/js/navigation-loader.js") }}" defer></script>
 
     @if ($usesAccessControl)

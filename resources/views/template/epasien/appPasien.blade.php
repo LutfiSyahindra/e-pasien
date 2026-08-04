@@ -6,6 +6,8 @@
 
     <body>
 
+        @include("template.epasien.pwa-splash")
+
         <div id="ep-navigation-loader" class="ep-navigation-loader" hidden aria-hidden="true">
             <div class="ep-navigation-loader__panel" role="status" aria-live="polite">
                 <span class="ep-navigation-loader__spinner" aria-hidden="true"></span>
