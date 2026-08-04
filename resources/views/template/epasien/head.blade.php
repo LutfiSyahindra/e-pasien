@@ -1,10 +1,10 @@
 <head>
     @php
         $usesDataTables = request()->routeIs("users.*", "roles.*", "permissions.*");
-        $usesSelect2 = request()->routeIs("users.*", "roles.*", "daftarOnline.index");
+        $usesSelect2 = request()->routeIs("users.*", "roles.*", "roleConfiguration.*", "daftarOnline.index");
         $usesDashboardCharts = request()->routeIs("dashboard");
         $usesAccessControl = request()->routeIs("users.*", "roles.*", "permissions.*", "roleConfiguration.*");
-        $usesSweetAlert = request()->routeIs("profile.*", "users.*", "roles.*", "permissions.*", "daftarOnline.*", "promotions.*");
+        $usesSweetAlert = request()->routeIs("profile.*", "users.*", "roles.*", "permissions.*", "daftarOnline.*");
     @endphp
 
     <!-- Required meta tags -->
@@ -18,6 +18,7 @@
         <meta name="epasien-notifications-read-all-url" content="{{ route("notifications.readAll") }}">
         <meta name="epasien-push-config-url" content="{{ route("push.config") }}">
         <meta name="epasien-push-subscription-url" content="{{ route("push.store") }}">
+        <meta name="epasien-notification-sound-url" content="{{ asset("landing/assets/sound/notif.mp3") }}">
     @endauth
     <meta name="theme-color" content="#0b766d">
     <link rel="manifest" href="{{ asset("manifest.webmanifest") }}">
@@ -41,9 +42,6 @@
     <link href="{{ asset("epasien/assets/css/bootstrap-extended.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/css/style.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/css/icons.css") }}" rel="stylesheet">
-    <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
 
     <link href="{{ asset("epasien/assets/css/navigation-loader.css") }}" rel="stylesheet" />
     <script src="{{ asset("epasien/assets/js/navigation-loader.js") }}" defer></script>

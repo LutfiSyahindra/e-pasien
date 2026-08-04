@@ -1,21 +1,28 @@
-import axios from 'axios';
-window.axios = axios;
+let realtimePromise;
 
-window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+window.initializeEpasienRealtime = () => {
+    if (!import.meta.env.VITE_REVERB_APP_KEY) return Promise.resolve(null);
+    if (window.Echo) return Promise.resolve(window.Echo);
+    if (realtimePromise) return realtimePromise;
 
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
+    realtimePromise = Promise.all([
+        import('laravel-echo'),
+        import('pusher-js'),
+    ]).then(([echoModule, pusherModule]) => {
+        const Echo = echoModule.default;
+        window.Pusher = pusherModule.default;
+        window.Echo = new Echo({
+            broadcaster: 'reverb',
+            key: import.meta.env.VITE_REVERB_APP_KEY,
+            wsHost: import.meta.env.VITE_REVERB_HOST || window.location.hostname,
+            wsPort: import.meta.env.VITE_REVERB_PORT || 80,
+            wssPort: import.meta.env.VITE_REVERB_PORT || 443,
+            forceTLS: (import.meta.env.VITE_REVERB_SCHEME || 'https') === 'https',
+            enabledTransports: ['ws', 'wss'],
+        });
 
-window.Pusher = Pusher;
+        return window.Echo;
+    }).catch(() => null);
 
-if (import.meta.env.VITE_REVERB_APP_KEY) {
-    window.Echo = new Echo({
-        broadcaster: 'reverb',
-        key: import.meta.env.VITE_REVERB_APP_KEY,
-        wsHost: import.meta.env.VITE_REVERB_HOST || window.location.hostname,
-        wsPort: import.meta.env.VITE_REVERB_PORT || 80,
-        wssPort: import.meta.env.VITE_REVERB_PORT || 443,
-        forceTLS: (import.meta.env.VITE_REVERB_SCHEME || 'https') === 'https',
-        enabledTransports: ['ws', 'wss'],
-    });
-}
+    return realtimePromise;
+};

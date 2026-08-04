@@ -7,10 +7,13 @@ use App\Services\epasien\menu\RiwayatMcuService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Mockery\MockInterface;
+use Tests\Concerns\AuthorizesEpasienMenuRoutes;
 use Tests\TestCase;
 
 class RiwayatMcuPageTest extends TestCase
 {
+    use AuthorizesEpasienMenuRoutes;
+
     public function test_guest_cannot_access_mcu_routes(): void
     {
         $this->get(route('riwayatMcu.index'))

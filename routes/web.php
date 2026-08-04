@@ -11,6 +11,7 @@ use App\Http\Controllers\Epasien\menu\PermintaanTindakan\OperasiController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\PemeriksaanLaboratController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\PemeriksaanRadiologiController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\ResepObatController;
+use App\Http\Controllers\Epasien\menu\PromotionConfigurationController;
 use App\Http\Controllers\Epasien\menu\PromotionController;
 use App\Http\Controllers\Epasien\menu\RiwayatMcuController;
 use App\Http\Controllers\Epasien\menu\RiwayatPemeriksaanController;
@@ -95,6 +96,9 @@ Route::middleware('auth')->group(function () {
             Route::get('/role-configurations', [RoleConfigurationController::class, 'index'])
                 ->middleware('role_or_permission:Super Admin|roles.update')
                 ->name('roleConfiguration.index');
+            Route::get('/role-configurations/users', [RoleConfigurationController::class, 'users'])
+                ->middleware('role_or_permission:Super Admin|roles.update')
+                ->name('roleConfiguration.users');
             Route::put('/role-configurations', [RoleConfigurationController::class, 'update'])
                 ->middleware('role_or_permission:Super Admin|roles.update')
                 ->name('roleConfiguration.update');
@@ -117,6 +121,10 @@ Route::middleware('auth')->group(function () {
                     ->whereNumber('promotion')->name('promotions.show');
 
                 Route::middleware('permission:EPASIEN.MENU.PROMOSI.KELOLA')->group(function () {
+                    Route::get('/promo-sehat/konfigurasi', [PromotionConfigurationController::class, 'edit'])
+                        ->name('promotions.configuration.edit');
+                    Route::put('/promo-sehat/konfigurasi', [PromotionConfigurationController::class, 'update'])
+                        ->name('promotions.configuration.update');
                     Route::get('/promo-sehat-baru', [PromotionController::class, 'create'])->name('promotions.create');
                     Route::post('/promo-sehat', [PromotionController::class, 'store'])->name('promotions.store');
                     Route::get('/promo-sehat/{promotion}/edit', [PromotionController::class, 'edit'])

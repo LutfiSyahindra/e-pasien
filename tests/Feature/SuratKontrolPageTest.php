@@ -9,10 +9,13 @@ use App\Services\epasien\menu\Surat\SuratKontrolService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Mockery;
 use Mockery\MockInterface;
+use Tests\Concerns\AuthorizesEpasienMenuRoutes;
 use Tests\TestCase;
 
 class SuratKontrolPageTest extends TestCase
 {
+    use AuthorizesEpasienMenuRoutes;
+
     public function test_page_shows_general_and_bpjs_control_letter_experience(): void
     {
         $patient = (object) [

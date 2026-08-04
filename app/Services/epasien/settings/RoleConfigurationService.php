@@ -2,6 +2,7 @@
 
 namespace App\Services\epasien\settings;
 
+use App\Models\PromotionNotificationUserConfiguration;
 use App\Models\RegistrationRoleConfiguration;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -29,7 +30,27 @@ class RoleConfigurationService
                     'email_onboarding_enabled',
                     (bool) $role->email_onboarding_enabled
                 );
+                $role->setAttribute(
+                    'promotion_notifications_enabled',
+                    (bool) $role->promotion_notifications_enabled
+                );
             });
+    }
+
+    public function promotionNotificationUsers(?array $userIds = null): Collection
+    {
+        return User::query()
+            ->with('roles:id,name')
+            ->when(
+                $userIds === null,
+                fn ($query) => $query->whereIn(
+                    $query->getModel()->getQualifiedKeyName(),
+                    PromotionNotificationUserConfiguration::query()->select('user_id'),
+                ),
+                fn ($query) => $query->whereKey($this->normalizeIds($userIds ?? [])),
+            )
+            ->orderBy('name')
+            ->get();
     }
 
     public function isRegistrationEnabled(User $user): bool
@@ -44,7 +65,7 @@ class RoleConfigurationService
 
     public function syncRegistration(array $roleIds, User $configuredBy): void
     {
-        $roleIds = $this->normalizeRoleIds($roleIds);
+        $roleIds = $this->normalizeIds($roleIds);
 
         DB::connection(config('database.default'))->transaction(
             fn () => $this->replaceRegistrationRoles($roleIds, $configuredBy)
@@ -54,14 +75,20 @@ class RoleConfigurationService
     public function sync(
         array $registrationRoleIds,
         array $emailOnboardingRoleIds,
+        array $promotionNotificationRoleIds,
+        array $promotionNotificationUserIds,
         User $configuredBy
     ): void {
-        $registrationRoleIds = $this->normalizeRoleIds($registrationRoleIds);
-        $emailOnboardingRoleIds = $this->normalizeRoleIds($emailOnboardingRoleIds);
+        $registrationRoleIds = $this->normalizeIds($registrationRoleIds);
+        $emailOnboardingRoleIds = $this->normalizeIds($emailOnboardingRoleIds);
+        $promotionNotificationRoleIds = $this->normalizeIds($promotionNotificationRoleIds);
+        $promotionNotificationUserIds = $this->normalizeIds($promotionNotificationUserIds);
 
         DB::connection(config('database.default'))->transaction(function () use (
             $registrationRoleIds,
             $emailOnboardingRoleIds,
+            $promotionNotificationRoleIds,
+            $promotionNotificationUserIds,
             $configuredBy
         ): void {
             $this->replaceRegistrationRoles($registrationRoleIds, $configuredBy);
@@ -76,6 +103,22 @@ class RoleConfigurationService
                     ->whereIn('id', $emailOnboardingRoleIds)
                     ->update(['email_onboarding_enabled' => true]);
             }
+
+            Role::query()
+                ->where('guard_name', 'web')
+                ->update(['promotion_notifications_enabled' => false]);
+
+            if ($promotionNotificationRoleIds->isNotEmpty()) {
+                Role::query()
+                    ->where('guard_name', 'web')
+                    ->whereIn('id', $promotionNotificationRoleIds)
+                    ->update(['promotion_notifications_enabled' => true]);
+            }
+
+            $this->replacePromotionNotificationUsers(
+                $promotionNotificationUserIds,
+                $configuredBy
+            );
         });
     }
 
@@ -90,13 +133,37 @@ class RoleConfigurationService
             : $user->roles()->pluck('roles.id');
     }
 
-    private function normalizeRoleIds(array $roleIds): Collection
+    private function normalizeIds(array $ids): Collection
     {
-        return collect($roleIds)
-            ->map(fn (mixed $roleId): int => (int) $roleId)
+        return collect($ids)
+            ->map(fn (mixed $id): int => (int) $id)
             ->filter()
             ->unique()
             ->values();
+    }
+
+    private function replacePromotionNotificationUsers(Collection $userIds, User $configuredBy): void
+    {
+        PromotionNotificationUserConfiguration::query()
+            ->when(
+                $userIds->isNotEmpty(),
+                fn ($query) => $query->whereNotIn('user_id', $userIds),
+            )
+            ->delete();
+
+        if ($userIds->isNotEmpty()) {
+            $now = now();
+            PromotionNotificationUserConfiguration::query()->upsert(
+                $userIds->map(fn (int $userId): array => [
+                    'user_id' => $userId,
+                    'configured_by' => $configuredBy->getKey(),
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ])->all(),
+                ['user_id'],
+                ['configured_by', 'updated_at'],
+            );
+        }
     }
 
     private function replaceRegistrationRoles(Collection $roleIds, User $configuredBy): void

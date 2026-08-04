@@ -210,7 +210,7 @@
                             </div>
                             <a class="dropdown-item" href="#">
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ asset("epasien/assets/images/avatars/avatar-1.png") }}"
+                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-1.png") }}"
                                         alt="" class="rounded-circle" width="52" height="52">
                                     <div class="ms-3 flex-grow-1">
                                         <h6 class="mb-0 dropdown-msg-user">Amelio Joly <span
@@ -223,7 +223,7 @@
                             </a>
                             <a class="dropdown-item" href="#">
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ asset("epasien/assets/images/avatars/avatar-2.png") }}"
+                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-2.png") }}"
                                         alt="" class="rounded-circle" width="52" height="52">
                                     <div class="ms-3 flex-grow-1">
                                         <h6 class="mb-0 dropdown-msg-user">Althea Cabardo <span
@@ -236,7 +236,7 @@
                             </a>
                             <a class="dropdown-item" href="#">
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ asset("epasien/assets/images/avatars/avatar-3.png") }}"
+                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-3.png") }}"
                                         alt="" class="rounded-circle" width="52" height="52">
                                     <div class="ms-3 flex-grow-1">
                                         <h6 class="mb-0 dropdown-msg-user">Katherine Pechon <span
@@ -249,7 +249,7 @@
                             </a>
                             <a class="dropdown-item" href="#">
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ asset("epasien/assets/images/avatars/avatar-4.png") }}"
+                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-4.png") }}"
                                         alt="" class="rounded-circle" width="52" height="52">
                                     <div class="ms-3 flex-grow-1">
                                         <h6 class="mb-0 dropdown-msg-user">Peter Costanzo <span
@@ -262,7 +262,7 @@
                             </a>
                             <a class="dropdown-item" href="#">
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ asset("epasien/assets/images/avatars/avatar-5.png") }}"
+                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-5.png") }}"
                                         alt="" class="rounded-circle" width="52" height="52">
                                     <div class="ms-3 flex-grow-1">
                                         <h6 class="mb-0 dropdown-msg-user">Thomas Wheeler <span
@@ -275,7 +275,7 @@
                             </a>
                             <a class="dropdown-item" href="#">
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ asset("epasien/assets/images/avatars/avatar-6.png") }}"
+                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-6.png") }}"
                                         alt="" class="rounded-circle" width="52" height="52">
                                     <div class="ms-3 flex-grow-1">
                                         <h6 class="mb-0 dropdown-msg-user">Johnny Seitz <span
@@ -288,7 +288,7 @@
                             </a>
                             <a class="dropdown-item" href="#">
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ asset("epasien/assets/images/avatars/avatar-1.png") }}"
+                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-1.png") }}"
                                         alt="" class="rounded-circle" width="52" height="52">
                                     <div class="ms-3 flex-grow-1">
                                         <h6 class="mb-0 dropdown-msg-user">Amelio Joly <span
@@ -301,7 +301,7 @@
                             </a>
                             <a class="dropdown-item" href="#">
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ asset("epasien/assets/images/avatars/avatar-2.png") }}"
+                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-2.png") }}"
                                         alt="" class="rounded-circle" width="52" height="52">
                                     <div class="ms-3 flex-grow-1">
                                         <h6 class="mb-0 dropdown-msg-user">Althea Cabardo <span
@@ -314,7 +314,7 @@
                             </a>
                             <a class="dropdown-item" href="#">
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ asset("epasien/assets/images/avatars/avatar-3.png") }}"
+                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-3.png") }}"
                                         alt="" class="rounded-circle" width="52" height="52">
                                     <div class="ms-3 flex-grow-1">
                                         <h6 class="mb-0 dropdown-msg-user">Katherine Pechon <span

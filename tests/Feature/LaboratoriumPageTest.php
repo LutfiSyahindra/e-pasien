@@ -7,10 +7,13 @@ use App\Services\epasien\menu\FasilitasTarif\LaboratoriumService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Mockery\MockInterface;
+use Tests\Concerns\AuthorizesEpasienMenuRoutes;
 use Tests\TestCase;
 
 class LaboratoriumPageTest extends TestCase
 {
+    use AuthorizesEpasienMenuRoutes;
+
     public function test_guest_cannot_access_laboratory_rate_page(): void
     {
         $this->get(route('laboratorium.index'))

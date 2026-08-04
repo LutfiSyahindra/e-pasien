@@ -16,9 +16,16 @@ class StorePromotionRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'category' => ['required', Rule::in(Promotion::CATEGORIES)],
             'title' => ['required', 'string', 'max:120'],
             'caption' => ['required', 'string', 'max:2000'],
-            'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'image' => [
+                'required',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:5120',
+                'dimensions:max_width=4096,max_height=4096',
+            ],
             'starts_at' => ['required', 'date'],
             'duration_value' => ['required', 'integer', 'min:1', 'max:9999'],
             'duration_unit' => ['required', Rule::in(Promotion::DURATION_UNITS)],
@@ -29,14 +36,17 @@ class StorePromotionRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.required' => 'Judul promosi wajib diisi.',
-            'caption.required' => 'Caption promosi wajib diisi.',
-            'image.required' => 'Gambar promosi wajib dipilih.',
+            'category.required' => 'Kategori konten wajib dipilih.',
+            'category.in' => 'Kategori konten harus berupa Promosi atau Informasi.',
+            'title.required' => 'Judul konten wajib diisi.',
+            'caption.required' => 'Caption konten wajib diisi.',
+            'image.required' => 'Gambar konten wajib dipilih.',
             'image.image' => 'Berkas harus berupa gambar yang valid.',
             'image.mimes' => 'Gunakan gambar JPG, PNG, atau WebP.',
             'image.max' => 'Ukuran gambar maksimal 5 MB.',
+            'image.dimensions' => 'Resolusi gambar maksimal 4096 × 4096 piksel.',
             'starts_at.required' => 'Waktu mulai tayang wajib diisi.',
-            'duration_value.required' => 'Durasi promosi wajib diisi.',
+            'duration_value.required' => 'Durasi konten wajib diisi.',
             'duration_value.min' => 'Durasi minimal adalah 1.',
         ];
     }

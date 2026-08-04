@@ -6,10 +6,13 @@ use App\Models\User;
 use App\Services\epasien\menu\PermintaanTindakan\ResepObatService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Mockery\MockInterface;
+use Tests\Concerns\AuthorizesEpasienMenuRoutes;
 use Tests\TestCase;
 
 class ResepObatPageTest extends TestCase
 {
+    use AuthorizesEpasienMenuRoutes;
+
     public function test_guest_cannot_access_prescription_page(): void
     {
         $this->get(route('resepObat.index'))

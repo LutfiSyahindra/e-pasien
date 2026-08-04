@@ -2,15 +2,21 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage;
 
 class Promotion extends Model
 {
     use HasFactory;
+
+    public const CATEGORY_PROMOTION = 'promotion';
+
+    public const CATEGORY_INFORMATION = 'information';
+
+    public const CATEGORIES = [self::CATEGORY_PROMOTION, self::CATEGORY_INFORMATION];
 
     public const STATUS_DRAFT = 'draft';
 
@@ -22,6 +28,7 @@ class Promotion extends Model
 
     protected $fillable = [
         'creator_id',
+        'category',
         'title',
         'caption',
         'image_path',
@@ -49,17 +56,21 @@ class Promotion extends Model
         return $this->belongsTo(User::class, 'creator_id');
     }
 
-    public function scopeActive(Builder $query): Builder
+    public function scopeActive(Builder $query, ?CarbonInterface $at = null): Builder
     {
+        $at ??= now();
+
         return $query
             ->where('status', self::STATUS_PUBLISHED)
-            ->where('starts_at', '<=', now())
-            ->where('ends_at', '>', now());
+            ->where('starts_at', '<=', $at)
+            ->where('ends_at', '>', $at);
     }
 
     public function getImageUrlAttribute(): string
     {
-        return Storage::disk('public')->url($this->image_path);
+        $path = str_replace('\\', '/', ltrim($this->image_path, '/\\'));
+
+        return '/storage/'.$path;
     }
 
     public function getIsActiveAttribute(): bool
@@ -100,5 +111,21 @@ class Promotion extends Model
         ];
 
         return $this->duration_value.' '.($labels[$this->duration_unit] ?? $this->duration_unit);
+    }
+
+    public function getCategoryLabelAttribute(): string
+    {
+        return match ($this->category) {
+            self::CATEGORY_INFORMATION => 'Informasi',
+            default => 'Promosi',
+        };
+    }
+
+    public function getCategoryIconAttribute(): string
+    {
+        return match ($this->category) {
+            self::CATEGORY_INFORMATION => 'bi-info-circle-fill',
+            default => 'bi-megaphone-fill',
+        };
     }
 }

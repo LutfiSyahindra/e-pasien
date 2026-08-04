@@ -7,10 +7,13 @@ use App\Services\epasien\menu\Surat\SuratRujukanService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Mockery;
 use Mockery\MockInterface;
+use Tests\Concerns\AuthorizesEpasienMenuRoutes;
 use Tests\TestCase;
 
 class SuratRujukanPageTest extends TestCase
 {
+    use AuthorizesEpasienMenuRoutes;
+
     public function test_page_shows_mobile_referral_experience_and_general_data(): void
     {
         $patient = (object) [

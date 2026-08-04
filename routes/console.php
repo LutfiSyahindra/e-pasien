@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\epasien\menu\PromotionNotificationService;
+use App\Services\epasien\menu\PromotionService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -12,4 +13,9 @@ Artisan::command('inspire', function () {
 Schedule::call(fn () => app(PromotionNotificationService::class)->dispatchDue())
     ->name('dispatch-due-promotion-notifications')
     ->everyMinute()
+    ->withoutOverlapping();
+
+Schedule::call(fn () => app(PromotionService::class)->deleteExpired())
+    ->name('delete-expired-promotions')
+    ->everyFiveMinutes()
     ->withoutOverlapping();

@@ -14,7 +14,6 @@ class PushSubscriptionController extends Controller
         return response()->json([
             'enabled' => filled(config('webpush.vapid.public_key')) && filled(config('webpush.vapid.private_key')),
             'public_key' => config('webpush.vapid.public_key'),
-            'subscriptions' => $request->user()->pushSubscriptions()->count(),
         ]);
     }
 

@@ -6,10 +6,13 @@ use App\Models\User;
 use App\Services\epasien\menu\FasilitasTarif\PoliklinikService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Mockery\MockInterface;
+use Tests\Concerns\AuthorizesEpasienMenuRoutes;
 use Tests\TestCase;
 
 class PoliklinikPageTest extends TestCase
 {
+    use AuthorizesEpasienMenuRoutes;
+
     public function test_guest_cannot_access_polyclinic_rate_page(): void
     {
         $this->get(route('poliklinik.index'))

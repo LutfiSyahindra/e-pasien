@@ -38,16 +38,19 @@ class PromotionNotificationService
     public function dispatchDue(): int
     {
         $count = 0;
+        $now = now();
 
         Promotion::query()
             ->where('status', Promotion::STATUS_PUBLISHED)
             ->whereNull('notified_at')
-            ->where('starts_at', '<=', now())
-            ->where('ends_at', '>', now())
+            ->where('starts_at', '<=', $now)
+            ->where('ends_at', '>', $now)
             ->orderBy('id')
-            ->each(function (Promotion $promotion) use (&$count): void {
-                if ($this->dispatchIfDue($promotion)) {
-                    $count++;
+            ->chunkById(100, function ($promotions) use (&$count): void {
+                foreach ($promotions as $promotion) {
+                    if ($this->dispatchIfDue($promotion)) {
+                        $count++;
+                    }
                 }
             });
 

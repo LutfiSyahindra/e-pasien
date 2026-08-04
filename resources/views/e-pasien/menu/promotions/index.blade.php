@@ -1,6 +1,6 @@
 @extends("template.epasien.appPasien")
 
-@section("title", "Promo Sehat - E-Pasien")
+@section("title", "Promosi & Informasi - E-Pasien")
 
 @push("style")
     <link href="{{ asset("epasien/assets/css/promotion-premium.css") }}" rel="stylesheet">
@@ -21,25 +21,30 @@
                 <div class="promo-hero__glow promo-hero__glow--one"></div>
                 <div class="promo-hero__glow promo-hero__glow--two"></div>
                 <div class="promo-hero__content">
-                    <span class="promo-eyebrow"><i class="bi bi-megaphone-fill"></i> Marketing studio</span>
-                    <h1 id="promo-page-title">Hadirkan cerita sehat yang <em>berkesan.</em></h1>
-                    <p>Rancang, jadwalkan, dan pantau seluruh konten promosi pasien dari satu ruang kerja.</p>
-                    <a class="promo-primary-button" href="{{ route("promotions.create") }}">
-                        <i class="bi bi-plus-lg"></i><span>Buat promosi</span>
-                    </a>
+                    <span class="promo-eyebrow"><i class="bi bi-megaphone-fill"></i> Pusat publikasi</span>
+                    <h1 id="promo-page-title">Bagikan kabar sehat yang <em>bermanfaat.</em></h1>
+                    <p>Rancang, jadwalkan, dan pantau seluruh konten promosi dan informasi pasien dari satu ruang kerja.</p>
+                    <div class="promo-hero-actions">
+                        <a class="promo-primary-button" href="{{ route("promotions.create") }}">
+                            <i class="bi bi-plus-lg"></i><span>Buat konten</span>
+                        </a>
+                        <a class="promo-secondary-button" href="{{ route("promotions.configuration.edit") }}">
+                            <i class="bi bi-sliders"></i><span>Konfigurasi</span>
+                        </a>
+                    </div>
                 </div>
                 <div class="promo-hero__visual" aria-hidden="true">
                     <div class="promo-orbit"><i class="bi bi-stars"></i></div>
                     <div class="promo-phone-card">
                         <span class="promo-phone-card__tag">LIVE</span>
                         <i class="bi bi-heart-pulse-fill"></i>
-                        <strong>Promo Sehat</strong>
-                        <small>Konten tepat, pasien terpikat</small>
+                        <strong>Promosi &amp; Informasi</strong>
+                        <small>Kabar tepat, pasien terhubung</small>
                     </div>
                 </div>
             </section>
 
-            <section class="promo-stats" aria-label="Ringkasan promosi">
+            <section class="promo-stats" aria-label="Ringkasan konten">
                 <article><span class="promo-stat-icon is-indigo"><i class="bi bi-collection"></i></span><div><strong>{{ $summary["total"] }}</strong><span>Total konten</span></div></article>
                 <article><span class="promo-stat-icon is-emerald"><i class="bi bi-broadcast-pin"></i></span><div><strong>{{ $summary["active"] }}</strong><span>Sedang tayang</span></div></article>
                 <article><span class="promo-stat-icon is-amber"><i class="bi bi-clock-history"></i></span><div><strong>{{ $summary["scheduled"] }}</strong><span>Terjadwal</span></div></article>
@@ -48,14 +53,22 @@
 
             <section class="promo-workspace" aria-labelledby="content-heading">
                 <div class="promo-section-heading">
-                    <div><span>Koleksi kampanye</span><h2 id="content-heading">Konten promosi</h2></div>
+                    <div><span>Pusat informasi</span><h2 id="content-heading">Konten promosi &amp; informasi</h2></div>
                     <span class="promo-result-count">{{ $promotions->total() }} konten</span>
                 </div>
 
                 <form class="promo-filters" method="GET" action="{{ route("promotions.index") }}">
                     <label class="promo-search-field">
                         <i class="bi bi-search"></i>
-                        <input type="search" name="q" value="{{ $filters["q"] }}" placeholder="Cari judul atau caption..." aria-label="Cari promosi">
+                        <input type="search" name="q" value="{{ $filters["q"] }}" placeholder="Cari judul atau caption..." aria-label="Cari konten">
+                    </label>
+                    <label class="promo-select-field">
+                        <i class="bi bi-tags"></i>
+                        <select name="category" aria-label="Filter kategori" onchange="this.form.submit()">
+                            @foreach (["all" => "Semua kategori", "promotion" => "Promosi", "information" => "Informasi"] as $value => $label)
+                                <option value="{{ $value }}" @selected($filters["category"] === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
                     </label>
                     <label class="promo-select-field">
                         <i class="bi bi-funnel"></i>
@@ -65,9 +78,9 @@
                             @endforeach
                         </select>
                     </label>
-                    <button class="promo-filter-button" type="submit">Terapkan</button>
-                    @if ($filters["q"] !== "" || $filters["status"] !== "all")
-                        <a class="promo-reset-button" href="{{ route("promotions.index") }}">Reset</a>
+                    <button class="promo-filter-button" type="submit"><i class="bi bi-check2"></i>Terapkan</button>
+                    @if ($filters["q"] !== "" || $filters["status"] !== "all" || $filters["category"] !== "all")
+                        <a class="promo-reset-button" href="{{ route("promotions.index") }}"><i class="bi bi-arrow-counterclockwise"></i>Reset</a>
                     @endif
                 </form>
 
@@ -85,8 +98,9 @@
                             @endphp
                             <article class="promo-admin-card">
                                 <a class="promo-admin-card__media" href="{{ route("promotions.show", $promotion) }}">
-                                    <img src="{{ $promotion->image_url }}" alt="{{ $promotion->title }}" loading="lazy">
+                                    <img src="{{ $promotion->image_url }}" alt="{{ $promotion->title }}" loading="lazy" decoding="async">
                                     <span class="promo-status is-{{ $tone }}"><i class="bi bi-circle-fill"></i>{{ $promotion->status_label }}</span>
+                                    <span class="promo-category-badge is-{{ $promotion->category }}"><i class="bi {{ $promotion->category_icon }}"></i>{{ $promotion->category_label }}</span>
                                 </a>
                                 <div class="promo-admin-card__body">
                                     <div class="promo-admin-card__meta"><span><i class="bi bi-hourglass-split"></i>{{ $promotion->duration_label }}</span><span>{{ $promotion->creator?->name ?? "Marketing" }}</span></div>
@@ -121,13 +135,13 @@
             <section class="promo-hero promo-hero--patient" aria-labelledby="promo-page-title">
                 <div class="promo-hero__glow promo-hero__glow--one"></div>
                 <div class="promo-hero__content">
-                    <span class="promo-eyebrow"><i class="bi bi-stars"></i> Pilihan spesial untuk Anda</span>
-                    <h1 id="promo-page-title">Lebih sehat, lebih hemat, <em>lebih bahagia.</em></h1>
-                    <p>Temukan program kesehatan dan penawaran terbaik RS Arsy dalam satu tempat.</p>
+                    <span class="promo-eyebrow"><i class="bi bi-stars"></i> Kabar kesehatan untuk Anda</span>
+                    <h1 id="promo-page-title">Promosi dan informasi kesehatan <em>terbaru.</em></h1>
+                    <p>Temukan informasi, program kesehatan, dan penawaran terbaru RS Arsy dalam satu tempat.</p>
                     <button class="promo-notification-button" type="button" data-push-toggle>
-                        <i class="bi bi-bell"></i><span>Aktifkan notifikasi promo</span>
+                        <i class="bi bi-bell"></i><span>Aktifkan notifikasi</span>
                     </button>
-                    <small class="promo-push-hint" data-push-hint>Jangan lewatkan promo terbaru dari kami.</small>
+                    <small class="promo-push-hint" data-push-hint>Jangan lewatkan promosi dan informasi terbaru dari kami.</small>
                 </div>
                 <div class="promo-hero__patient-art" aria-hidden="true">
                     <div class="promo-heart-ring"><i class="bi bi-heart-pulse-fill"></i></div>
@@ -136,16 +150,22 @@
                 </div>
             </section>
 
+            <nav class="promo-category-tabs" aria-label="Filter kategori konten">
+                <a class="{{ $filters["category"] === "all" ? "is-active" : "" }}" href="{{ route("promotions.index") }}" @if ($filters["category"] === "all") aria-current="page" @endif><i class="bi bi-grid-fill"></i>Semua</a>
+                <a class="{{ $filters["category"] === "promotion" ? "is-active" : "" }}" href="{{ route("promotions.index", ["category" => "promotion"]) }}" @if ($filters["category"] === "promotion") aria-current="page" @endif><i class="bi bi-megaphone-fill"></i>Promosi</a>
+                <a class="{{ $filters["category"] === "information" ? "is-active" : "" }}" href="{{ route("promotions.index", ["category" => "information"]) }}" @if ($filters["category"] === "information") aria-current="page" @endif><i class="bi bi-info-circle-fill"></i>Informasi</a>
+            </nav>
+
             @if ($featured)
                 <section class="promo-featured" aria-labelledby="featured-heading">
                     <div class="promo-section-heading">
-                        <div><span>Sedang berlangsung</span><h2 id="featured-heading">Promo unggulan</h2></div>
+                        <div><span>Sedang berlangsung</span><h2 id="featured-heading">Konten unggulan</h2></div>
                     </div>
                     <a class="promo-featured-card" href="{{ route("promotions.show", $featured) }}">
-                        <img src="{{ $featured->image_url }}" alt="{{ $featured->title }}">
+                        <img src="{{ $featured->image_url }}" alt="{{ $featured->title }}" decoding="async">
                         <span class="promo-featured-card__shade"></span>
                         <div class="promo-featured-card__content">
-                            <span><i class="bi bi-lightning-charge-fill"></i> Promo pilihan</span>
+                            <span class="is-{{ $featured->category }}"><i class="bi {{ $featured->category_icon }}"></i> {{ $featured->category_label }}</span>
                             <h3>{{ $featured->title }}</h3>
                             <p>{{ Str::limit($featured->caption, 150) }}</p>
                             <strong>Lihat selengkapnya <i class="bi bi-arrow-right"></i></strong>
@@ -157,16 +177,16 @@
 
             <section class="promo-patient-list" aria-labelledby="all-promos-heading">
                 <div class="promo-section-heading">
-                    <div><span>Jelajahi manfaat</span><h2 id="all-promos-heading">Semua Promo Sehat</h2></div>
-                    @if ($promotions->total())<span class="promo-result-count">{{ $promotions->total() }} promo aktif</span>@endif
+                    <div><span>Jelajahi kabar terbaru</span><h2 id="all-promos-heading">{{ match ($filters["category"]) { "promotion" => "Promosi", "information" => "Informasi", default => "Semua Promosi & Informasi" } }}</h2></div>
+                    @if ($promotions->total())<span class="promo-result-count">{{ $promotions->total() }} konten aktif</span>@endif
                 </div>
                 @if ($promotions->isNotEmpty())
                     <div class="promo-patient-grid">
                         @foreach ($promotions as $promotion)
-                            <a class="promo-patient-card" href="{{ route("promotions.show", $promotion) }}">
+                            <a class="promo-patient-card is-{{ $promotion->category }}" href="{{ route("promotions.show", $promotion) }}">
                                 <span class="promo-patient-card__media">
-                                    <img src="{{ $promotion->image_url }}" alt="{{ $promotion->title }}" loading="lazy">
-                                    <span class="promo-patient-card__badge"><i class="bi bi-gift-fill"></i> Promo</span>
+                                    <img src="{{ $promotion->image_url }}" alt="{{ $promotion->title }}" loading="lazy" decoding="async">
+                                    <span class="promo-patient-card__badge is-{{ $promotion->category }}"><i class="bi {{ $promotion->category_icon }}"></i> {{ $promotion->category_label }}</span>
                                 </span>
                                 <span class="promo-patient-card__body">
                                     <small><i class="bi bi-clock"></i> Hingga {{ $promotion->ends_at->translatedFormat("d M Y") }}</small>
@@ -186,6 +206,11 @@
     </div>
 @endsection
 
-@push("script")
-    <script src="{{ asset("epasien/assets/js/promotion-page.js") }}"></script>
-@endpush
+@if ($canManage)
+    @push("script")
+        <script
+            src="{{ asset("epasien/assets/js/promotion-page.js") }}"
+            data-premium-css="{{ asset("epasien/assets/css/sweetalert-premium.css") }}"
+        ></script>
+    @endpush
+@endif

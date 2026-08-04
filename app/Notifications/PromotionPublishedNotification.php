@@ -26,10 +26,12 @@ class PromotionPublishedNotification extends Notification implements ShouldQueue
     {
         return new self([
             'id' => $promotion->getKey(),
+            'category' => $promotion->category,
+            'category_label' => $promotion->category_label,
             'title' => $promotion->title,
             'body' => Str::limit(strip_tags($promotion->caption), 150),
             'image_url' => $promotion->image_url,
-            'url' => route('promotions.show', $promotion),
+            'url' => route('promotions.show', $promotion, absolute: false),
             'ends_at' => $promotion->ends_at->toIso8601String(),
         ]);
     }
@@ -49,7 +51,9 @@ class PromotionPublishedNotification extends Notification implements ShouldQueue
     {
         return [
             'kind' => 'promotion',
-            'title' => 'Promo Sehat Baru: '.$this->promotion['title'],
+            'category' => $this->promotion['category'],
+            'category_label' => $this->promotion['category_label'],
+            'title' => $this->promotion['category_label'].': '.$this->promotion['title'],
             'body' => $this->promotion['body'],
             'image_url' => $this->promotion['image_url'],
             'url' => $this->promotion['url'],
@@ -71,15 +75,15 @@ class PromotionPublishedNotification extends Notification implements ShouldQueue
     public function toWebPush(object $notifiable, self $notification): WebPushMessage
     {
         return (new WebPushMessage)
-            ->title('Promo Sehat Baru')
+            ->title($this->promotion['category_label'].' Terbaru')
             ->body($this->promotion['title'].' — '.$this->promotion['body'])
-            ->icon(asset('epasien/assets/images/logo-icon.png'))
-            ->badge(asset('epasien/assets/images/favicon-32x32.png'))
+            ->icon('/epasien/assets/images/logo-icon.png')
+            ->badge('/epasien/assets/images/favicon-32x32.png')
             ->image($this->promotion['image_url'])
             ->tag('promotion-'.$this->promotion['id'])
             ->renotify()
             ->vibrate([180, 80, 180])
-            ->action('Lihat promo', 'open_promotion')
+            ->action('Lihat detail', 'open_promotion')
             ->data(['url' => $this->promotion['url']])
             ->options(['TTL' => 86400]);
     }

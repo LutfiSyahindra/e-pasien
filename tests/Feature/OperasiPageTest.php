@@ -6,10 +6,13 @@ use App\Models\User;
 use App\Services\epasien\menu\PermintaanTindakan\OperasiService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Mockery\MockInterface;
+use Tests\Concerns\AuthorizesEpasienMenuRoutes;
 use Tests\TestCase;
 
 class OperasiPageTest extends TestCase
 {
+    use AuthorizesEpasienMenuRoutes;
+
     public function test_guest_cannot_access_operation_routes(): void
     {
         $this->get(route('operasi.index'))

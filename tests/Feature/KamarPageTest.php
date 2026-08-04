@@ -7,10 +7,13 @@ use App\Services\epasien\menu\FasilitasTarif\KamarService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Mockery\MockInterface;
+use Tests\Concerns\AuthorizesEpasienMenuRoutes;
 use Tests\TestCase;
 
 class KamarPageTest extends TestCase
 {
+    use AuthorizesEpasienMenuRoutes;
+
     public function test_guest_cannot_access_room_page(): void
     {
         $this->get(route('kamar.index'))

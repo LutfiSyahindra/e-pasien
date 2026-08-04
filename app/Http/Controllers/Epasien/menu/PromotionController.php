@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Epasien\Menu\StorePromotionRequest;
 use App\Http\Requests\Epasien\Menu\UpdatePromotionRequest;
 use App\Models\Promotion;
+use App\Models\PromotionConfiguration;
 use App\Services\epasien\menu\PromotionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,16 +21,23 @@ class PromotionController extends Controller
     public function index(Request $request): View
     {
         $canManage = $request->user()->can('EPASIEN.MENU.PROMOSI.KELOLA');
+        $now = now();
 
-        if ($canManage) {
-            $filters = $request->validate([
+        $filters = $request->validate([
+            'category' => ['nullable', 'in:all,promotion,information'],
+            ...($canManage ? [
                 'q' => ['nullable', 'string', 'max:100'],
                 'status' => ['nullable', 'in:all,draft,published,archived,active,scheduled,expired'],
-            ]);
+            ] : []),
+        ]);
+        $category = $filters['category'] ?? 'all';
 
-            $query = Promotion::query()->with('creator:id,name')->latest();
+        if ($canManage) {
+            $query = Promotion::query()->with('creator:id,name')->orderByDesc('id');
             $search = trim((string) ($filters['q'] ?? ''));
             $status = $filters['status'] ?? 'all';
+
+            $query->when($category !== 'all', fn ($query) => $query->where('category', $category));
 
             $query->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($query) use ($search): void {
@@ -40,30 +48,55 @@ class PromotionController extends Controller
 
             match ($status) {
                 'draft', 'published', 'archived' => $query->where('status', $status),
-                'active' => $query->active(),
-                'scheduled' => $query->where('status', Promotion::STATUS_PUBLISHED)->where('starts_at', '>', now()),
-                'expired' => $query->where('status', Promotion::STATUS_PUBLISHED)->where('ends_at', '<=', now()),
+                'active' => $query->active($now),
+                'scheduled' => $query->where('status', Promotion::STATUS_PUBLISHED)->where('starts_at', '>', $now),
+                'expired' => $query->where('status', Promotion::STATUS_PUBLISHED)->where('ends_at', '<=', $now),
                 default => null,
             };
+
+            $summary = Promotion::query()
+                ->selectRaw('COUNT(*) AS total')
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN status = ? AND starts_at <= ? AND ends_at > ? THEN 1 ELSE 0 END), 0) AS active',
+                    [Promotion::STATUS_PUBLISHED, $now, $now],
+                )
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN status = ? AND starts_at > ? THEN 1 ELSE 0 END), 0) AS scheduled',
+                    [Promotion::STATUS_PUBLISHED, $now],
+                )
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS draft',
+                    [Promotion::STATUS_DRAFT],
+                )
+                ->firstOrFail();
 
             return view('e-pasien.menu.promotions.index', [
                 'canManage' => true,
                 'promotions' => $query->paginate(9)->withQueryString(),
-                'filters' => ['q' => $search, 'status' => $status],
+                'filters' => ['q' => $search, 'status' => $status, 'category' => $category],
                 'summary' => [
-                    'total' => Promotion::query()->count(),
-                    'active' => Promotion::query()->active()->count(),
-                    'scheduled' => Promotion::query()->where('status', Promotion::STATUS_PUBLISHED)
-                        ->where('starts_at', '>', now())->count(),
-                    'draft' => Promotion::query()->where('status', Promotion::STATUS_DRAFT)->count(),
+                    'total' => (int) $summary->total,
+                    'active' => (int) $summary->active,
+                    'scheduled' => (int) $summary->scheduled,
+                    'draft' => (int) $summary->draft,
                 ],
             ]);
         }
 
+        $query = Promotion::query()
+            ->active($now)
+            ->when($category !== 'all', fn ($query) => $query->where('category', $category))
+            ->latest('starts_at');
+        $featuredQuery = clone $query;
+        $promotions = $query->paginate(9)->withQueryString();
+
         return view('e-pasien.menu.promotions.index', [
             'canManage' => false,
-            'promotions' => Promotion::query()->active()->latest('starts_at')->paginate(9),
-            'featured' => Promotion::query()->active()->latest('starts_at')->first(),
+            'promotions' => $promotions,
+            'featured' => $promotions->currentPage() === 1
+                ? $promotions->first()
+                : $featuredQuery->first(),
+            'filters' => ['category' => $category],
         ]);
     }
 
@@ -76,11 +109,14 @@ class PromotionController extends Controller
 
     public function create(): View
     {
+        $configuration = PromotionConfiguration::current();
+
         return view('e-pasien.menu.promotions.form', [
             'promotion' => new Promotion([
+                'category' => Promotion::CATEGORY_PROMOTION,
                 'starts_at' => now()->addMinutes(5)->startOfMinute(),
-                'duration_value' => 1,
-                'duration_unit' => 'day',
+                'duration_value' => $configuration->default_duration_value,
+                'duration_unit' => $configuration->default_duration_unit,
                 'status' => Promotion::STATUS_DRAFT,
             ]),
         ]);
@@ -92,8 +128,8 @@ class PromotionController extends Controller
 
         return redirect()->route('promotions.index')
             ->with('success', $promotion->status === Promotion::STATUS_PUBLISHED
-                ? 'Promosi berhasil diterbitkan.'
-                : 'Draf promosi berhasil disimpan.');
+                ? 'Konten berhasil diterbitkan.'
+                : 'Draf konten berhasil disimpan.');
     }
 
     public function edit(Promotion $promotion): View
@@ -105,27 +141,27 @@ class PromotionController extends Controller
     {
         $this->service->update($promotion, $request->validated());
 
-        return redirect()->route('promotions.index')->with('success', 'Promosi berhasil diperbarui.');
+        return redirect()->route('promotions.index')->with('success', 'Konten berhasil diperbarui.');
     }
 
     public function archive(Promotion $promotion): RedirectResponse
     {
         $this->service->archive($promotion);
 
-        return back()->with('success', 'Promosi dipindahkan ke arsip.');
+        return back()->with('success', 'Konten dipindahkan ke arsip.');
     }
 
     public function restore(Promotion $promotion): RedirectResponse
     {
         $this->service->restore($promotion);
 
-        return back()->with('success', 'Promosi dikembalikan sebagai draf.');
+        return back()->with('success', 'Konten dikembalikan sebagai draf.');
     }
 
     public function destroy(Promotion $promotion): RedirectResponse
     {
         $this->service->delete($promotion);
 
-        return redirect()->route('promotions.index')->with('success', 'Promosi berhasil dihapus.');
+        return redirect()->route('promotions.index')->with('success', 'Konten berhasil dihapus.');
     }
 }

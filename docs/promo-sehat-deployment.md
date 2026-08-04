@@ -1,12 +1,14 @@
-# Operasional Promo Sehat
+# Operasional Promosi & Informasi
 
-Fitur Promo Sehat menggunakan database notification, Laravel Reverb, queue, scheduler, dan Web Push. Migrasi aplikasi harus dijalankan sebelum fitur digunakan:
+Fitur Promosi & Informasi menggunakan database notification, Laravel Reverb, queue, scheduler, dan Web Push. Migrasi aplikasi harus dijalankan sebelum fitur digunakan:
 
 ```bash
 php artisan migrate --force
 php artisan storage:link
 npm run build
 ```
+
+Setiap konten memiliki kategori `promotion` (Promosi) atau `information` (Informasi). Konten yang sudah ada otomatis dikategorikan sebagai Promosi saat migrasi dijalankan. Kategori ditampilkan sebagai label berbeda pada kartu, halaman detail, filter pasien, dan notifikasi.
 
 ## Environment produksi
 
@@ -28,4 +30,14 @@ php artisan reverb:start
 php artisan schedule:work
 ```
 
-Pada lingkungan pengembangan, `composer dev` sudah menjalankan web server, queue, Vite, log viewer, dan Reverb bersama-sama. Push notification hanya bekerja pada HTTPS atau `localhost`, dan pada iPhone/iPad pengguna perlu menambahkan E-Pasien ke Home Screen sebelum mengaktifkan notifikasi.
+Pada lingkungan pengembangan, `composer dev` sudah menjalankan web server, queue, scheduler, Vite, log viewer, dan Reverb bersama-sama. Push notification hanya bekerja pada HTTPS atau `localhost`, dan pada iPhone/iPad pengguna perlu menambahkan E-Pasien ke Home Screen sebelum mengaktifkan notifikasi.
+
+Izin notifikasi dan langganan Web Push bersifat wajib pada seluruh halaman E-Pasien. Pengguna baru harus menekan **Aktifkan Sekarang** dan memilih **Izinkan** pada dialog browser sebelum dapat melanjutkan. Pastikan VAPID dan HTTPS sudah siap sebelum fitur ini diterapkan; konfigurasi yang belum siap akan membuat gerbang notifikasi tetap terkunci. Jika izin dicabut atau ditolak, pengguna harus mengubah izin situs menjadi **Izinkan** melalui pengaturan browser, lalu menekan **Periksa Kembali**.
+
+Scheduler menjalankan pembersihan konten Promosi & Informasi setiap lima menit agar beban pemeriksaan database tetap ringan. Pengelola dapat mengatur durasi bawaan, mengaktifkan/nonaktifkan pembersihan, dan menentukan masa tenggang melalui **Promosi & Informasi > Konfigurasi Konten**. Nilai masa tenggang `0` menghapus konten terbit/arsip pada siklus pembersihan berikutnya setelah waktu tayangnya berakhir; draf tidak ikut dihapus.
+
+Gambar unggahan dibatasi hingga 4096 × 4096 piksel. Jika ekstensi PHP GD dengan dukungan WebP tersedia, gambar otomatis diperkecil maksimal 1600 × 1200 dan disimpan sebagai WebP agar daftar konten serta notifikasi lebih ringan. Pastikan paket `ext-gd` aktif di produksi untuk memperoleh optimasi ini.
+
+## Target penerima notifikasi konten
+
+Target notifikasi diatur melalui **Pengaturan Akses > Konfigurasi Roles**. Penerima merupakan gabungan user aktif dari role yang dicentang dan user/pasien yang dipilih langsung. Untuk pengujian satu akun, nonaktifkan seluruh role pada kolom **Notifikasi Konten**, lalu pilih hanya akun uji pada bagian **Pilih Pasien/User Tertentu** sebelum konten diterbitkan.

@@ -3,8 +3,8 @@
 namespace App\Jobs;
 
 use App\Models\Promotion;
-use App\Models\User;
 use App\Notifications\PromotionPublishedNotification;
+use App\Services\epasien\menu\PromotionNotificationRecipientService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Notification;
@@ -19,7 +19,7 @@ class DispatchPromotionNotifications implements ShouldQueue
 
     public function __construct(public readonly int $promotionId) {}
 
-    public function handle(): void
+    public function handle(PromotionNotificationRecipientService $recipients): void
     {
         $promotion = Promotion::query()->find($this->promotionId);
 
@@ -27,17 +27,9 @@ class DispatchPromotionNotifications implements ShouldQueue
             return;
         }
 
-        $roleNames = array_unique([
-            config('access-control.patient_role', 'Patient'),
-            ...config('access-control.patient_role_aliases', ['Pasien']),
-        ]);
         $notification = PromotionPublishedNotification::fromPromotion($promotion);
 
-        User::query()
-            ->where(function ($query): void {
-                $query->where('status', true)->orWhereNull('status');
-            })
-            ->whereHas('roles', fn ($query) => $query->whereIn('name', $roleNames))
+        $recipients->query()
             ->chunkById(250, function ($patients) use ($notification): void {
                 Notification::send($patients, $notification);
             });

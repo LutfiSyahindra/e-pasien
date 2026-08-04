@@ -3,11 +3,15 @@
 namespace App\Services\epasien\menu;
 
 use App\Models\Promotion;
+use App\Models\PromotionConfiguration;
 use App\Models\User;
+use App\Notifications\PromotionPublishedNotification;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Throwable;
 
 class PromotionService
@@ -26,6 +30,7 @@ class PromotionService
 
                 return Promotion::query()->create([
                     'creator_id' => $creator->getKey(),
+                    'category' => $data['category'],
                     'title' => trim($data['title']),
                     'caption' => trim($data['caption']),
                     'image_path' => $imagePath,
@@ -60,6 +65,7 @@ class PromotionService
                 $wasPublished = $promotion->status === Promotion::STATUS_PUBLISHED;
 
                 $promotion->fill([
+                    'category' => $data['category'],
                     'title' => trim($data['title']),
                     'caption' => trim($data['caption']),
                     'duration_value' => $data['duration_value'],
@@ -110,14 +116,104 @@ class PromotionService
 
     public function delete(Promotion $promotion): void
     {
+        $promotionId = $promotion->getKey();
         $imagePath = $promotion->image_path;
         $promotion->delete();
+        DatabaseNotification::query()
+            ->where('type', PromotionPublishedNotification::class)
+            ->where('data->promotion_id', $promotionId)
+            ->delete();
         Storage::disk('public')->delete($imagePath);
+    }
+
+    public function deleteExpired(?PromotionConfiguration $configuration = null): int
+    {
+        $configuration ??= PromotionConfiguration::current();
+
+        if (! $configuration->auto_delete_enabled) {
+            return 0;
+        }
+
+        $deleted = 0;
+        $cutoff = $configuration->deletionCutoff();
+
+        Promotion::query()
+            ->whereIn('status', [Promotion::STATUS_PUBLISHED, Promotion::STATUS_ARCHIVED])
+            ->where('ends_at', '<=', $cutoff)
+            ->orderBy('id')
+            ->chunkById(100, function ($promotions) use (&$deleted): void {
+                $promotionIds = $promotions->modelKeys();
+                $imagePaths = $promotions->pluck('image_path')->filter()->all();
+
+                DB::transaction(function () use ($promotionIds): void {
+                    Promotion::query()->whereKey($promotionIds)->delete();
+                    DatabaseNotification::query()
+                        ->where('type', PromotionPublishedNotification::class)
+                        ->whereIn('data->promotion_id', $promotionIds)
+                        ->delete();
+                });
+
+                Storage::disk('public')->delete($imagePaths);
+                $deleted += count($promotionIds);
+            });
+
+        return $deleted;
     }
 
     private function storeImage(UploadedFile $image): string
     {
-        return $image->store('promotions/'.now()->format('Y/m'), 'public');
+        $fallback = fn (): string => $image->store('promotions/'.now()->format('Y/m'), 'public');
+
+        if (! function_exists('imagecreatefromstring') || ! function_exists('imagewebp')) {
+            return $fallback();
+        }
+
+        $contents = @file_get_contents($image->getRealPath());
+        $source = is_string($contents) ? @imagecreatefromstring($contents) : false;
+
+        if (! $source) {
+            return $fallback();
+        }
+
+        $sourceWidth = imagesx($source);
+        $sourceHeight = imagesy($source);
+        $scale = min(1, 1600 / $sourceWidth, 1200 / $sourceHeight);
+        $targetWidth = max(1, (int) round($sourceWidth * $scale));
+        $targetHeight = max(1, (int) round($sourceHeight * $scale));
+        $target = imagecreatetruecolor($targetWidth, $targetHeight);
+
+        imagealphablending($target, false);
+        imagesavealpha($target, true);
+        $transparent = imagecolorallocatealpha($target, 0, 0, 0, 127);
+        imagefilledrectangle($target, 0, 0, $targetWidth, $targetHeight, $transparent);
+        imagecopyresampled(
+            $target,
+            $source,
+            0,
+            0,
+            0,
+            0,
+            $targetWidth,
+            $targetHeight,
+            $sourceWidth,
+            $sourceHeight,
+        );
+
+        ob_start();
+        $encoded = @imagewebp($target, null, 82);
+        $optimizedContents = ob_get_clean();
+        imagedestroy($target);
+        imagedestroy($source);
+
+        if (! $encoded || ! is_string($optimizedContents) || $optimizedContents === '') {
+            return $fallback();
+        }
+
+        $path = 'promotions/'.now()->format('Y/m').'/'.Str::uuid().'.webp';
+
+        return Storage::disk('public')->put($path, $optimizedContents)
+            ? $path
+            : $fallback();
     }
 
     private function schedule(array $data): array

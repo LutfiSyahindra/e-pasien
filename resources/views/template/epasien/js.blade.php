@@ -2,10 +2,10 @@
  <script src="{{ asset("epasien/assets/js/bootstrap.bundle.min.js") }}"></script>
  <!--plugins-->
  <script src="{{ asset("epasien/assets/js/jquery.min.js") }}"></script>
- @if (request()->routeIs("users.*", "roles.*", "daftarOnline.index"))
+ @if (request()->routeIs("users.*", "roles.*", "roleConfiguration.*", "daftarOnline.index"))
      <script src="{{ asset("epasien/assets/plugins/select2/js/select2.min.js") }}"></script>
  @endif
- @if (request()->routeIs("profile.*", "users.*", "roles.*", "permissions.*", "daftarOnline.*", "promotions.*"))
+ @if (request()->routeIs("profile.*", "users.*", "roles.*", "permissions.*", "daftarOnline.*"))
      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
      <script>
      (function() {

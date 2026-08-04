@@ -1,8 +1,28 @@
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import './bootstrap';
-import './notification-center';
 
-import Alpine from 'alpinejs';
+const startAlpine = () => {
+    if (!document.querySelector('[x-data]')) return;
 
-window.Alpine = Alpine;
+    import('alpinejs').then(({ default: Alpine }) => {
+        window.Alpine = Alpine;
+        Alpine.start();
+    });
+};
 
-Alpine.start();
+const startNotificationCenter = () => import('./notification-center').catch(() => {});
+const scheduleNotificationCenter = () => {
+    if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(startNotificationCenter, { timeout: 1200 });
+        return;
+    }
+
+    window.setTimeout(startNotificationCenter, 0);
+};
+
+startAlpine();
+
+if (document.querySelector('meta[name="epasien-user-id"]')) {
+    if (document.readyState === 'complete') scheduleNotificationCenter();
+    else window.addEventListener('load', scheduleNotificationCenter, { once: true });
+}
