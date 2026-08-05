@@ -151,6 +151,17 @@
                             @endcan
                         @endcan
 
+                        @can("EPASIEN.MENU.PASIEN_SERVICE")
+                            <li class="{{ request()->routeIs("patientService.*") ? "mm-active" : "" }}">
+                                <a href="{{ route("patientService.index") }}" data-patient-service-sidebar-link
+                                    @if (request()->routeIs("patientService.*")) aria-current="page" @endif>
+                                    <div class="parent-icon"><i class="bi bi-chat-heart"></i></div>
+                                    <div class="menu-title">Pasien Service</div>
+                                    <span class="ep-patient-service-badge" data-patient-service-sidebar-badge hidden aria-hidden="true">0</span>
+                                </a>
+                            </li>
+                        @endcan
+
                         @can("EPASIEN.MENU.PENDAFTARAN_ONLINE")
                             <li class="{{ $registrationMenuActive ? "mm-active" : "" }}">
                                 <a href="javascript:;" class="has-arrow"

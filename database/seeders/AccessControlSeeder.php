@@ -32,6 +32,7 @@ class AccessControlSeeder extends Seeder
         $patient->givePermissionTo([
             'EPASIEN.MENU',
             'EPASIEN.MENU.PROMOSI',
+            'EPASIEN.MENU.PASIEN_SERVICE',
         ]);
 
         $marketing->givePermissionTo([

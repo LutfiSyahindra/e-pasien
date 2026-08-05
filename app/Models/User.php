@@ -23,6 +23,16 @@ class User extends Authenticatable
         return $this->hasMany(Promotion::class, 'creator_id');
     }
 
+    public function patientServiceConversations(): HasMany
+    {
+        return $this->hasMany(PatientServiceConversation::class, 'patient_id');
+    }
+
+    public function patientServiceMessages(): HasMany
+    {
+        return $this->hasMany(PatientServiceMessage::class, 'sender_id');
+    }
+
     /**
      * The attributes that are mass assignable.
      *

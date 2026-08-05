@@ -7,6 +7,7 @@ use App\Http\Controllers\Epasien\menu\FasilitasTarif\LaboratoriumController;
 use App\Http\Controllers\Epasien\menu\FasilitasTarif\PoliklinikController;
 use App\Http\Controllers\Epasien\menu\FasilitasTarif\RadiologiController;
 use App\Http\Controllers\Epasien\menu\JadwalDokterController;
+use App\Http\Controllers\Epasien\menu\PatientServiceController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\OperasiController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\PemeriksaanLaboratController;
 use App\Http\Controllers\Epasien\menu\PermintaanTindakan\PemeriksaanRadiologiController;
@@ -138,6 +139,28 @@ Route::middleware('auth')->group(function () {
                     Route::delete('/promo-sehat/{promotion}', [PromotionController::class, 'destroy'])
                         ->whereNumber('promotion')->name('promotions.destroy');
                 });
+            });
+
+            Route::middleware('permission:EPASIEN.MENU.PASIEN_SERVICE')->group(function () {
+                Route::get('/pasien-service', [PatientServiceController::class, 'index'])
+                    ->name('patientService.index');
+                Route::get('/pasien-service/navbar', [PatientServiceController::class, 'navbar'])
+                    ->name('patientService.navbar');
+                Route::post('/pasien-service/deliveries', [PatientServiceController::class, 'markDelivered'])
+                    ->middleware('throttle:60,1')
+                    ->name('patientService.deliveries');
+                Route::post('/pasien-service/conversations', [PatientServiceController::class, 'storeConversation'])
+                    ->middleware('throttle:10,1')
+                    ->name('patientService.conversations.store');
+                Route::get('/pasien-service/conversations/{conversation}/messages', [PatientServiceController::class, 'messages'])
+                    ->name('patientService.messages.index');
+                Route::post('/pasien-service/conversations/{conversation}/messages', [PatientServiceController::class, 'storeMessage'])
+                    ->middleware('throttle:30,1')
+                    ->name('patientService.messages.store');
+                Route::patch('/pasien-service/conversations/{conversation}/read', [PatientServiceController::class, 'markRead'])
+                    ->name('patientService.read');
+                Route::patch('/pasien-service/conversations/{conversation}/status', [PatientServiceController::class, 'updateStatus'])
+                    ->name('patientService.status');
             });
 
             Route::middleware('permission:EPASIEN.MENU.JADWAL_DOKTER')->group(function () {

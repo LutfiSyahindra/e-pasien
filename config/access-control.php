@@ -12,6 +12,7 @@ $sidebarPermissions = [
     'EPASIEN.MENU.PERMINTAAN_DAN_TINDAKAN',
     'EPASIEN.MENU.FASILITAS_TARIF',
     'EPASIEN.MENU.PENDAFTARAN_ONLINE',
+    'EPASIEN.MENU.PASIEN_SERVICE',
 ];
 
 return [
@@ -39,6 +40,11 @@ return [
         'Pemasaran',
     ],
 
+    'patient_service_admin_roles' => [
+        'Administrator',
+        'Admin',
+    ],
+
     'sidebar_permissions' => $sidebarPermissions,
 
     'protected_permissions' => [
@@ -56,6 +62,7 @@ return [
         'permissions.delete',
         'EPASIEN.MENU.PROMOSI',
         'EPASIEN.MENU.PROMOSI.KELOLA',
+        'EPASIEN.MENU.PASIEN_SERVICE.KELOLA',
         ...$sidebarPermissions,
     ],
 ];

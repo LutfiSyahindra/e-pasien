@@ -62,6 +62,7 @@ class RegistrationRoleConfigurationTest extends TestCase
             [$patientRole->id],
             [$patientRole->id],
             [$configuredBy->id],
+            [$bpjsRole->id],
             $configuredBy,
         );
 
@@ -75,6 +76,8 @@ class RegistrationRoleConfigurationTest extends TestCase
         $this->assertFalse((bool) $bpjsRole->fresh()->email_onboarding_enabled);
         $this->assertTrue((bool) $patientRole->fresh()->email_onboarding_enabled);
         $this->assertTrue((bool) $patientRole->fresh()->promotion_notifications_enabled);
+        $this->assertTrue($bpjsRole->fresh()->hasPermissionTo('EPASIEN.MENU.PASIEN_SERVICE'));
+        $this->assertTrue($bpjsRole->fresh()->hasPermissionTo('EPASIEN.MENU.PASIEN_SERVICE.KELOLA'));
         $this->assertDatabaseHas('promotion_notification_user_configurations', [
             'user_id' => $configuredBy->id,
             'configured_by' => $configuredBy->id,
@@ -104,10 +107,13 @@ class RegistrationRoleConfigurationTest extends TestCase
             ->assertSeeText('Pendaftaran BPJS')
             ->assertSeeText('Animasi Onboarding Email')
             ->assertSeeText('Notifikasi Promosi & Informasi')
+            ->assertSeeText('Admin Pasien Service')
+            ->assertSeeText('Seluruh pengguna aktif dari role terpilih menjadi Tim Pasien Service')
             ->assertSeeText('Pilih Pasien/User Tertentu')
             ->assertSee('name="registration_role_ids[]"', false)
             ->assertSee('name="email_onboarding_role_ids[]"', false)
             ->assertSee('name="promotion_notification_role_ids[]"', false)
+            ->assertSee('name="patient_service_role_ids[]"', false)
             ->assertSee('name="promotion_notification_user_ids[]"', false);
     }
 
@@ -119,21 +125,70 @@ class RegistrationRoleConfigurationTest extends TestCase
             'guard_name' => 'web',
         ]));
         $patientRole = Role::create(['name' => 'Pasien Uji', 'guard_name' => 'web']);
+        $serviceRole = Role::create(['name' => 'Customer Care', 'guard_name' => 'web']);
         $target = User::factory()->create(['name' => 'Pasien Target', 'status' => true]);
 
         $this->actingAs($admin)
             ->put(route('roleConfiguration.update'), [
                 'promotion_notification_role_ids' => [$patientRole->id],
                 'promotion_notification_user_ids' => [$target->id],
+                'patient_service_role_ids' => [$serviceRole->id],
             ])
             ->assertRedirect(route('roleConfiguration.index'))
             ->assertSessionHas('status');
 
         $this->assertTrue((bool) $patientRole->fresh()->promotion_notifications_enabled);
+        $this->assertTrue($serviceRole->fresh()->hasPermissionTo('EPASIEN.MENU.PASIEN_SERVICE'));
+        $this->assertTrue($serviceRole->fresh()->hasPermissionTo('EPASIEN.MENU.PASIEN_SERVICE.KELOLA'));
         $this->assertDatabaseHas('promotion_notification_user_configurations', [
             'user_id' => $target->id,
             'configured_by' => $admin->id,
         ]);
+    }
+
+    public function test_role_configuration_can_remove_patient_service_management_from_a_role(): void
+    {
+        $admin = User::factory()->create(['username' => 'ADMIN04']);
+        $admin->assignRole(Role::create([
+            'name' => config('access-control.super_admin_role', 'Super Admin'),
+            'guard_name' => 'web',
+        ]));
+        $serviceRole = Role::create(['name' => 'Customer Service', 'guard_name' => 'web']);
+        $serviceRole->givePermissionTo([
+            'EPASIEN.MENU',
+            'EPASIEN.MENU.PASIEN_SERVICE',
+            'EPASIEN.MENU.PASIEN_SERVICE.KELOLA',
+        ]);
+
+        $this->actingAs($admin)
+            ->put(route('roleConfiguration.update'), ['patient_service_role_ids' => []])
+            ->assertRedirect(route('roleConfiguration.index'));
+
+        $this->assertFalse($serviceRole->fresh()->hasPermissionTo('EPASIEN.MENU.PASIEN_SERVICE.KELOLA'));
+        $this->assertTrue($serviceRole->fresh()->hasPermissionTo('EPASIEN.MENU.PASIEN_SERVICE'));
+    }
+
+    public function test_patient_role_cannot_be_configured_as_patient_service_handler(): void
+    {
+        $admin = User::factory()->create(['username' => 'ADMIN05']);
+        $admin->assignRole(Role::create([
+            'name' => config('access-control.super_admin_role', 'Super Admin'),
+            'guard_name' => 'web',
+        ]));
+        $patientRole = Role::create([
+            'name' => config('access-control.patient_role', 'Patient'),
+            'guard_name' => 'web',
+        ]);
+
+        $this->actingAs($admin)
+            ->from(route('roleConfiguration.index'))
+            ->put(route('roleConfiguration.update'), [
+                'patient_service_role_ids' => [$patientRole->id],
+            ])
+            ->assertRedirect(route('roleConfiguration.index'))
+            ->assertSessionHasErrors('patient_service_role_ids');
+
+        $this->assertFalse($patientRole->fresh()->hasPermissionTo('EPASIEN.MENU.PASIEN_SERVICE.KELOLA'));
     }
 
     public function test_registration_by_configured_role_is_audited_in_application_database(): void

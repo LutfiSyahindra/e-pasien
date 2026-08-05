@@ -7,7 +7,9 @@ use App\Models\RegistrationRoleConfiguration;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RoleConfigurationService
 {
@@ -16,12 +18,19 @@ class RoleConfigurationService
         $registrationRoleIds = RegistrationRoleConfiguration::query()
             ->pluck('role_id');
 
+        $patientRoleNames = array_unique([
+            config('access-control.patient_role', 'Patient'),
+            ...config('access-control.patient_role_aliases', ['Pasien']),
+        ]);
+        $superAdminRole = config('access-control.super_admin_role', 'Super Admin');
+
         return Role::query()
             ->where('guard_name', 'web')
+            ->with('permissions:id,name')
             ->withCount('users')
             ->orderBy('name')
             ->get()
-            ->each(function (Role $role) use ($registrationRoleIds): void {
+            ->each(function (Role $role) use ($registrationRoleIds, $patientRoleNames, $superAdminRole): void {
                 $role->setAttribute(
                     'registration_enabled',
                     $registrationRoleIds->contains($role->id)
@@ -34,6 +43,13 @@ class RoleConfigurationService
                     'promotion_notifications_enabled',
                     (bool) $role->promotion_notifications_enabled
                 );
+                $role->setAttribute(
+                    'patient_service_enabled',
+                    $role->name === $superAdminRole
+                        || $role->permissions->contains('name', 'EPASIEN.MENU.PASIEN_SERVICE.KELOLA')
+                );
+                $role->setAttribute('patient_service_locked', $role->name === $superAdminRole);
+                $role->setAttribute('patient_service_patient_role', in_array($role->name, $patientRoleNames, true));
             });
     }
 
@@ -77,18 +93,21 @@ class RoleConfigurationService
         array $emailOnboardingRoleIds,
         array $promotionNotificationRoleIds,
         array $promotionNotificationUserIds,
+        array $patientServiceRoleIds,
         User $configuredBy
     ): void {
         $registrationRoleIds = $this->normalizeIds($registrationRoleIds);
         $emailOnboardingRoleIds = $this->normalizeIds($emailOnboardingRoleIds);
         $promotionNotificationRoleIds = $this->normalizeIds($promotionNotificationRoleIds);
         $promotionNotificationUserIds = $this->normalizeIds($promotionNotificationUserIds);
+        $patientServiceRoleIds = $this->normalizeIds($patientServiceRoleIds);
 
         DB::connection(config('database.default'))->transaction(function () use (
             $registrationRoleIds,
             $emailOnboardingRoleIds,
             $promotionNotificationRoleIds,
             $promotionNotificationUserIds,
+            $patientServiceRoleIds,
             $configuredBy
         ): void {
             $this->replaceRegistrationRoles($registrationRoleIds, $configuredBy);
@@ -119,7 +138,42 @@ class RoleConfigurationService
                 $promotionNotificationUserIds,
                 $configuredBy
             );
+
+            $this->syncPatientServiceRoles($patientServiceRoleIds);
         });
+    }
+
+    private function syncPatientServiceRoles(Collection $roleIds): void
+    {
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $menu = Permission::findOrCreate('EPASIEN.MENU', 'web');
+        $view = Permission::findOrCreate('EPASIEN.MENU.PASIEN_SERVICE', 'web');
+        $manage = Permission::findOrCreate('EPASIEN.MENU.PASIEN_SERVICE.KELOLA', 'web');
+        $superAdminRole = config('access-control.super_admin_role', 'Super Admin');
+        $roleIds = $roleIds->merge(
+            Role::query()
+                ->where('guard_name', 'web')
+                ->where('name', $superAdminRole)
+                ->pluck('id')
+        )->unique();
+
+        Role::query()
+            ->where('guard_name', 'web')
+            ->get()
+            ->each(function (Role $role) use ($roleIds, $menu, $view, $manage): void {
+                if ($roleIds->contains($role->id)) {
+                    $role->givePermissionTo([$menu, $view, $manage]);
+
+                    return;
+                }
+
+                if ($role->hasPermissionTo($manage)) {
+                    $role->revokePermissionTo($manage);
+                }
+            });
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
     private function roleIdsFor(User $user): Collection

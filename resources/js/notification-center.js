@@ -54,8 +54,13 @@ const prepareNotificationSound = () => {
 
 const notificationSoundKey = (data = {}) => {
     if (data.promotion_id) return `promotion-${data.promotion_id}`;
+    if (data.message_id) return `patient-service-message-${data.message_id}`;
     return data.tag || data.url || 'notification';
 };
+
+const notificationIconClass = (data = {}) => data.kind === 'patient_service_message'
+    ? 'bi bi-chat-heart-fill'
+    : 'bi bi-bell-fill';
 
 const playNotificationSound = (key, source = notificationSoundUrl) => {
     if (document.visibilityState !== 'visible') return;
@@ -149,6 +154,7 @@ const notificationItem = (item) => {
 
     const visual = document.createElement('span');
     visual.className = 'ep-notification-item__image';
+    visual.classList.toggle('is-patient-service', data.kind === 'patient_service_message');
     if (data.image_url) {
         const img = document.createElement('img');
         img.src = data.image_url;
@@ -157,13 +163,13 @@ const notificationItem = (item) => {
         img.decoding = 'async';
         imageFallback(img, () => {
             const icon = document.createElement('i');
-            icon.className = 'bi bi-bell-fill';
+            icon.className = notificationIconClass(data);
             return icon;
         });
         visual.append(img);
     } else {
         const icon = document.createElement('i');
-        icon.className = 'bi bi-bell-fill';
+        icon.className = notificationIconClass(data);
         visual.append(icon);
     }
 
@@ -234,17 +240,25 @@ const showLiveToast = (data) => {
     document.querySelector('.ep-live-toast')?.remove();
     const toast = document.createElement('div');
     toast.className = 'ep-live-toast';
+    toast.classList.toggle('is-patient-service', data.kind === 'patient_service_message');
     if (data.image_url) {
         const image = document.createElement('img'); image.src = data.image_url; image.alt = ''; image.decoding = 'async';
         imageFallback(image, () => {
             const icon = document.createElement('span');
             icon.className = 'ep-live-toast__icon';
-            icon.innerHTML = '<i class="bi bi-bell-fill"></i>';
+            const fallbackIcon = document.createElement('i');
+            fallbackIcon.className = notificationIconClass(data);
+            icon.append(fallbackIcon);
             return icon;
         });
         toast.append(image);
     } else {
-        const icon = document.createElement('span'); icon.className = 'ep-live-toast__icon'; icon.innerHTML = '<i class="bi bi-bell-fill"></i>'; toast.append(icon);
+        const icon = document.createElement('span');
+        icon.className = 'ep-live-toast__icon';
+        const glyph = document.createElement('i');
+        glyph.className = notificationIconClass(data);
+        icon.append(glyph);
+        toast.append(icon);
     }
     const copy = document.createElement('span');
     const title = document.createElement('strong'); title.textContent = data.title || 'Kabar baru';
@@ -583,11 +597,39 @@ const recheckRequiredNotifications = () => {
     if (gateVisible || notificationUnavailable) enforceRequiredNotifications();
 };
 
+const syncPatientServiceRead = (event) => {
+    forgetCachedNotifications();
+    notificationsLoaded = false;
+    const count = event.detail?.notificationUnreadCount;
+    if (count !== undefined && count !== null) setBadge(count);
+
+    if (document.querySelector('.ep-notification-menu')?.classList.contains('show')) {
+        loadNotifications({ force: true });
+    }
+};
+
 const subscribeToRealtime = async () => {
     const echo = window.Echo || await window.initializeEpasienRealtime?.();
     if (!echo) return;
 
-    echo.private(`App.Models.User.${userId}`).notification((notification) => {
+    echo.private(`App.Models.User.${userId}`).notification(async (notification) => {
+        if (notification.kind === 'patient_service_message') {
+            window.dispatchEvent(new CustomEvent('epasien:patient-service-notification', { detail: notification }));
+
+            const activeChat = document.querySelector('[data-patient-service]');
+            const isOpenConversation = activeChat
+                && Number(activeChat.dataset.activeConversation) === Number(notification.conversation_id);
+
+            if (isOpenConversation && activeChat.dataset.readUrl) {
+                forgetCachedNotifications();
+                notificationsLoaded = false;
+                window.dispatchEvent(new CustomEvent('epasien:patient-service-mark-read-requested', {
+                    detail: { conversationId: Number(notification.conversation_id) },
+                }));
+                return;
+            }
+        }
+
         showLiveToast(notification);
         playNotificationSound(notificationSoundKey(notification));
         forgetCachedNotifications();
@@ -627,6 +669,7 @@ const initializeNotificationCenter = () => {
         if (cached && !notificationsLoaded) renderNotifications(cached);
         loadNotifications();
     });
+    window.addEventListener('epasien:patient-service-read', syncPatientServiceRead);
     enforceRequiredNotifications();
     subscribeToRealtime();
     document.querySelectorAll('[data-push-toggle]').forEach((button) => button.addEventListener('click', togglePush));

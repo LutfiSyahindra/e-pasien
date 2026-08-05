@@ -19,6 +19,10 @@
         <meta name="epasien-push-config-url" content="{{ route("push.config") }}">
         <meta name="epasien-push-subscription-url" content="{{ route("push.store") }}">
         <meta name="epasien-notification-sound-url" content="{{ asset("landing/assets/sound/notif.mp3") }}">
+        @can("EPASIEN.MENU.PASIEN_SERVICE")
+            <meta name="epasien-patient-service-navbar-url" content="{{ route("patientService.navbar") }}">
+            <meta name="epasien-patient-service-delivery-url" content="{{ route("patientService.deliveries") }}">
+        @endcan
     @endauth
     <meta name="theme-color" content="#0b766d">
     <link rel="manifest" href="{{ asset("manifest.webmanifest") }}">
@@ -26,7 +30,9 @@
     <link rel="apple-touch-icon" href="{{ asset("epasien/assets/images/pwa-icon-180.png") }}">
     <!--plugins-->
     <link href="{{ asset("epasien/assets/plugins/simplebar/css/simplebar.css") }}" rel="stylesheet" />
-    <link href="{{ asset("epasien/assets/plugins/perfect-scrollbar/css/perfect-scrollbar.css") }}" rel="stylesheet" />
+    @if ($usesDashboardCharts)
+        <link href="{{ asset("epasien/assets/plugins/perfect-scrollbar/css/perfect-scrollbar.css") }}" rel="stylesheet" />
+    @endif
     <link href="{{ asset("epasien/assets/plugins/metismenu/css/metisMenu.min.css") }}" rel="stylesheet" />
     @if ($usesDashboardCharts)
         <link href="{{ asset("epasien/assets/plugins/vectormap/jquery-jvectormap-2.0.2.css") }}" rel="stylesheet" />
@@ -55,6 +61,10 @@
     @endif
     <link href="{{ asset("epasien/assets/css/sidebar-premium.css") }}" rel="stylesheet" />
     <link href="{{ asset("epasien/assets/css/notification-center.css") }}" rel="stylesheet" />
+    @can("EPASIEN.MENU.PASIEN_SERVICE")
+        <link href="{{ asset("epasien/assets/css/patient-service-navbar.css") }}" rel="stylesheet" />
+    @endcan
+    <link href="{{ asset("epasien/assets/css/navbar-premium.css") }}" rel="stylesheet" />
 
     <title>@yield("title", "E-Pasien")</title>
     @if (file_exists(public_path("build/manifest.json")) || file_exists(public_path("hot")))

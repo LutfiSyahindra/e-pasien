@@ -11,7 +11,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Spatie\Permission\Models\Role;
 
 class RoleConfigurationController extends Controller
 {
@@ -26,6 +28,7 @@ class RoleConfigurationController extends Controller
         $registrationRoles = $roles->where('registration_enabled', true);
         $emailOnboardingRoles = $roles->where('email_onboarding_enabled', true);
         $promotionNotificationRoles = $roles->where('promotion_notifications_enabled', true);
+        $patientServiceRoles = $roles->where('patient_service_enabled', true);
         $configuredPromotionUsers = $this->configurationService->promotionNotificationUsers();
         $hasOldPromotionUsers = $request->session()->hasOldInput('promotion_notification_user_ids');
         $selectedPromotionUserIds = $hasOldPromotionUsers
@@ -50,6 +53,8 @@ class RoleConfigurationController extends Controller
             'promotionNotificationRoleCount' => $promotionNotificationRoles->count(),
             'promotionNotificationUserCount' => $configuredPromotionUsers->count(),
             'promotionNotificationRecipientCount' => $this->recipientService->count(),
+            'patientServiceRoleCount' => $patientServiceRoles->count(),
+            'patientServiceUserCount' => $patientServiceRoles->sum('users_count'),
             'configuredPromotionUserIds' => $configuredPromotionUsers->pluck('id'),
             'selectedPromotionUserIds' => collect($selectedPromotionUserIds)->map(fn ($id) => (int) $id),
             'selectedPromotionUsers' => $selectedPromotionUsers,
@@ -117,18 +122,36 @@ class RoleConfigurationController extends Controller
                 'distinct',
                 Rule::exists('users', 'id'),
             ],
+            'patient_service_role_ids' => ['nullable', 'array'],
+            'patient_service_role_ids.*' => $roleRule,
         ]);
+
+        $patientRoleNames = array_unique([
+            config('access-control.patient_role', 'Patient'),
+            ...config('access-control.patient_role_aliases', ['Pasien']),
+        ]);
+        $invalidPatientRole = Role::query()
+            ->whereKey($validated['patient_service_role_ids'] ?? [])
+            ->whereIn('name', $patientRoleNames)
+            ->first();
+
+        if ($invalidPatientRole) {
+            throw ValidationException::withMessages([
+                'patient_service_role_ids' => "Role {$invalidPatientRole->name} merupakan role pasien dan tidak dapat dijadikan penerima seluruh percakapan.",
+            ]);
+        }
 
         $this->configurationService->sync(
             $validated['registration_role_ids'] ?? [],
             $validated['email_onboarding_role_ids'] ?? [],
             $validated['promotion_notification_role_ids'] ?? [],
             $validated['promotion_notification_user_ids'] ?? [],
+            $validated['patient_service_role_ids'] ?? [],
             $request->user(),
         );
 
         return redirect()
             ->route('roleConfiguration.index')
-            ->with('status', 'Konfigurasi role dan penerima notifikasi berhasil disimpan.');
+            ->with('status', 'Konfigurasi role, penerima notifikasi, dan admin Pasien Service berhasil disimpan.');
     }
 }

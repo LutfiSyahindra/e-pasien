@@ -115,8 +115,8 @@
  @endif
  <script src="{{ asset("epasien/assets/plugins/simplebar/js/simplebar.min.js") }}"></script>
  <script src="{{ asset("epasien/assets/plugins/metismenu/js/metisMenu.min.js") }}"></script>
- <script src="{{ asset("epasien/assets/plugins/perfect-scrollbar/js/perfect-scrollbar.js") }}"></script>
  @if (request()->routeIs("dashboard"))
+     <script src="{{ asset("epasien/assets/plugins/perfect-scrollbar/js/perfect-scrollbar.js") }}"></script>
      <script src="{{ asset("epasien/assets/plugins/vectormap/jquery-jvectormap-2.0.2.min.js") }}"></script>
      <script src="{{ asset("epasien/assets/plugins/vectormap/jquery-jvectormap-world-mill-en.js") }}"></script>
  @endif
@@ -128,8 +128,3 @@
  <!--app-->
  <script src="{{ asset("epasien/assets/js/app.js") }}"></script>
  {{-- <script src="{{ asset("epasien/assets/js/index.js") }}"></script> --}}
-
- {{-- <script>
-     new PerfectScrollbar(".best-product")
-     new PerfectScrollbar(".top-sellers-list")
- </script> --}}

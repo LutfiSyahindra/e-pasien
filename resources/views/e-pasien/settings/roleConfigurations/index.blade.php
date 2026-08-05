@@ -24,6 +24,11 @@
             ->pluck("id")
             ->map(fn ($roleId) => (int) $roleId)
             ->values();
+        $patientServiceConfiguredIds = $roles
+            ->where("patient_service_enabled", true)
+            ->pluck("id")
+            ->map(fn ($roleId) => (int) $roleId)
+            ->values();
         $selectedRegistrationIds = collect(old("registration_role_ids", $registrationConfiguredIds->all()))
             ->map(fn ($roleId) => (int) $roleId)
             ->values()
@@ -33,6 +38,10 @@
             ->values()
             ->all();
         $selectedPromotionNotificationIds = collect(old("promotion_notification_role_ids", $promotionNotificationConfiguredIds->all()))
+            ->map(fn ($roleId) => (int) $roleId)
+            ->values()
+            ->all();
+        $selectedPatientServiceIds = collect(old("patient_service_role_ids", $patientServiceConfiguredIds->all()))
             ->map(fn ($roleId) => (int) $roleId)
             ->values()
             ->all();
@@ -86,7 +95,7 @@
             <div class="auth-header-actions role-config-header-actions">
                 <span class="role-config-live-state">
                     <span class="role-config-live-dot"></span>
-                    <strong>3</strong>
+                    <strong>4</strong>
                     <span>fitur tersedia</span>
                 </span>
                 <a href="{{ route("roles.roles") }}" class="role-config-manage-link">
@@ -188,6 +197,19 @@
                     <small>role aktif</small>
                 </span>
             </article>
+
+            <article class="role-config-feature-card tone-patient-service">
+                <span class="role-config-feature-icon"><i class="bi bi-headset"></i></span>
+                <div>
+                    <span class="role-config-feature-kicker">Layanan Percakapan</span>
+                    <h2>Admin Pasien Service</h2>
+                    <p>Seluruh pengguna aktif dari role terpilih menjadi Tim Pasien Service serta dapat menerima notifikasi, membalas, dan menyelesaikan percakapan.</p>
+                </div>
+                <span class="role-config-feature-count">
+                    <strong data-patient-service-summary>{{ $patientServiceRoleCount }}</strong>
+                    <small>role aktif</small>
+                </span>
+            </article>
         </div>
 
         <section class="access-panel role-config-panel">
@@ -203,7 +225,7 @@
                     <span><i class="bi bi-toggles"></i></span>
                     <div>
                         <small>Konfigurasi aktif</small>
-                        <strong><span id="activeConfigurationCount">{{ $registrationRoleCount + $emailOnboardingRoleCount + $promotionNotificationRoleCount + $promotionNotificationUserCount }}</span> assignment</strong>
+                        <strong><span id="activeConfigurationCount">{{ $registrationRoleCount + $emailOnboardingRoleCount + $promotionNotificationRoleCount + $promotionNotificationUserCount + $patientServiceRoleCount }}</span> assignment</strong>
                     </div>
                 </div>
             </div>
@@ -213,6 +235,7 @@
                 data-initial-registration="{{ $registrationConfiguredIds->sort()->implode(",") }}"
                 data-initial-email="{{ $emailOnboardingConfiguredIds->sort()->implode(",") }}"
                 data-initial-promotion-roles="{{ $promotionNotificationConfiguredIds->sort()->implode(",") }}"
+                data-initial-patient-service="{{ $patientServiceConfiguredIds->sort()->implode(",") }}"
                 data-initial-promotion-users="{{ $configuredPromotionUserIds->sort()->implode(",") }}">
                 @csrf
                 @method("PUT")
@@ -224,13 +247,15 @@
                     $errors->has("email_onboarding_role_ids.*") ||
                     $errors->has("promotion_notification_role_ids") ||
                     $errors->has("promotion_notification_role_ids.*") ||
+                    $errors->has("patient_service_role_ids") ||
+                    $errors->has("patient_service_role_ids.*") ||
                     $errors->has("promotion_notification_user_ids") ||
                     $errors->has("promotion_notification_user_ids.*")
                 )
                     <div class="role-config-alert-error" role="alert">
                         <i class="bi bi-exclamation-triangle"></i>
                         <span>
-                            {{ $errors->first("registration_role_ids") ?: $errors->first("registration_role_ids.*") ?: $errors->first("email_onboarding_role_ids") ?: $errors->first("email_onboarding_role_ids.*") ?: $errors->first("promotion_notification_role_ids") ?: $errors->first("promotion_notification_role_ids.*") ?: $errors->first("promotion_notification_user_ids") ?: $errors->first("promotion_notification_user_ids.*") }}
+                            {{ $errors->first("registration_role_ids") ?: $errors->first("registration_role_ids.*") ?: $errors->first("email_onboarding_role_ids") ?: $errors->first("email_onboarding_role_ids.*") ?: $errors->first("promotion_notification_role_ids") ?: $errors->first("promotion_notification_role_ids.*") ?: $errors->first("patient_service_role_ids") ?: $errors->first("patient_service_role_ids.*") ?: $errors->first("promotion_notification_user_ids") ?: $errors->first("promotion_notification_user_ids.*") }}
                         </span>
                     </div>
                 @endif
@@ -252,6 +277,10 @@
                                 <i class="bi bi-megaphone"></i>
                                 Notifikasi Konten
                             </span>
+                            <span role="columnheader">
+                                <i class="bi bi-headset"></i>
+                                Admin Pasien Service
+                            </span>
                         </div>
 
                         @forelse ($roles as $role)
@@ -259,6 +288,7 @@
                                 $registrationSelected = in_array((int) $role->id, $selectedRegistrationIds, true);
                                 $emailSelected = in_array((int) $role->id, $selectedEmailOnboardingIds, true);
                                 $promotionSelected = in_array((int) $role->id, $selectedPromotionNotificationIds, true);
+                                $patientServiceSelected = in_array((int) $role->id, $selectedPatientServiceIds, true);
                             @endphp
                             <div class="role-config-matrix-row" role="row">
                                 <div class="role-config-role" role="cell">
@@ -321,6 +351,31 @@
                                         <span class="role-config-toggle-copy">
                                             <strong data-toggle-state>{{ $promotionSelected ? "Aktif" : "Nonaktif" }}</strong>
                                             <small>Semua user aktif pada role ini</small>
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <div class="role-config-cell" role="cell">
+                                    <span class="role-config-mobile-label">Admin Pasien Service</span>
+                                    <label class="role-config-toggle {{ $role->patient_service_locked || $role->patient_service_patient_role ? "is-locked" : "" }}" for="patient-service-role-{{ $role->id }}">
+                                        <input class="role-config-checkbox" type="checkbox"
+                                            id="patient-service-role-{{ $role->id }}"
+                                            name="patient_service_role_ids[]" value="{{ $role->id }}"
+                                            data-feature="patientService" data-users="{{ $role->users_count }}"
+                                            @checked($patientServiceSelected && ! $role->patient_service_patient_role)
+                                            @disabled($role->patient_service_locked || $role->patient_service_patient_role)>
+                                        <span class="role-config-switch" aria-hidden="true"><span></span></span>
+                                        <span class="role-config-toggle-copy">
+                                            @if ($role->patient_service_locked)
+                                                <strong data-toggle-state>Akses permanen</strong>
+                                                <small>Super Admin selalu dapat mengelola</small>
+                                            @elseif ($role->patient_service_patient_role)
+                                                <strong data-toggle-state>Khusus pasien</strong>
+                                                <small>Tidak dapat menerima chat pasien lain</small>
+                                            @else
+                                                <strong data-toggle-state>{{ $patientServiceSelected ? "Aktif" : "Nonaktif" }}</strong>
+                                                <small>Masuk tim, terima notifikasi &amp; balas</small>
+                                            @endif
                                         </span>
                                     </label>
                                 </div>
@@ -421,6 +476,7 @@
                 registration: (form.dataset.initialRegistration || "").split(",").filter(Boolean).sort(),
                 email: (form.dataset.initialEmail || "").split(",").filter(Boolean).sort(),
                 promotion: (form.dataset.initialPromotionRoles || "").split(",").filter(Boolean).sort(),
+                patientService: (form.dataset.initialPatientService || "").split(",").filter(Boolean).sort(),
                 promotionUsers: (form.dataset.initialPromotionUsers || "").split(",").filter(Boolean).sort(),
             };
 
@@ -435,6 +491,10 @@
                 .sort();
 
             const refreshToggle = (input) => {
+                if (input.disabled) {
+                    return;
+                }
+
                 const toggle = input.closest(".role-config-toggle");
                 const state = toggle?.querySelector("[data-toggle-state]");
 
@@ -453,14 +513,17 @@
                 const registrationIds = selectedIds("registration");
                 const emailIds = selectedIds("email");
                 const promotionIds = selectedIds("promotion");
+                const patientServiceIds = selectedIds("patientService");
                 const promotionUserIds = selectedUserIds();
                 const registrationChanged = registrationIds.join(",") !== initial.registration.join(",");
                 const emailChanged = emailIds.join(",") !== initial.email.join(",");
                 const promotionChanged = promotionIds.join(",") !== initial.promotion.join(",");
+                const patientServiceChanged = patientServiceIds.join(",") !== initial.patientService.join(",");
                 const promotionUsersChanged = promotionUserIds.join(",") !== initial.promotionUsers.join(",");
-                const hasChanges = registrationChanged || emailChanged || promotionChanged || promotionUsersChanged;
+                const hasChanges = registrationChanged || emailChanged || promotionChanged ||
+                    patientServiceChanged || promotionUsersChanged;
                 const assignmentCount = registrationIds.length + emailIds.length +
-                    promotionIds.length + promotionUserIds.length;
+                    promotionIds.length + patientServiceIds.length + promotionUserIds.length;
 
                 inputs.forEach(refreshToggle);
 
@@ -474,6 +537,7 @@
                 document.querySelector("[data-registration-summary]").textContent = registrationIds.length;
                 document.querySelector("[data-email-summary]").textContent = emailIds.length;
                 document.querySelector("[data-promotion-summary]").textContent = promotionIds.length;
+                document.querySelector("[data-patient-service-summary]").textContent = patientServiceIds.length;
                 document.querySelector("[data-direct-user-summary]").textContent = promotionUserIds.length;
                 document.getElementById("promotionDirectUserCount").textContent = promotionUserIds.length;
 
@@ -497,7 +561,7 @@
                     ? "Ada perubahan yang belum disimpan"
                     : "Konfigurasi sudah tersimpan";
                 changeHint.textContent = hasChanges
-                    ? `${promotionIds.length} role konten dan ${promotionUserIds.length} user langsung akan menjadi target notifikasi.`
+                    ? `${patientServiceIds.length} role akan menangani Pasien Service; ${promotionIds.length} role konten dan ${promotionUserIds.length} user menjadi target informasi.`
                     : "Ubah sakelar untuk mengaktifkan tombol simpan.";
             };
 
