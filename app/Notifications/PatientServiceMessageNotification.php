@@ -68,7 +68,12 @@ class PatientServiceMessageNotification extends Notification implements ShouldQu
             ->renotify()
             ->vibrate([180, 80, 180])
             ->action('Buka percakapan', 'open_patient_service')
-            ->data(['url' => $this->message['url']])
+            ->data([
+                'kind' => 'patient_service_message',
+                'url' => $this->message['url'],
+                'conversation_id' => $this->message['conversation_id'],
+                'message_id' => $this->message['message_id'],
+            ])
             ->options(['TTL' => 86400]);
     }
 }

@@ -41,10 +41,10 @@ class PatientServiceNotificationService
         Notification::send($recipients, new PatientServiceMessageNotification([
             'title' => $title,
             'body' => $conversation->subject.' — '.$preview,
-            'push_title' => $senderIsTeamMember ? 'Balasan Pasien Service' : 'Pesan Pasien Service baru',
-            'push_body' => $senderIsTeamMember
-                ? 'Tim Pasien Service telah membalas percakapan Anda.'
-                : 'Ada pesan baru dari pasien. Buka E-Pasien untuk menanganinya.',
+            'push_title' => $senderIsTeamMember
+                ? 'Balasan dari '.$sender->name
+                : 'Pesan dari '.$conversation->patient->name,
+            'push_body' => $preview,
             'url' => route('patientService.index', ['conversation' => $conversation->id], absolute: false),
             'conversation_id' => $conversation->id,
             'message_id' => $message->id,
