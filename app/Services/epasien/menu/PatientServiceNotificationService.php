@@ -42,7 +42,7 @@ class PatientServiceNotificationService
             'title' => $title,
             'body' => $conversation->subject.' — '.$preview,
             'push_title' => $senderIsTeamMember
-                ? 'Balasan dari '.$sender->name
+                ? 'Balasan dari Pasien Service'
                 : 'Pesan dari '.$conversation->patient->name,
             'push_body' => $preview,
             'url' => route('patientService.index', ['conversation' => $conversation->id], absolute: false),

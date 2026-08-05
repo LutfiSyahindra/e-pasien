@@ -249,6 +249,7 @@ class PatientServiceFeatureTest extends TestCase
                 $push = $notification->toWebPush($patient, $notification)->toArray();
 
                 return $notification->toArray($patient)['conversation_id'] === $conversationId
+                    && $push['title'] === 'Balasan dari Pasien Service'
                     && $push['body'] === $adminReply
                     && $push['data']['url'] === route('patientService.index', ['conversation' => $conversationId], false);
             },
