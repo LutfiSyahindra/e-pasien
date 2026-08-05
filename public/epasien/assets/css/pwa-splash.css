@@ -1,0 +1,66 @@
+.ep-pwa-splash {
+    position: fixed;
+    inset: 0;
+    z-index: 30000;
+    display: grid;
+    place-items: center;
+    padding: 2rem;
+    background:
+        radial-gradient(circle at 50% 42%, rgba(22, 182, 166, 0.1), transparent 34%),
+        #f6f8fb;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 220ms ease, visibility 220ms ease;
+}
+
+.ep-pwa-splash[hidden] {
+    display: none;
+}
+
+.ep-pwa-splash.is-hiding {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.ep-pwa-splash__content {
+    display: grid;
+    justify-items: center;
+    gap: 1.5rem;
+    width: min(78vw, 27rem);
+}
+
+.ep-pwa-splash__content img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.ep-pwa-splash__loader {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 0.18rem solid rgba(11, 118, 109, 0.18);
+    border-top-color: #0b766d;
+    border-radius: 50%;
+    animation: ep-pwa-splash-spin 720ms linear infinite;
+}
+
+html.ep-pwa-splash-active,
+html.ep-pwa-splash-active body {
+    overflow: hidden;
+}
+
+@keyframes ep-pwa-splash-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ep-pwa-splash {
+        transition: none;
+    }
+
+    .ep-pwa-splash__loader {
+        animation-duration: 1.4s;
+    }
+}

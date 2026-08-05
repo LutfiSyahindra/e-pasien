@@ -12,6 +12,7 @@
 .ep-notification-item.is-unread { background: #f7f6ff; }
 .ep-notification-item.is-unread::after { content: ""; position: absolute; top: 17px; right: 11px; width: 7px; height: 7px; border-radius: 50%; background: #6558df; }
 .ep-notification-item__image { display: grid; width: 50px; height: 50px; overflow: hidden; place-items: center; border-radius: 14px; color: #5c4fd7; background: #eceaff; }
+.ep-notification-item__image.is-patient-service { color: #087b72; background: #def5f0; }
 .ep-notification-item__image img { width: 100%; height: 100%; object-fit: cover; }
 .ep-notification-item__copy { min-width: 0; padding-right: 7px; }
 .ep-notification-item__copy strong { display: block; overflow: hidden; margin-bottom: 3px; color: #273149; font-size: .73rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }

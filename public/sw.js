@@ -30,7 +30,7 @@ self.addEventListener('push', function (event) {
         var foregroundClient = await notificationSoundClient(windowClients);
         var options = {
             body: payload.body || '',
-            icon: payload.icon || '/epasien/assets/images/logo-icon.png',
+            icon: payload.icon || '/epasien/assets/images/pwa-icon-192.png',
             badge: payload.badge || '/epasien/assets/images/favicon-32x32.png',
             image: payload.image,
             tag: payload.tag || 'epasien-notification',

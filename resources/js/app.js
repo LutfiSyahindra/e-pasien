@@ -22,6 +22,10 @@ const scheduleNotificationCenter = () => {
 
 startAlpine();
 
+if (document.querySelector('meta[name="epasien-patient-service-navbar-url"]')) {
+    import('./patient-service-navbar').catch(() => {});
+}
+
 if (document.querySelector('meta[name="epasien-user-id"]')) {
     if (document.readyState === 'complete') scheduleNotificationCenter();
     else window.addEventListener('load', scheduleNotificationCenter, { once: true });

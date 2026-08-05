@@ -14,6 +14,7 @@ $(function() {
     var $wrapper = $(".wrapper")
     var $sidebar = $(".sidebar-wrapper")
     var $sidebarToggle = $(".toggle-icon")
+    var $mobileSidebarToggle = $(".mobile-toggle-icon")
     var $sidebarMenu = $("#menu")
     var $sidebarSearch = $("#ep-sidebar-search")
     var desktopSidebarQuery = window.matchMedia("(min-width: 1026px)")
@@ -41,12 +42,19 @@ $(function() {
         var controlLabel = isDesktop
             ? (isExpanded ? "Ciutkan sidebar" : "Perluas sidebar")
             : "Tutup sidebar"
+        var mobileSidebarExpanded = !isDesktop && isExpanded
+        var mobileControlLabel = mobileSidebarExpanded ? "Tutup menu utama" : "Buka menu utama"
         var $controlIcon = $sidebarToggle.find("i")
 
         $sidebarToggle
             .attr("aria-expanded", String(isExpanded))
             .attr("aria-label", controlLabel)
             .attr("title", controlLabel)
+
+        $mobileSidebarToggle
+            .attr("aria-expanded", String(mobileSidebarExpanded))
+            .attr("aria-label", mobileControlLabel)
+            .attr("title", mobileControlLabel)
 
         $controlIcon
             .toggleClass("bi-chevron-double-left", isDesktop)
@@ -271,14 +279,6 @@ $(function() {
     })
 
 
-	$(".search-toggle-icon").on("click", function() {
-		$(".top-header .navbar form").addClass("full-searchbar")
-	})
-	$(".search-close-icon").on("click", function() {
-		$(".top-header .navbar form").removeClass("full-searchbar")
-	})
-
-
 	$(".chat-toggle-btn").on("click", function() {
 		$(".chat-wrapper").toggleClass("chat-toggled")
 	}), $(".chat-toggle-btn-mobile").on("click", function() {
@@ -341,11 +341,6 @@ $(function() {
 	}), $("#headercolor8").on("click", function() {
 		$("html").addClass("color-header headercolor8"), $("html").removeClass("headercolor1 headercolor2 headercolor4 headercolor5 headercolor6 headercolor7 headercolor3")
 	})
-
-
-	new PerfectScrollbar(".header-message-list")
-    new PerfectScrollbar(".header-notifications-list")
-
 
 
 });

@@ -101,7 +101,7 @@
 .role-config-feature-grid {
     display: grid;
     gap: 14px;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     margin: 18px 0;
 }
 
@@ -141,6 +141,10 @@
     background: #d97706;
 }
 
+.role-config-feature-card.tone-patient-service::before {
+    background: #8b5cf6;
+}
+
 .role-config-feature-icon {
     align-items: center;
     border-radius: 9px;
@@ -168,6 +172,12 @@
     background: #fff6e8;
     border: 1px solid #f3dfbd;
     color: #c66a08;
+}
+
+.tone-patient-service .role-config-feature-icon {
+    background: #f3efff;
+    border: 1px solid #ded3fb;
+    color: #7651cc;
 }
 
 .role-config-feature-kicker {
@@ -281,14 +291,14 @@
 .role-config-matrix {
     border: 1px solid #e0e5eb;
     border-radius: 9px;
-    min-width: 1080px;
+    min-width: 1320px;
     overflow: hidden;
 }
 
 .role-config-matrix-header,
 .role-config-matrix-row {
     display: grid;
-    grid-template-columns: minmax(220px, 1.25fr) 105px repeat(3, minmax(220px, 1fr));
+    grid-template-columns: minmax(220px, 1.25fr) 105px repeat(4, minmax(220px, 1fr));
 }
 
 .role-config-matrix-header {
@@ -415,6 +425,18 @@
     gap: 10px;
     margin: 0;
     min-width: 0;
+}
+
+.role-config-toggle.is-locked {
+    cursor: not-allowed;
+}
+
+.role-config-toggle.is-locked .role-config-switch {
+    opacity: .72;
+}
+
+.role-config-toggle.is-locked .role-config-toggle-copy strong {
+    color: #66758a;
 }
 
 .role-config-checkbox {
@@ -738,6 +760,12 @@
 @media (max-width: 991.98px) {
     .role-config-feature-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1399.98px) {
+    .role-config-feature-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 

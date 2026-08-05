@@ -7,13 +7,17 @@
 
         <title>Login - E-Pasien</title>
 
-        <link rel="icon" href="{{ asset("epasien/assets/images/favicon-32x32.png") }}" type="image/png" />
+        <meta name="theme-color" content="#0b766d">
+        <link rel="manifest" href="{{ asset("manifest.webmanifest") }}">
+        <link rel="icon" href="{{ asset("epasien/assets/images/pwa-icon-32.png") }}" type="image/png" />
+        <link rel="apple-touch-icon" href="{{ asset("epasien/assets/images/pwa-icon-180.png") }}">
 
         <link href="{{ asset("epasien/assets/css/bootstrap.min.css") }}" rel="stylesheet">
         <link href="{{ asset("epasien/assets/css/bootstrap-extended.css") }}" rel="stylesheet">
         <link href="{{ asset("epasien/assets/css/style.css") }}" rel="stylesheet">
         <link href="{{ asset("epasien/assets/css/icons.css") }}" rel="stylesheet">
         <link href="{{ asset("epasien/assets/css/pace.min.css") }}" rel="stylesheet">
+        <link href="{{ asset("epasien/assets/css/pwa-splash.css") }}" rel="stylesheet">
 
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
 
@@ -490,6 +494,8 @@
     </head>
 
     <body>
+
+        @include("template.epasien.pwa-splash")
 
         <div class="wrapper">
 

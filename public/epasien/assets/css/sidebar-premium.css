@@ -332,6 +332,32 @@ html .ep-premium-sidebar .metismenu a .menu-title {
     margin-left: 10px;
 }
 
+.ep-premium-sidebar .ep-patient-service-badge {
+    align-items: center;
+    background: linear-gradient(145deg, #f26e61, #dc4f49);
+    border: 2px solid var(--ep-sidebar-surface);
+    border-radius: 999px;
+    box-shadow: 0 6px 14px rgba(208, 69, 62, 0.24);
+    color: #ffffff;
+    display: inline-flex;
+    font-size: 9px;
+    font-weight: 800;
+    height: 21px;
+    justify-content: center;
+    line-height: 1;
+    margin-left: auto;
+    min-width: 21px;
+    padding: 0 5px;
+}
+
+.ep-premium-sidebar [data-patient-service-sidebar-link] {
+    position: relative;
+}
+
+.ep-premium-sidebar .ep-patient-service-badge[hidden] {
+    display: none;
+}
+
 html .ep-premium-sidebar .metismenu a.has-arrow::after {
     border-width: 1.4px 0 0 1.4px;
     color: #8d9aaa;
@@ -634,6 +660,16 @@ html .ep-premium-sidebar .metismenu > li.ep-sidebar-empty.is-visible {
         height: 38px;
         margin: 0;
         width: 38px;
+    }
+
+    .wrapper.toggled:not(.sidebar-hovered) .ep-premium-sidebar .ep-patient-service-badge {
+        height: 19px;
+        margin: 0;
+        min-width: 19px;
+        padding: 0 4px;
+        position: absolute;
+        right: 2px;
+        top: 1px;
     }
 
     .wrapper.toggled:not(.sidebar-hovered) .ep-premium-sidebar .metismenu .menu-title,
