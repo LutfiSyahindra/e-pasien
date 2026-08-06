@@ -26,6 +26,7 @@ class JadwalDokterPageTest extends TestCase
             'doctor_code' => 'dryunus',
             'doctor_name' => 'dr. Achmad Yunus, Sp.A',
             'doctor_initials' => 'AY',
+            'doctor_photo_url' => 'https://example.test/doctors/achmad-yunus.jpg',
             'gender_icon' => 'bi-person',
             'clinic_code' => 'ANA',
             'clinic_name' => 'Poliklinik Anak',
@@ -73,6 +74,10 @@ class JadwalDokterPageTest extends TestCase
             ->assertSeeText('Daftar secara online')
             ->assertSee('class="doctor-schedule-days"', false)
             ->assertSee('class="doctor-schedule-grid"', false)
+            ->assertSee('class="doctor-schedule-avatar doctor-schedule-photo-trigger"', false)
+            ->assertSee('data-bs-target="#doctorPhotoModal"', false)
+            ->assertSee('data-photo-url="https://example.test/doctors/achmad-yunus.jpg"', false)
+            ->assertSee('id="doctorPhotoModal"', false)
             ->assertSee('name="q"', false)
             ->assertSee('name="poli"', false)
             ->assertSee('jadwal-dokter.css');
