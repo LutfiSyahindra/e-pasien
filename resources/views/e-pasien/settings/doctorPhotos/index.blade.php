@@ -7,6 +7,14 @@
 @endpush
 
 @section("content")
+    @php
+        $visibleDoctorCount = $doctors->count();
+        $pendingPhotos = max(0, $visibleDoctorCount - $configuredPhotos);
+        $photoCoverage = $visibleDoctorCount > 0
+            ? (int) round(($configuredPhotos / $visibleDoctorCount) * 100)
+            : 0;
+    @endphp
+
     <main class="doctor-photo-page">
         <nav class="doctor-photo-breadcrumb" aria-label="Breadcrumb">
             <a href="{{ route("dashboard") }}" aria-label="Kembali ke Dashboard">
@@ -19,17 +27,19 @@
         </nav>
 
         <section class="doctor-photo-hero">
+            <span class="doctor-photo-hero-orbit orbit-one" aria-hidden="true"></span>
+            <span class="doctor-photo-hero-orbit orbit-two" aria-hidden="true"></span>
             <div class="doctor-photo-heading">
                 <span class="doctor-photo-heading-icon"><i class="bi bi-person-bounding-box"></i></span>
                 <div>
-                    <span class="doctor-photo-eyebrow">Data visual landing page</span>
+                    <span class="doctor-photo-eyebrow"><i class="bi bi-stars"></i> Galeri tenaga medis</span>
                     <h1>Foto Dokter</h1>
-                    <p>Atur foto dokter yang ditampilkan pada landing page dan kartu Jadwal Dokter pasien.</p>
+                    <p>Kelola foto profesional dokter untuk landing page dan kartu Jadwal Dokter pasien.</p>
                 </div>
             </div>
             <div class="doctor-photo-hero-status">
-                <span><i class="bi bi-crop"></i> Crop persegi</span>
-                <small>JPG, PNG, atau WEBP · Maksimal 2 MB</small>
+                <span><i class="bi bi-shield-check"></i> Siap tayang otomatis</span>
+                <small><i class="bi bi-crop"></i> Crop 1:1 &nbsp;&bull;&nbsp; JPG, PNG, WEBP &nbsp;&bull;&nbsp; Maks. 2 MB</small>
             </div>
         </section>
 
@@ -50,32 +60,63 @@
             </div>
         @endif
 
-        <section class="doctor-photo-toolbar" aria-label="Pencarian dokter">
-            <form action="{{ route("doctorPhotoSettings.index") }}" method="GET">
-                <label for="doctorPhotoSearch">Cari dokter</label>
-                <div class="doctor-photo-search-field">
-                    <i class="bi bi-search"></i>
-                    <input id="doctorPhotoSearch" type="search" name="q" value="{{ $search }}"
-                        maxlength="80" placeholder="Nama atau kode dokter..." autocomplete="off">
-                    @if ($search !== "")
-                        <a href="{{ route("doctorPhotoSettings.index") }}" aria-label="Hapus pencarian">
-                            <i class="bi bi-x-lg"></i>
-                        </a>
-                    @endif
-                </div>
-                <button type="submit"><i class="bi bi-search"></i><span>Cari</span></button>
-            </form>
-            <div class="doctor-photo-summary">
-                <span><i class="bi bi-people"></i></span>
-                <div>
-                    <strong>{{ number_format($doctors->total(), 0, ",", ".") }}</strong>
-                    <small>{{ $search !== "" ? "dokter ditemukan" : "dokter aktif" }}</small>
-                </div>
-                <div>
-                    <strong>{{ number_format($configuredPhotos, 0, ",", ".") }}</strong>
-                    <small>foto di halaman ini</small>
-                </div>
+        <div class="doctor-photo-alert danger doctor-photo-client-alert" data-photo-feedback role="alert" hidden>
+            <i class="bi bi-exclamation-triangle"></i>
+            <div>
+                <strong>Foto belum dapat diproses</strong>
+                <span data-photo-feedback-message></span>
             </div>
+            <button type="button" data-photo-feedback-close aria-label="Tutup pemberitahuan">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <section class="doctor-photo-toolbar" aria-label="Pencarian dan ringkasan dokter">
+            <div class="doctor-photo-toolbar-search">
+                <div class="doctor-photo-toolbar-title">
+                    <span>Koleksi dokter</span>
+                    <h2>{{ $search !== "" ? "Hasil pencarian" : "Kelola foto dengan cepat" }}</h2>
+                </div>
+
+                <form action="{{ route("doctorPhotoSettings.index") }}" method="GET">
+                    <label for="doctorPhotoSearch">Cari dokter berdasarkan nama atau kode</label>
+                    <div class="doctor-photo-search-field">
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                        <input id="doctorPhotoSearch" type="search" name="q" value="{{ $search }}"
+                            maxlength="80" placeholder="Cari nama atau kode dokter" autocomplete="off">
+                        @if ($search !== "")
+                            <a href="{{ route("doctorPhotoSettings.index") }}" aria-label="Hapus pencarian"
+                                title="Hapus pencarian">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        @endif
+                    </div>
+                    <button type="submit"><i class="bi bi-search"></i><span>Cari dokter</span></button>
+                </form>
+            </div>
+
+            <dl class="doctor-photo-summary">
+                <div>
+                    <dt><span class="doctor-photo-summary-icon"><i class="bi bi-people"></i></span>Dokter</dt>
+                    <dd>{{ number_format($doctors->total(), 0, ",", ".") }}</dd>
+                    <small>{{ $search !== "" ? "hasil ditemukan" : "aktif tersedia" }}</small>
+                </div>
+                <div class="is-complete">
+                    <dt><span class="doctor-photo-summary-icon"><i class="bi bi-patch-check"></i></span>Terpasang</dt>
+                    <dd>{{ number_format($configuredPhotos, 0, ",", ".") }}</dd>
+                    <small>di halaman ini</small>
+                </div>
+                <div class="{{ $pendingPhotos > 0 ? "is-pending" : "is-complete" }}">
+                    <dt>
+                        <span class="doctor-photo-summary-icon">
+                            <i class="bi {{ $pendingPhotos > 0 ? "bi-hourglass-split" : "bi-check2-all" }}"></i>
+                        </span>
+                        {{ $pendingPhotos > 0 ? "Perlu foto" : "Lengkap" }}
+                    </dt>
+                    <dd>{{ $pendingPhotos > 0 ? number_format($pendingPhotos, 0, ",", ".") : $photoCoverage."%" }}</dd>
+                    <small>di halaman ini</small>
+                </div>
+            </dl>
         </section>
 
         @if ($connectionError)
@@ -95,48 +136,56 @@
         @else
             <section class="doctor-photo-grid" aria-label="Daftar foto dokter">
                 @foreach ($doctors as $doctor)
-                    <article class="doctor-photo-card">
+                    <article class="doctor-photo-card {{ $doctor["photo_url"] ? "has-photo" : "needs-photo" }}">
                         <div class="doctor-photo-portrait">
-                            <span>{{ $doctor["doctor_initials"] }}</span>
+                            <span class="doctor-photo-initials" aria-hidden="true">{{ $doctor["doctor_initials"] }}</span>
                             @if ($doctor["photo_url"])
                                 <img src="{{ $doctor["photo_url"] }}" alt="Foto {{ $doctor["doctor_name"] }}"
                                     width="320" height="320" loading="lazy" decoding="async" onerror="this.remove()">
                             @endif
+                            <span class="doctor-photo-code">{{ $doctor["doctor_code"] }}</span>
                             <em class="{{ $doctor["photo_url"] ? "is-set" : "" }}">
                                 <i class="bi {{ $doctor["photo_url"] ? "bi-check-circle-fill" : "bi-image" }}"></i>
-                                {{ $doctor["photo_url"] ? "Foto aktif" : "Belum ada foto" }}
+                                {{ $doctor["photo_url"] ? "Siap tayang" : "Perlu foto" }}
                             </em>
                         </div>
                         <div class="doctor-photo-card-body">
-                            <span class="doctor-photo-code">{{ $doctor["doctor_code"] }}</span>
-                            <h2>{{ $doctor["doctor_name"] }}</h2>
-                            <p><i class="bi bi-person"></i> {{ $doctor["gender"] }}</p>
+                            <div class="doctor-photo-identity">
+                                <h2>{{ $doctor["doctor_name"] }}</h2>
+                                <p><i class="bi bi-person" aria-hidden="true"></i> {{ $doctor["gender"] }}</p>
+                            </div>
 
-                            <form class="doctor-photo-upload-form" method="POST"
-                                action="{{ route("doctorPhotoSettings.update") }}" enctype="multipart/form-data">
-                                @csrf
-                                <input type="hidden" name="doctor_code" value="{{ $doctor["doctor_code"] }}">
-                                <input type="hidden" name="filter_q" value="{{ $search }}">
-                                <input type="hidden" name="filter_page" value="{{ $doctors->currentPage() }}">
-                                <input class="doctor-photo-cropped-input" type="hidden" name="doctor_photo_cropped">
-                                <input class="doctor-photo-file-input" type="file" name="doctor_photo"
-                                    accept="image/png,image/jpeg,image/webp" tabindex="-1">
-                                <button class="doctor-photo-upload-button" type="button" data-photo-picker>
-                                    <i class="bi {{ $doctor["photo_url"] ? "bi-arrow-repeat" : "bi-cloud-arrow-up" }}"></i>
-                                    {{ $doctor["photo_url"] ? "Ganti & crop foto" : "Upload & crop foto" }}
-                                </button>
-                            </form>
-
-                            @if ($doctor["photo_url"])
-                                <form method="POST" action="{{ route("doctorPhotoSettings.destroy", $doctor["doctor_code"]) }}"
-                                    data-photo-delete-form>
+                            <div class="doctor-photo-card-actions">
+                                <form class="doctor-photo-upload-form" method="POST"
+                                    action="{{ route("doctorPhotoSettings.update") }}" enctype="multipart/form-data"
+                                    data-doctor-name="{{ $doctor["doctor_name"] }}">
                                     @csrf
-                                    @method("DELETE")
-                                    <button class="doctor-photo-delete-button" type="submit">
-                                        <i class="bi bi-trash3"></i> Hapus foto
+                                    <input type="hidden" name="doctor_code" value="{{ $doctor["doctor_code"] }}">
+                                    <input type="hidden" name="filter_q" value="{{ $search }}">
+                                    <input type="hidden" name="filter_page" value="{{ $doctors->currentPage() }}">
+                                    <input class="doctor-photo-cropped-input" type="hidden" name="doctor_photo_cropped">
+                                    <input class="doctor-photo-file-input" type="file" name="doctor_photo"
+                                        accept="image/png,image/jpeg,image/webp" tabindex="-1">
+                                    <button class="doctor-photo-upload-button" type="button" data-photo-picker>
+                                        <i class="bi {{ $doctor["photo_url"] ? "bi-arrow-repeat" : "bi-cloud-arrow-up" }}"></i>
+                                        <span>{{ $doctor["photo_url"] ? "Ganti foto" : "Pilih foto" }}</span>
+                                        <i class="bi bi-arrow-right-short doctor-photo-button-arrow" aria-hidden="true"></i>
                                     </button>
                                 </form>
-                            @endif
+
+                                @if ($doctor["photo_url"])
+                                    <form method="POST"
+                                        action="{{ route("doctorPhotoSettings.destroy", $doctor["doctor_code"]) }}"
+                                        data-photo-delete-form data-doctor-name="{{ $doctor["doctor_name"] }}">
+                                        @csrf
+                                        @method("DELETE")
+                                        <button class="doctor-photo-delete-button" type="submit"
+                                            title="Hapus foto {{ $doctor["doctor_name"] }}">
+                                            <i class="bi bi-trash3"></i> <span>Hapus foto</span>
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
                         </div>
                     </article>
                 @endforeach
@@ -160,8 +209,11 @@
         @endif
 
         <aside class="doctor-photo-note">
-            <i class="bi bi-info-circle-fill"></i>
-            <p><strong>Tips foto yang baik</strong> Gunakan foto menghadap depan dengan pencahayaan cukup. Area crop berbentuk persegi dan hasilnya otomatis dioptimalkan.</p>
+            <span><i class="bi bi-lightbulb-fill"></i></span>
+            <div>
+                <strong>Hasil terbaik dimulai dari foto yang tepat</strong>
+                <p>Gunakan foto menghadap depan, pencahayaan merata, dan latar yang bersih. Hasil crop persegi otomatis dioptimalkan untuk seluruh tampilan pasien.</p>
+            </div>
         </aside>
 
         <div class="modal fade doctor-photo-crop-modal" id="doctorPhotoCropModal" tabindex="-1"
@@ -170,8 +222,9 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <div>
-                            <span>Foto dokter</span>
+                            <span><i class="bi bi-stars"></i> Editor foto dokter</span>
                             <h2 class="modal-title" id="doctorPhotoCropTitle">Atur posisi foto</h2>
+                            <p>Untuk <strong data-crop-doctor>dokter terpilih</strong></p>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                     </div>
@@ -179,30 +232,56 @@
                         <div class="doctor-photo-crop-layout">
                             <div class="doctor-photo-crop-stage" data-crop-stage>
                                 <img data-crop-image alt="Preview foto yang akan dipotong">
-                                <span aria-hidden="true"><i class="bi bi-arrows-move"></i> Geser foto</span>
+                                <span aria-hidden="true"><i class="bi bi-arrows-move"></i> Geser untuk mengatur posisi</span>
                             </div>
                             <div class="doctor-photo-crop-side">
                                 <div class="doctor-photo-crop-preview">
+                                    <span class="doctor-photo-crop-preview-label">Preview hasil</span>
                                     <canvas data-crop-preview width="180" height="180"></canvas>
-                                    <span>Preview hasil</span>
+                                    <small>640 &times; 640 px</small>
                                 </div>
-                                <label for="doctorPhotoCropZoom">Zoom</label>
-                                <div class="doctor-photo-zoom-control">
-                                    <i class="bi bi-dash-circle"></i>
-                                    <input id="doctorPhotoCropZoom" type="range" min="1" max="3" step="0.01"
-                                        value="1" data-crop-zoom>
-                                    <i class="bi bi-plus-circle"></i>
+                                <div class="doctor-photo-crop-tools">
+                                    <div class="doctor-photo-crop-tool-heading">
+                                        <label for="doctorPhotoCropZoom">Perbesar foto</label>
+                                        <output for="doctorPhotoCropZoom" data-crop-zoom-output>100%</output>
+                                    </div>
+                                    <div class="doctor-photo-zoom-control">
+                                        <i class="bi bi-image" aria-hidden="true"></i>
+                                        <input id="doctorPhotoCropZoom" type="range" min="1" max="3" step="0.01"
+                                            value="1" data-crop-zoom aria-label="Perbesar atau perkecil foto">
+                                        <i class="bi bi-image-fill" aria-hidden="true"></i>
+                                    </div>
+                                    <button type="button" class="doctor-photo-crop-reset" data-crop-reset>
+                                        <i class="bi bi-arrow-counterclockwise"></i> Reset posisi
+                                    </button>
                                 </div>
-                                <button type="button" class="doctor-photo-crop-reset" data-crop-reset>
-                                    <i class="bi bi-arrow-counterclockwise"></i> Reset posisi
-                                </button>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
+                        <small><i class="bi bi-shield-check"></i> Foto dioptimalkan sebelum disimpan</small>
+                        <div>
+                            <button type="button" class="doctor-photo-crop-cancel" data-bs-dismiss="modal">Batal</button>
+                            <button type="button" class="doctor-photo-crop-save" data-crop-save disabled>
+                                <i class="bi bi-check2-circle"></i> <span>Gunakan foto</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade doctor-photo-delete-modal" id="doctorPhotoDeleteModal" tabindex="-1"
+            aria-labelledby="doctorPhotoDeleteTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content">
+                    <div class="doctor-photo-delete-icon"><i class="bi bi-trash3"></i></div>
+                    <h2 class="modal-title" id="doctorPhotoDeleteTitle">Hapus foto dokter?</h2>
+                    <p>Foto <strong data-delete-doctor>dokter ini</strong> akan dihapus dan tampilan pasien kembali menggunakan inisial.</p>
+                    <div class="doctor-photo-delete-actions">
                         <button type="button" class="doctor-photo-crop-cancel" data-bs-dismiss="modal">Batal</button>
-                        <button type="button" class="doctor-photo-crop-save" data-crop-save disabled>
-                            <i class="bi bi-check2-circle"></i> Gunakan foto
+                        <button type="button" class="doctor-photo-delete-confirm" data-delete-confirm>
+                            <i class="bi bi-trash3"></i> <span>Ya, hapus foto</span>
                         </button>
                     </div>
                 </div>

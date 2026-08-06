@@ -7,12 +7,24 @@
         var image = document.querySelector("[data-crop-image]");
         var preview = document.querySelector("[data-crop-preview]");
         var zoom = document.querySelector("[data-crop-zoom]");
+        var zoomOutput = document.querySelector("[data-crop-zoom-output]");
+        var cropDoctor = document.querySelector("[data-crop-doctor]");
         var resetButton = document.querySelector("[data-crop-reset]");
         var saveButton = document.querySelector("[data-crop-save]");
         var modal = modalElement && window.bootstrap ? new window.bootstrap.Modal(modalElement) : null;
+        var feedback = document.querySelector("[data-photo-feedback]");
+        var feedbackMessage = document.querySelector("[data-photo-feedback-message]");
+        var feedbackClose = document.querySelector("[data-photo-feedback-close]");
+        var deleteModalElement = document.getElementById("doctorPhotoDeleteModal");
+        var deleteModal = deleteModalElement && window.bootstrap
+            ? new window.bootstrap.Modal(deleteModalElement)
+            : null;
+        var deleteDoctor = document.querySelector("[data-delete-doctor]");
+        var deleteConfirmButton = document.querySelector("[data-delete-confirm]");
         var activeInput = null;
         var activeForm = null;
         var activeCroppedInput = null;
+        var pendingDeleteForm = null;
         var state = {
             baseScale: 1,
             dragging: false,
@@ -37,7 +49,24 @@
         }
 
         function showError(message) {
-            window.alert(message);
+            if (!feedback || !feedbackMessage) {
+                window.alert(message);
+                return;
+            }
+
+            feedbackMessage.textContent = message;
+            feedback.hidden = false;
+            feedback.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+
+        function hideError() {
+            if (feedback) {
+                feedback.hidden = true;
+            }
+
+            if (feedbackMessage) {
+                feedbackMessage.textContent = "";
+            }
         }
 
         function releaseObjectUrl() {
@@ -67,6 +96,12 @@
 
             if (saveButton) {
                 saveButton.disabled = true;
+                saveButton.classList.remove("is-loading");
+
+                var saveIcon = saveButton.querySelector("i");
+                var saveLabel = saveButton.querySelector("span");
+                saveIcon && (saveIcon.className = "bi bi-check2-circle");
+                saveLabel && (saveLabel.textContent = "Gunakan foto");
             }
 
             if (!state.submitting) {
@@ -132,6 +167,7 @@
 
             var zoomValue = zoom ? parseFloat(zoom.value) : state.zoom;
             state.zoom = clamp(isNaN(zoomValue) ? 1 : zoomValue, 1, 3);
+            zoomOutput && (zoomOutput.textContent = Math.round(state.zoom * 100) + "%");
             var baseWidth = state.naturalWidth * state.baseScale;
             var baseHeight = state.naturalHeight * state.baseScale;
             var maxOffsetX = Math.max((baseWidth * state.zoom - state.stageSize) / 2, 0);
@@ -174,6 +210,7 @@
 
             releaseObjectUrl();
             activeCroppedInput.value = "";
+            hideError();
             state.loaded = false;
             state.submitting = false;
             saveButton.disabled = true;
@@ -225,6 +262,12 @@
             activeInput.value = "";
             state.submitting = true;
             saveButton.disabled = true;
+            saveButton.classList.add("is-loading");
+
+            var saveIcon = saveButton.querySelector("i");
+            var saveLabel = saveButton.querySelector("span");
+            saveIcon && (saveIcon.className = "bi bi-arrow-repeat");
+            saveLabel && (saveLabel.textContent = "Menyimpan...");
             activeForm.submit();
         }
 
@@ -232,6 +275,9 @@
             button.addEventListener("click", function () {
                 var form = button.closest(".doctor-photo-upload-form");
                 var input = form && form.querySelector(".doctor-photo-file-input");
+                var doctorName = form && form.getAttribute("data-doctor-name");
+                cropDoctor && (cropDoctor.textContent = doctorName || "dokter terpilih");
+                hideError();
                 input && input.click();
             });
         });
@@ -317,13 +363,53 @@
             updateCrop();
         });
         saveButton && saveButton.addEventListener("click", saveCrop);
+        feedbackClose && feedbackClose.addEventListener("click", hideError);
 
         document.querySelectorAll("[data-photo-delete-form]").forEach(function (form) {
             form.addEventListener("submit", function (event) {
-                if (!window.confirm("Hapus foto dokter ini? Tampilan akan kembali menggunakan inisial.")) {
-                    event.preventDefault();
+                event.preventDefault();
+
+                if (!deleteModal) {
+                    if (window.confirm("Hapus foto dokter ini? Tampilan akan kembali menggunakan inisial.")) {
+                        form.submit();
+                    }
+
+                    return;
                 }
+
+                pendingDeleteForm = form;
+                deleteDoctor && (deleteDoctor.textContent = form.getAttribute("data-doctor-name") || "dokter ini");
+                deleteModal.show();
             });
+        });
+
+        deleteConfirmButton && deleteConfirmButton.addEventListener("click", function () {
+            if (!pendingDeleteForm) {
+                return;
+            }
+
+            deleteConfirmButton.disabled = true;
+            deleteConfirmButton.classList.add("is-loading");
+
+            var deleteIcon = deleteConfirmButton.querySelector("i");
+            var deleteLabel = deleteConfirmButton.querySelector("span");
+            deleteIcon && (deleteIcon.className = "bi bi-arrow-repeat");
+            deleteLabel && (deleteLabel.textContent = "Menghapus...");
+            pendingDeleteForm.submit();
+        });
+
+        deleteModalElement && deleteModalElement.addEventListener("hidden.bs.modal", function () {
+            pendingDeleteForm = null;
+
+            if (deleteConfirmButton) {
+                deleteConfirmButton.disabled = false;
+                deleteConfirmButton.classList.remove("is-loading");
+
+                var deleteIcon = deleteConfirmButton.querySelector("i");
+                var deleteLabel = deleteConfirmButton.querySelector("span");
+                deleteIcon && (deleteIcon.className = "bi bi-trash3");
+                deleteLabel && (deleteLabel.textContent = "Ya, hapus foto");
+            }
         });
 
         window.addEventListener("resize", function () {
