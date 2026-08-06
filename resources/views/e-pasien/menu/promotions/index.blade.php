@@ -170,7 +170,6 @@
                             <p>{{ Str::limit($featured->caption, 150) }}</p>
                             <strong>Lihat selengkapnya <i class="bi bi-arrow-right"></i></strong>
                         </div>
-                        <div class="promo-featured-card__time"><small>Berakhir</small><strong>{{ $featured->ends_at->translatedFormat("d M Y") }}</strong></div>
                     </a>
                 </section>
             @endif
@@ -189,7 +188,6 @@
                                     <span class="promo-patient-card__badge is-{{ $promotion->category }}"><i class="bi {{ $promotion->category_icon }}"></i> {{ $promotion->category_label }}</span>
                                 </span>
                                 <span class="promo-patient-card__body">
-                                    <small><i class="bi bi-clock"></i> Hingga {{ $promotion->ends_at->translatedFormat("d M Y") }}</small>
                                     <strong>{{ $promotion->title }}</strong>
                                     <span>{{ Str::limit($promotion->caption, 96) }}</span>
                                     <em>Lihat detail <i class="bi bi-arrow-up-right"></i></em>

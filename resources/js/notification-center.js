@@ -14,6 +14,7 @@ const notificationCacheKey = `epasien.notifications.v1.${userId}`;
 let notificationSound;
 let notificationSoundUnlocked = false;
 let unreadCount = 0;
+let promotionUnreadCount = 0;
 let notificationsLoaded = false;
 let notificationsLoading;
 
@@ -144,6 +145,22 @@ const setBadge = (count) => {
     badge.hidden = unreadCount < 1;
 };
 
+const setPromotionBadge = (count) => {
+    promotionUnreadCount = Number(count) || 0;
+    const badge = document.querySelector('[data-promotion-sidebar-badge]');
+    const link = document.querySelector('[data-promotion-sidebar-link]');
+    if (badge) {
+        badge.textContent = promotionUnreadCount > 99 ? '99+' : String(promotionUnreadCount);
+        badge.hidden = promotionUnreadCount < 1;
+    }
+    link?.setAttribute(
+        'aria-label',
+        promotionUnreadCount > 0
+            ? `Promosi & Informasi, ${promotionUnreadCount} konten baru`
+            : 'Promosi & Informasi',
+    );
+};
+
 const notificationItem = (item) => {
     const button = document.createElement('button');
     const data = normalizedNotificationData(item.data);
@@ -189,6 +206,7 @@ const notificationItem = (item) => {
             try {
                 const result = await request(`${readBaseUrl}/${item.id}/read`, { method: 'PATCH', body: '{}' });
                 setBadge(result.unread_count || 0);
+                setPromotionBadge(result.promotion_unread_count || 0);
                 button.classList.remove('is-unread');
                 forgetCachedNotifications();
             } catch (_) {}
@@ -200,9 +218,10 @@ const notificationItem = (item) => {
 
 const renderNotifications = (payload) => {
     const list = document.querySelector('[data-notification-list]');
+    setBadge(payload.unread_count || 0);
+    setPromotionBadge(payload.promotion_unread_count || 0);
     if (!list) return;
     list.replaceChildren();
-    setBadge(payload.unread_count || 0);
     if (!payload.notifications?.length) {
         const empty = document.createElement('div');
         empty.className = 'ep-notification-empty';
@@ -635,6 +654,7 @@ const subscribeToRealtime = async () => {
         forgetCachedNotifications();
         notificationsLoaded = false;
         setBadge(unreadCount + 1);
+        if (notification.kind === 'promotion') setPromotionBadge(promotionUnreadCount + 1);
 
         if (document.querySelector('.ep-notification-menu')?.classList.contains('show')) {
             loadNotifications({ force: true });
@@ -644,7 +664,12 @@ const subscribeToRealtime = async () => {
 
 const initializeNotificationCenter = () => {
     const cached = cachedNotifications();
-    if (cached) setBadge(cached.unread_count || 0);
+    if (cached) {
+        setBadge(cached.unread_count || 0);
+        setPromotionBadge(cached.promotion_unread_count || 0);
+    }
+
+    loadNotifications({ force: true });
 
     document.addEventListener('pointerdown', prepareNotificationSound, { once: true, capture: true });
     document.addEventListener('keydown', prepareNotificationSound, { once: true, capture: true });

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Epasien;
 
 use App\Http\Controllers\Controller;
 use App\Models\Promotion;
+use App\Notifications\PromotionPublishedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -24,7 +25,7 @@ class NotificationController extends Controller
             ->keyBy(fn (Promotion $promotion): string => (string) $promotion->getKey());
 
         return response()->json([
-            'unread_count' => $request->user()->unreadNotifications()->count(),
+            ...$this->unreadCounts($request),
             'notifications' => $notifications->map(fn ($notification): array => [
                 'id' => $notification->id,
                 'data' => $this->normalizeData($notification->data, $promotions),
@@ -40,14 +41,27 @@ class NotificationController extends Controller
         $item = $request->user()->notifications()->whereKey($notification)->firstOrFail();
         $item->markAsRead();
 
-        return response()->json(['unread_count' => $request->user()->unreadNotifications()->count()]);
+        return response()->json($this->unreadCounts($request));
     }
 
     public function readAll(Request $request): JsonResponse
     {
         $request->user()->unreadNotifications->markAsRead();
 
-        return response()->json(['unread_count' => 0]);
+        return response()->json([
+            'unread_count' => 0,
+            'promotion_unread_count' => 0,
+        ]);
+    }
+
+    private function unreadCounts(Request $request): array
+    {
+        return [
+            'unread_count' => $request->user()->unreadNotifications()->count(),
+            'promotion_unread_count' => $request->user()->unreadNotifications()
+                ->where('type', PromotionPublishedNotification::class)
+                ->count(),
+        ];
     }
 
     private function normalizeData(array $data, Collection $promotions): array

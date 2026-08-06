@@ -162,10 +162,11 @@
                                 </li>
                             @else
                                 <li class="{{ request()->routeIs("promotions.*") ? "mm-active" : "" }}">
-                                    <a href="{{ route("promotions.index") }}"
+                                    <a href="{{ route("promotions.index") }}" data-promotion-sidebar-link
                                         @if (request()->routeIs("promotions.*")) aria-current="page" @endif>
                                         <div class="parent-icon"><i class="bi bi-stars"></i></div>
                                         <div class="menu-title">Promosi &amp; Informasi</div>
+                                        <span class="ep-promotion-badge" data-promotion-sidebar-badge hidden aria-hidden="true">0</span>
                                     </a>
                                 </li>
                             @endcan
