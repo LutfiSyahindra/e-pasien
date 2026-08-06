@@ -18,18 +18,7 @@ class JadwalDokterRepository
         ?string $clinicCode,
         int $perPage
     ): LengthAwarePaginator {
-        return $this->activeScheduleQuery()
-            ->select(
-                'jadwal_spesialis.kd_dokter',
-                'dokter.nm_dokter',
-                'dokter.jk',
-                'jadwal_spesialis.kd_poli',
-                'poliklinik.nm_poli',
-                'jadwal_spesialis.hari_kerja',
-                'jadwal_spesialis.jam_mulai',
-                'jadwal_spesialis.jam_selesai',
-                'jadwal_spesialis.kuota'
-            )
+        return $this->scheduleListQuery()
             ->when(
                 $search !== null,
                 function (Builder $query) use ($search): void {
@@ -64,6 +53,16 @@ class JadwalDokterRepository
             ->orderBy('dokter.nm_dokter')
             ->paginate($perPage)
             ->withQueryString();
+    }
+
+    public function schedulesForDay(string $day, int $limit): Collection
+    {
+        return $this->scheduleListQuery()
+            ->where('jadwal_spesialis.hari_kerja', $day)
+            ->orderBy('jadwal_spesialis.jam_mulai')
+            ->orderBy('dokter.nm_dokter')
+            ->limit($limit)
+            ->get();
     }
 
     public function clinics(): Collection
@@ -120,6 +119,21 @@ class JadwalDokterRepository
             ->whereNotNull('poliklinik.nm_poli')
             ->where('dokter.nm_dokter', '<>', '')
             ->where('poliklinik.nm_poli', '<>', '');
+    }
+
+    private function scheduleListQuery(): Builder
+    {
+        return $this->activeScheduleQuery()->select(
+            'jadwal_spesialis.kd_dokter',
+            'dokter.nm_dokter',
+            'dokter.jk',
+            'jadwal_spesialis.kd_poli',
+            'poliklinik.nm_poli',
+            'jadwal_spesialis.hari_kerja',
+            'jadwal_spesialis.jam_mulai',
+            'jadwal_spesialis.jam_selesai',
+            'jadwal_spesialis.kuota'
+        );
     }
 
     private function connection(): Connection

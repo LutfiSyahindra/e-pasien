@@ -152,6 +152,20 @@ class DaftarOnlineService
         return $this->pendingRegistrationForMedicalRecord((string) $user->username);
     }
 
+    public function upcomingRegistration(User $user): ?array
+    {
+        $medicalRecordNumber = trim((string) $user->username);
+
+        if ($medicalRecordNumber === '') {
+            return null;
+        }
+
+        $registration = $this->daftarOnlineRepository
+            ->findUpcomingRegistration($medicalRecordNumber);
+
+        return $registration ? $this->formatRegistration($registration) : null;
+    }
+
     public function pendingRegistrationForMedicalRecord(string $medicalRecordNumber): ?array
     {
         $medicalRecordNumber = trim($medicalRecordNumber);

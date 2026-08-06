@@ -44,6 +44,51 @@ class DaftarOnlineServiceTest extends TestCase
         $this->assertNull($service->patientForUser($user));
     }
 
+    public function test_upcoming_registration_is_formatted_for_dashboard(): void
+    {
+        $registration = (object) [
+            'no_reg' => '007',
+            'no_rawat' => '2026/08/07/000001',
+            'no_rkm_medis' => '000123',
+            'nm_pasien' => 'Budi Santoso',
+            'no_tlp' => '08123456789',
+            'tgl_registrasi' => '2026-08-07',
+            'jam_reg' => '08:00:00',
+            'nm_dokter' => 'dr. Sehat',
+            'kd_dokter' => 'D001',
+            'nm_poli' => 'Poliklinik Anak',
+            'kd_poli' => 'ANA',
+            'png_jawab' => 'BPJS Kesehatan',
+            'kd_pj' => 'BPJ',
+            'stts' => 'Belum',
+            'sudah_checkin' => 0,
+            'status_bayar' => 'Belum Bayar',
+            'status_lanjut' => 'Ralan',
+            'stts_daftar' => 'Lama',
+            'status_poli' => 'Lama',
+            'biaya_reg' => 0,
+            'umurdaftar' => '35',
+            'sttsumur' => 'Th',
+            'p_jawab' => 'Budi',
+            'almt_pj' => 'Jl. Sehat',
+            'hubunganpj' => 'DIRI SENDIRI',
+        ];
+        $repository = $this->createMock(DaftarOnlineRepository::class);
+        $repository
+            ->expects($this->once())
+            ->method('findUpcomingRegistration')
+            ->with('000123')
+            ->willReturn($registration);
+
+        $result = (new DaftarOnlineService($repository))
+            ->upcomingRegistration(new User(['username' => ' 000123 ']));
+
+        $this->assertSame('007', $result['no_reg']);
+        $this->assertSame('Poliklinik Anak', $result['poli']);
+        $this->assertSame('warning', $result['status_tone']);
+        $this->assertSame('07', $result['tanggal_angka']);
+    }
+
     public function test_search_patients_uses_trimmed_query_and_bounded_limit(): void
     {
         $patients = collect([

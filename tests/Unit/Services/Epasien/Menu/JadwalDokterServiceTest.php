@@ -6,6 +6,7 @@ use App\Repositories\epasien\menu\JadwalDokterRepository;
 use App\Repositories\epasien\settings\DoctorPhotoRepository;
 use App\Services\epasien\menu\JadwalDokterService;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
@@ -215,6 +216,46 @@ class JadwalDokterServiceTest extends TestCase
             '/storage/doctor-photos/d001.webp',
             $page['schedules']->items()[0]['doctor_photo_url']
         );
+    }
+
+    public function test_today_returns_a_small_formatted_schedule_collection(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-04 08:00:00', 'Asia/Jakarta'));
+
+        try {
+            $repository = $this->createMock(JadwalDokterRepository::class);
+            $photoRepository = $this->createMock(DoctorPhotoRepository::class);
+            $repository
+                ->expects($this->once())
+                ->method('schedulesForDay')
+                ->with('SELASA', 6)
+                ->willReturn(collect([
+                    (object) [
+                        'kd_dokter' => 'D001',
+                        'nm_dokter' => 'dr. Sehat',
+                        'jk' => 'L',
+                        'kd_poli' => 'INT',
+                        'nm_poli' => 'Poliklinik Penyakit Dalam',
+                        'hari_kerja' => 'SELASA',
+                        'jam_mulai' => '08:00:00',
+                        'jam_selesai' => '10:00:00',
+                        'kuota' => 20,
+                    ],
+                ]));
+            $photoRepository
+                ->expects($this->once())
+                ->method('urlsForCodes')
+                ->with(['D001'])
+                ->willReturn(['D001' => '/storage/doctor-photos/d001.webp']);
+
+            $schedules = (new JadwalDokterService($repository, $photoRepository))->today();
+
+            $this->assertCount(1, $schedules);
+            $this->assertSame('08.00 – 10.00 WIB', $schedules->first()['time_label']);
+            $this->assertSame('/storage/doctor-photos/d001.webp', $schedules->first()['doctor_photo_url']);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     private function service(JadwalDokterRepository $repository): JadwalDokterService

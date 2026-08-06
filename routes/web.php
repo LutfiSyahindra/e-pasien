@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Epasien\bridging\RencanaKontrolController;
+use App\Http\Controllers\Epasien\DashboardController;
 use App\Http\Controllers\Epasien\menu\DaftarOnlineController;
 use App\Http\Controllers\Epasien\menu\FasilitasTarif\KamarController;
 use App\Http\Controllers\Epasien\menu\FasilitasTarif\LaboratoriumController;
@@ -32,9 +33,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingPageController::class, 'index'])->name('landingPage.index');
 
-Route::get('/dashboard', function () {
-    return view('e-pasien.dashboard');
-})->middleware([
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware([
     'auth',
     'verified',
     'permission:EPASIEN.MENU',

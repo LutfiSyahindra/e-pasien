@@ -173,6 +173,26 @@ class JadwalDokterService
         };
     }
 
+    public function today(int $limit = 6): Collection
+    {
+        $limit = max(1, min($limit, 12));
+        $day = $this->currentDay();
+        $databaseDay = DoctorScheduleDay::toDatabase($day);
+        $schedules = Cache::flexible(
+            'epasien:khanza:doctor-schedules:today:v1:'.$databaseDay.':'.$limit,
+            [
+                self::LIST_CACHE_FRESH_SECONDS,
+                self::LIST_CACHE_STALE_SECONDS,
+            ],
+            fn (): Collection => $this->jadwalDokterRepository
+                ->schedulesForDay($databaseDay, $limit)
+                ->map(fn (object $schedule): array => $this->formatSchedule($schedule))
+                ->values()
+        );
+
+        return $this->withDoctorPhotos($schedules);
+    }
+
     /**
      * @return array<string, array{label: string, short: string}>
      */
@@ -294,17 +314,26 @@ class JadwalDokterService
             return;
         }
 
+        $schedules->setCollection(
+            $this->withDoctorPhotos($schedules->getCollection())
+        );
+    }
+
+    private function withDoctorPhotos(Collection $schedules): Collection
+    {
+        if ($schedules->isEmpty()) {
+            return $schedules;
+        }
+
         $photoUrls = $this->doctorPhotoRepository->urlsForCodes(
-            $schedules->getCollection()->pluck('doctor_code')->all()
+            $schedules->pluck('doctor_code')->all()
         );
 
-        $schedules->setCollection($schedules->getCollection()->map(
-            function (array $schedule) use ($photoUrls): array {
-                $schedule['doctor_photo_url'] = $photoUrls[$schedule['doctor_code']] ?? null;
+        return $schedules->map(function (array $schedule) use ($photoUrls): array {
+            $schedule['doctor_photo_url'] = $photoUrls[$schedule['doctor_code']] ?? null;
 
-                return $schedule;
-            }
-        ));
+            return $schedule;
+        });
     }
 
     private function text(mixed $value): string
