@@ -332,7 +332,8 @@ html .ep-premium-sidebar .metismenu a .menu-title {
     margin-left: 10px;
 }
 
-.ep-premium-sidebar .ep-patient-service-badge {
+.ep-premium-sidebar .ep-patient-service-badge,
+.ep-premium-sidebar .ep-promotion-badge {
     align-items: center;
     background: linear-gradient(145deg, #f26e61, #dc4f49);
     border: 2px solid var(--ep-sidebar-surface);
@@ -350,11 +351,18 @@ html .ep-premium-sidebar .metismenu a .menu-title {
     padding: 0 5px;
 }
 
-.ep-premium-sidebar [data-patient-service-sidebar-link] {
+.ep-premium-sidebar .ep-promotion-badge {
+    background: linear-gradient(145deg, #7567ee, #5848d6);
+    box-shadow: 0 6px 14px rgba(79, 65, 203, 0.26);
+}
+
+.ep-premium-sidebar [data-patient-service-sidebar-link],
+.ep-premium-sidebar [data-promotion-sidebar-link] {
     position: relative;
 }
 
-.ep-premium-sidebar .ep-patient-service-badge[hidden] {
+.ep-premium-sidebar .ep-patient-service-badge[hidden],
+.ep-premium-sidebar .ep-promotion-badge[hidden] {
     display: none;
 }
 
@@ -662,7 +670,8 @@ html .ep-premium-sidebar .metismenu > li.ep-sidebar-empty.is-visible {
         width: 38px;
     }
 
-    .wrapper.toggled:not(.sidebar-hovered) .ep-premium-sidebar .ep-patient-service-badge {
+    .wrapper.toggled:not(.sidebar-hovered) .ep-premium-sidebar .ep-patient-service-badge,
+    .wrapper.toggled:not(.sidebar-hovered) .ep-premium-sidebar .ep-promotion-badge {
         height: 19px;
         margin: 0;
         min-width: 19px;

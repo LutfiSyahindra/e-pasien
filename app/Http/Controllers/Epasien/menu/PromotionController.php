@@ -7,6 +7,7 @@ use App\Http\Requests\Epasien\Menu\StorePromotionRequest;
 use App\Http\Requests\Epasien\Menu\UpdatePromotionRequest;
 use App\Models\Promotion;
 use App\Models\PromotionConfiguration;
+use App\Notifications\PromotionPublishedNotification;
 use App\Services\epasien\menu\PromotionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -83,6 +84,8 @@ class PromotionController extends Controller
             ]);
         }
 
+        $this->markNotificationsAsRead($request);
+
         $query = Promotion::query()
             ->active($now)
             ->when($category !== 'all', fn ($query) => $query->where('category', $category))
@@ -103,6 +106,10 @@ class PromotionController extends Controller
     public function show(Request $request, Promotion $promotion): View
     {
         abort_unless($promotion->is_active || $request->user()->can('EPASIEN.MENU.PROMOSI.KELOLA'), 404);
+
+        if (! $request->user()->can('EPASIEN.MENU.PROMOSI.KELOLA')) {
+            $this->markNotificationsAsRead($request, $promotion);
+        }
 
         return view('e-pasien.menu.promotions.show', compact('promotion'));
     }
@@ -163,5 +170,17 @@ class PromotionController extends Controller
         $this->service->delete($promotion);
 
         return redirect()->route('promotions.index')->with('success', 'Konten berhasil dihapus.');
+    }
+
+    private function markNotificationsAsRead(Request $request, ?Promotion $promotion = null): void
+    {
+        $notifications = $request->user()->unreadNotifications()
+            ->where('type', PromotionPublishedNotification::class);
+
+        if ($promotion) {
+            $notifications->where('data->promotion_id', $promotion->getKey());
+        }
+
+        $notifications->update(['read_at' => now()]);
     }
 }

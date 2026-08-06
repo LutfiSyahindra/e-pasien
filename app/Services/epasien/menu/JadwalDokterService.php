@@ -3,6 +3,7 @@
 namespace App\Services\epasien\menu;
 
 use App\Repositories\epasien\menu\JadwalDokterRepository;
+use App\Repositories\epasien\settings\DoctorPhotoRepository;
 use App\Support\Epasien\DoctorScheduleDay;
 use Carbon\CarbonInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -32,7 +33,8 @@ class JadwalDokterService
     ];
 
     public function __construct(
-        private readonly JadwalDokterRepository $jadwalDokterRepository
+        private readonly JadwalDokterRepository $jadwalDokterRepository,
+        private readonly DoctorPhotoRepository $doctorPhotoRepository
     ) {}
 
     /**
@@ -76,6 +78,7 @@ class JadwalDokterService
             }
         );
         $schedules->setPath(LengthAwarePaginator::resolveCurrentPath());
+        $this->attachDoctorPhotos($schedules);
 
         $summary = Cache::flexible(
             'epasien:khanza:doctor-schedules:summary:v1',
@@ -170,6 +173,26 @@ class JadwalDokterService
         };
     }
 
+    public function today(int $limit = 6): Collection
+    {
+        $limit = max(1, min($limit, 12));
+        $day = $this->currentDay();
+        $databaseDay = DoctorScheduleDay::toDatabase($day);
+        $schedules = Cache::flexible(
+            'epasien:khanza:doctor-schedules:today:v1:'.$databaseDay.':'.$limit,
+            [
+                self::LIST_CACHE_FRESH_SECONDS,
+                self::LIST_CACHE_STALE_SECONDS,
+            ],
+            fn (): Collection => $this->jadwalDokterRepository
+                ->schedulesForDay($databaseDay, $limit)
+                ->map(fn (object $schedule): array => $this->formatSchedule($schedule))
+                ->values()
+        );
+
+        return $this->withDoctorPhotos($schedules);
+    }
+
     /**
      * @return array<string, array{label: string, short: string}>
      */
@@ -224,6 +247,7 @@ class JadwalDokterService
             'doctor_code' => $this->text($schedule->kd_dokter ?? null),
             'doctor_name' => $doctorName,
             'doctor_initials' => $this->initials($doctorName),
+            'doctor_photo_url' => null,
             'gender_icon' => ($schedule->jk ?? null) === 'P'
                 ? 'bi-person-heart'
                 : 'bi-person',
@@ -282,6 +306,34 @@ class JadwalDokterService
             fn (string $word): string => mb_substr($word, 0, 1),
             $words
         )));
+    }
+
+    private function attachDoctorPhotos(LengthAwarePaginator $schedules): void
+    {
+        if ($schedules->isEmpty()) {
+            return;
+        }
+
+        $schedules->setCollection(
+            $this->withDoctorPhotos($schedules->getCollection())
+        );
+    }
+
+    private function withDoctorPhotos(Collection $schedules): Collection
+    {
+        if ($schedules->isEmpty()) {
+            return $schedules;
+        }
+
+        $photoUrls = $this->doctorPhotoRepository->urlsForCodes(
+            $schedules->pluck('doctor_code')->all()
+        );
+
+        return $schedules->map(function (array $schedule) use ($photoUrls): array {
+            $schedule['doctor_photo_url'] = $photoUrls[$schedule['doctor_code']] ?? null;
+
+            return $schedule;
+        });
     }
 
     private function text(mixed $value): string

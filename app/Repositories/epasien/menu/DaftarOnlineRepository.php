@@ -201,29 +201,22 @@ class DaftarOnlineRepository
 
     public function findPendingRegistration(string $medicalRecordNumber): ?object
     {
-        return $this->registrationQuery($medicalRecordNumber)
-            ->selectRaw(
-                'EXISTS (
-                    SELECT 1
-                    FROM checkin_poli
-                    WHERE checkin_poli.no_rawat = reg_periksa.no_rawat
-                ) AS sudah_checkin'
-            )
-            ->where('reg_periksa.stts', 'Belum')
-            ->whereRaw(
-                'UPPER(TRIM(reg_periksa.kd_poli)) NOT LIKE ?',
-                [self::EMERGENCY_CLINIC_CODE_PREFIX.'%']
-            )
-            ->whereRaw(
-                "UPPER(TRIM(COALESCE(poliklinik.nm_poli, ''))) NOT IN (?, ?, ?, ?)",
-                self::IGNORED_ACTIVE_VISIT_CLINIC_NAMES
-            )
-            ->whereRaw(
-                "UPPER(TRIM(COALESCE(poliklinik.nm_poli, ''))) NOT LIKE ?",
-                ['%'.self::IGNORED_ACTIVE_VISIT_CLINIC_NAME_FRAGMENT.'%']
-            )
+        return $this->eligiblePendingRegistrationQuery($medicalRecordNumber)
             ->orderByDesc('reg_periksa.tgl_registrasi')
             ->orderByDesc('reg_periksa.jam_reg')
+            ->first();
+    }
+
+    public function findUpcomingRegistration(string $medicalRecordNumber): ?object
+    {
+        return $this->eligiblePendingRegistrationQuery($medicalRecordNumber)
+            ->where(
+                'reg_periksa.tgl_registrasi',
+                '>=',
+                Carbon::now('Asia/Jakarta')->toDateString()
+            )
+            ->orderBy('reg_periksa.tgl_registrasi')
+            ->orderBy('reg_periksa.jam_reg')
             ->first();
     }
 
@@ -609,6 +602,31 @@ class DaftarOnlineRepository
             ->when(
                 $medicalRecordNumber !== null,
                 fn (Builder $query) => $query->where('reg_periksa.no_rkm_medis', $medicalRecordNumber)
+            );
+    }
+
+    private function eligiblePendingRegistrationQuery(string $medicalRecordNumber): Builder
+    {
+        return $this->registrationQuery($medicalRecordNumber)
+            ->selectRaw(
+                'EXISTS (
+                    SELECT 1
+                    FROM checkin_poli
+                    WHERE checkin_poli.no_rawat = reg_periksa.no_rawat
+                ) AS sudah_checkin'
+            )
+            ->where('reg_periksa.stts', 'Belum')
+            ->whereRaw(
+                'UPPER(TRIM(reg_periksa.kd_poli)) NOT LIKE ?',
+                [self::EMERGENCY_CLINIC_CODE_PREFIX.'%']
+            )
+            ->whereRaw(
+                "UPPER(TRIM(COALESCE(poliklinik.nm_poli, ''))) NOT IN (?, ?, ?, ?)",
+                self::IGNORED_ACTIVE_VISIT_CLINIC_NAMES
+            )
+            ->whereRaw(
+                "UPPER(TRIM(COALESCE(poliklinik.nm_poli, ''))) NOT LIKE ?",
+                ['%'.self::IGNORED_ACTIVE_VISIT_CLINIC_NAME_FRAGMENT.'%']
             );
     }
 

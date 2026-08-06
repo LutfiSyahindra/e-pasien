@@ -242,10 +242,27 @@
                             </div>
 
                             <div class="doctor-schedule-doctor">
-                                <span class="doctor-schedule-avatar"
-                                    aria-hidden="true">
-                                    {{ $schedule["doctor_initials"] }}
-                                </span>
+                                @if (!empty($schedule["doctor_photo_url"] ?? null))
+                                    <button type="button"
+                                        class="doctor-schedule-avatar doctor-schedule-photo-trigger"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#doctorPhotoModal"
+                                        data-photo-url="{{ $schedule["doctor_photo_url"] }}"
+                                        data-doctor-name="{{ $schedule["doctor_name"] }}"
+                                        data-doctor-initials="{{ $schedule["doctor_initials"] }}"
+                                        aria-label="Perbesar foto {{ $schedule["doctor_name"] }}">
+                                        <span>{{ $schedule["doctor_initials"] }}</span>
+                                        <img src="{{ $schedule["doctor_photo_url"] }}"
+                                            alt="" width="60" height="60" loading="lazy"
+                                            decoding="async"
+                                            onerror="this.parentElement.disabled = true; this.remove()">
+                                    </button>
+                                @else
+                                    <span class="doctor-schedule-avatar"
+                                        aria-hidden="true">
+                                        <span>{{ $schedule["doctor_initials"] }}</span>
+                                    </span>
+                                @endif
                                 <div>
                                     <small>Dokter spesialis</small>
                                     <h3>{{ $schedule["doctor_name"] }}</h3>
@@ -332,6 +349,28 @@
                 antrean sebelum datang ke rumah sakit.
             </p>
         </aside>
+
+        <div class="modal fade doctor-schedule-photo-modal" id="doctorPhotoModal"
+            tabindex="-1" aria-labelledby="doctorPhotoModalTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div>
+                            <small>Foto dokter</small>
+                            <h2 class="modal-title" id="doctorPhotoModalTitle">Dokter</h2>
+                        </div>
+                        <button type="button" class="btn-close"
+                            data-bs-dismiss="modal" aria-label="Tutup foto"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="doctor-schedule-photo-preview">
+                            <span id="doctorPhotoModalInitials" aria-hidden="true"></span>
+                            <img id="doctorPhotoModalImage" alt="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 @endsection
 
@@ -339,9 +378,44 @@
     <script>
         (() => {
             const clinic = document.getElementById("doctorScheduleClinic");
+            const photoModal = document.getElementById("doctorPhotoModal");
+            const photoModalTitle = document.getElementById("doctorPhotoModalTitle");
+            const photoModalInitials = document.getElementById("doctorPhotoModalInitials");
+            const photoModalImage = document.getElementById("doctorPhotoModalImage");
 
             clinic?.addEventListener("change", () => {
                 clinic.form?.requestSubmit();
+            });
+
+            photoModal?.addEventListener("show.bs.modal", (event) => {
+                const trigger = event.relatedTarget;
+
+                if (!(trigger instanceof HTMLElement)) {
+                    return;
+                }
+
+                const doctorName = trigger.dataset.doctorName || "Dokter";
+
+                photoModalTitle.textContent = doctorName;
+                photoModalInitials.textContent = trigger.dataset.doctorInitials || "DR";
+                photoModalImage.classList.remove("is-loaded");
+                photoModalImage.src = trigger.dataset.photoUrl || "";
+                photoModalImage.alt = `Foto ${doctorName}`;
+            });
+
+            photoModalImage?.addEventListener("load", () => {
+                photoModalImage.classList.add("is-loaded");
+            });
+
+            photoModalImage?.addEventListener("error", () => {
+                photoModalImage.classList.remove("is-loaded");
+                photoModalImage.removeAttribute("src");
+            });
+
+            photoModal?.addEventListener("hidden.bs.modal", () => {
+                photoModalImage.classList.remove("is-loaded");
+                photoModalImage.removeAttribute("src");
+                photoModalImage.alt = "";
             });
         })();
     </script>

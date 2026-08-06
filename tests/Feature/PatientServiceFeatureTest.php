@@ -190,7 +190,7 @@ class PatientServiceFeatureTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_new_messages_notify_the_correct_recipient_through_in_app_broadcast_and_push(): void
+    public function test_new_messages_notify_the_correct_recipient_with_chat_preview_and_direct_conversation_link(): void
     {
         config([
             'webpush.vapid.public_key' => 'public-test-key',
@@ -202,12 +202,13 @@ class PatientServiceFeatureTest extends TestCase
         Event::fake([PatientServiceMessageSent::class]);
         Notification::fake();
 
+        $patientMessage = 'Mohon bantuan untuk memverifikasi data akun saya.';
         $response = $this->actingAs($patient)->postJson(
             route('patientService.conversations.store'),
             [
                 'category' => 'complaint',
                 'subject' => 'Verifikasi data akun',
-                'message' => 'Data sensitif hanya boleh tampil di dalam aplikasi.',
+                'message' => $patientMessage,
             ],
         )->assertCreated();
         $conversationId = $response->json('conversation.id');
@@ -215,31 +216,43 @@ class PatientServiceFeatureTest extends TestCase
         Notification::assertSentTo(
             $admin,
             PatientServiceMessageNotification::class,
-            function (PatientServiceMessageNotification $notification, array $channels) use ($admin, $conversationId): bool {
+            function (PatientServiceMessageNotification $notification, array $channels) use ($admin, $conversationId, $patientMessage): bool {
                 $data = $notification->toArray($admin);
                 $push = $notification->toWebPush($admin, $notification)->toArray();
+                $conversationUrl = route('patientService.index', ['conversation' => $conversationId], false);
 
                 return in_array('database', $channels, true)
                     && in_array('broadcast', $channels, true)
                     && in_array(WebPushChannel::class, $channels, true)
                     && $data['kind'] === 'patient_service_message'
                     && $data['conversation_id'] === $conversationId
-                    && ! str_contains($push['body'], 'Data sensitif');
+                    && $push['body'] === $patientMessage
+                    && $push['data']['kind'] === 'patient_service_message'
+                    && $push['data']['conversation_id'] === $conversationId
+                    && $push['data']['url'] === $conversationUrl;
             },
         );
         Notification::assertNotSentTo($otherPatient, PatientServiceMessageNotification::class);
 
         $conversation = PatientServiceConversation::query()->findOrFail($conversationId);
+        $adminReply = 'Data akun sudah kami periksa.';
         $this->actingAs($admin)
             ->postJson(route('patientService.messages.store', $conversation), [
-                'message' => 'Data akun sudah kami periksa.',
+                'message' => $adminReply,
             ])
             ->assertCreated();
 
         Notification::assertSentTo(
             $patient,
             PatientServiceMessageNotification::class,
-            fn (PatientServiceMessageNotification $notification): bool => $notification->toArray($patient)['conversation_id'] === $conversationId,
+            function (PatientServiceMessageNotification $notification) use ($patient, $conversationId, $adminReply): bool {
+                $push = $notification->toWebPush($patient, $notification)->toArray();
+
+                return $notification->toArray($patient)['conversation_id'] === $conversationId
+                    && $push['title'] === 'Balasan dari Pasien Service'
+                    && $push['body'] === $adminReply
+                    && $push['data']['url'] === route('patientService.index', ['conversation' => $conversationId], false);
+            },
         );
     }
 

@@ -45,6 +45,9 @@ class PromotionFeatureTest extends TestCase
             ->assertOk()
             ->assertSeeText('Promosi & Informasi')
             ->assertSeeText('Promo Aktif')
+            ->assertDontSeeText('Periode tayang')
+            ->assertDontSeeText('Hingga')
+            ->assertDontSeeText('Berakhir')
             ->assertDontSeeText('Promo Draf')
             ->assertDontSeeText('Promo Berakhir')
             ->assertSee('promotion-premium.css');
@@ -80,7 +83,16 @@ class PromotionFeatureTest extends TestCase
         $this->actingAs($patient)
             ->get(route('promotions.show', $information))
             ->assertOk()
-            ->assertSeeText('Informasi kesehatan');
+            ->assertSeeText('Informasi kesehatan')
+            ->assertDontSeeText('Periode tayang')
+            ->assertSee('data-promo-image-open', false)
+            ->assertSee('data-promo-image-viewer', false)
+            ->assertSee('promotion-image-viewer.js');
+
+        $this->actingAs($this->marketing())
+            ->get(route('promotions.show', $information))
+            ->assertOk()
+            ->assertSeeText('Periode tayang');
 
         $notification = PromotionPublishedNotification::fromPromotion($information);
         $this->assertSame('Informasi: '.$information->title, $notification->toArray($patient)['title']);
@@ -225,6 +237,55 @@ class PromotionFeatureTest extends TestCase
             ->assertOk()
             ->assertJsonPath('notifications.0.data.image_url', null)
             ->assertJsonPath('notifications.0.data.url', '/e-pasien/menu/promo-sehat');
+    }
+
+    public function test_promotion_badge_count_follows_notification_read_state(): void
+    {
+        $patient = $this->patient();
+        $first = $this->promotion(['title' => 'Promo Pertama']);
+        $second = $this->promotion(['title' => 'Informasi Kedua', 'category' => Promotion::CATEGORY_INFORMATION]);
+
+        $firstNotification = $this->promotionDatabaseNotification($patient, $first);
+        $this->promotionDatabaseNotification($patient, $second);
+
+        $this->actingAs($patient)
+            ->getJson(route('notifications.index'))
+            ->assertOk()
+            ->assertJsonPath('unread_count', 2)
+            ->assertJsonPath('promotion_unread_count', 2);
+
+        $this->patchJson(route('notifications.read', $firstNotification))
+            ->assertOk()
+            ->assertJsonPath('unread_count', 1)
+            ->assertJsonPath('promotion_unread_count', 1);
+
+        $this->patchJson(route('notifications.readAll'))
+            ->assertOk()
+            ->assertJsonPath('unread_count', 0)
+            ->assertJsonPath('promotion_unread_count', 0);
+    }
+
+    public function test_opening_patient_promotion_pages_marks_matching_notifications_as_read(): void
+    {
+        $patient = $this->patient();
+        $first = $this->promotion(['title' => 'Promo Dibuka']);
+        $second = $this->promotion(['title' => 'Informasi Belum Dibuka', 'category' => Promotion::CATEGORY_INFORMATION]);
+        $firstNotification = $this->promotionDatabaseNotification($patient, $first);
+        $secondNotification = $this->promotionDatabaseNotification($patient, $second);
+
+        $this->actingAs($patient)
+            ->get(route('promotions.show', $first))
+            ->assertOk();
+
+        $this->assertNotNull($firstNotification->refresh()->read_at);
+        $this->assertNull($secondNotification->refresh()->read_at);
+
+        $this->actingAs($patient)
+            ->get(route('promotions.index'))
+            ->assertOk()
+            ->assertSee('data-promotion-sidebar-badge', false);
+
+        $this->assertNotNull($secondNotification->refresh()->read_at);
     }
 
     public function test_promotion_can_be_limited_to_explicit_test_users(): void
@@ -477,5 +538,16 @@ class PromotionFeatureTest extends TestCase
             'status' => Promotion::STATUS_PUBLISHED,
             'published_at' => now(),
         ], $attributes));
+    }
+
+    private function promotionDatabaseNotification(User $patient, Promotion $promotion): DatabaseNotification
+    {
+        return DatabaseNotification::query()->create([
+            'id' => (string) Str::uuid(),
+            'type' => PromotionPublishedNotification::class,
+            'notifiable_type' => $patient->getMorphClass(),
+            'notifiable_id' => $patient->getKey(),
+            'data' => PromotionPublishedNotification::fromPromotion($promotion)->toArray($patient),
+        ]);
     }
 }

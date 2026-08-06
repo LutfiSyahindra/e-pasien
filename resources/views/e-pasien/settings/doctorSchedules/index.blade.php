@@ -19,7 +19,7 @@
                 <i class="bi bi-house-door"></i>
             </a>
             <i class="bi bi-chevron-right" aria-hidden="true"></i>
-            <span>Settings</span>
+            <span>Landing Page &amp; Data</span>
             <i class="bi bi-chevron-right" aria-hidden="true"></i>
             <span class="active">Jadwal Dokter</span>
         </nav>

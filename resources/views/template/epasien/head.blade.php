@@ -2,7 +2,6 @@
     @php
         $usesDataTables = request()->routeIs("users.*", "roles.*", "permissions.*");
         $usesSelect2 = request()->routeIs("users.*", "roles.*", "roleConfiguration.*", "daftarOnline.index");
-        $usesDashboardCharts = request()->routeIs("dashboard");
         $usesAccessControl = request()->routeIs("users.*", "roles.*", "permissions.*", "roleConfiguration.*");
         $usesSweetAlert = request()->routeIs("profile.*", "users.*", "roles.*", "permissions.*", "daftarOnline.*");
     @endphp
@@ -30,13 +29,7 @@
     <link rel="apple-touch-icon" href="{{ asset("epasien/assets/images/pwa-icon-180.png") }}">
     <!--plugins-->
     <link href="{{ asset("epasien/assets/plugins/simplebar/css/simplebar.css") }}" rel="stylesheet" />
-    @if ($usesDashboardCharts)
-        <link href="{{ asset("epasien/assets/plugins/perfect-scrollbar/css/perfect-scrollbar.css") }}" rel="stylesheet" />
-    @endif
     <link href="{{ asset("epasien/assets/plugins/metismenu/css/metisMenu.min.css") }}" rel="stylesheet" />
-    @if ($usesDashboardCharts)
-        <link href="{{ asset("epasien/assets/plugins/vectormap/jquery-jvectormap-2.0.2.css") }}" rel="stylesheet" />
-    @endif
     @if ($usesDataTables)
         <link href="{{ asset("epasien/assets/plugins/datatable/css/dataTables.bootstrap5.min.css") }}" rel="stylesheet" />
     @endif

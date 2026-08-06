@@ -7,8 +7,10 @@ use App\Models\PromotionConfiguration;
 use App\Models\User;
 use App\Notifications\PromotionPublishedNotification;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -19,6 +21,17 @@ class PromotionService
     public function __construct(
         private readonly PromotionNotificationService $notificationService,
     ) {}
+
+    public function latestActive(
+        ?CarbonInterface $at = null,
+        int $limit = 4,
+    ): Collection {
+        return Promotion::query()
+            ->active($at)
+            ->latest('starts_at')
+            ->limit(max(1, min($limit, 12)))
+            ->get();
+    }
 
     public function create(array $data, User $creator): Promotion
     {

@@ -3,63 +3,28 @@
 namespace App\Http\Controllers\LandingPage;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Services\LandingPage\LandingDoctorService;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class LandingPageController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    public function __construct(
+        private readonly LandingDoctorService $landingDoctorService
+    ) {}
+
     public function index()
     {
-        return view('landingPage.landingPage');
-    }
+        $landingDoctors = [];
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        try {
+            $landingDoctors = $this->landingDoctorService->featured();
+        } catch (Throwable $exception) {
+            Log::warning('Gagal memuat dokter untuk landing page.', [
+                'message' => $exception->getMessage(),
+            ]);
+        }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return view('landingPage.landingPage', compact('landingDoctors'));
     }
 }

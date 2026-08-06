@@ -1,956 +1,265 @@
 @extends("template.epasien.appPasien")
 
+@section("title", "Dashboard Pasien | E-Pasien")
+
+@push("style")
+    <link href="{{ asset("epasien/assets/css/patient-dashboard.css") }}" rel="stylesheet">
+@endpush
+
 @section("content")
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-2 row-cols-xl-4">
-        <div class="col">
-            <div class="card radius-10">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div>
-                            <p class="mb-0 text-secondary">Total Orders</p>
-                            <h4 class="my-1">4805</h4>
-                            <p class="mb-0 font-13 text-success"><i class="bi bi-caret-up-fill"></i> 5% from last week</p>
-                        </div>
-                        <div class="widget-icon-large bg-gradient-purple text-white ms-auto"><i
-                                class="bi bi-basket2-fill"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col">
-            <div class="card radius-10">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div>
-                            <p class="mb-0 text-secondary">Total Revenue</p>
-                            <h4 class="my-1">$24K</h4>
-                            <p class="mb-0 font-13 text-success"><i class="bi bi-caret-up-fill"></i> 4.6 from last week</p>
-                        </div>
-                        <div class="widget-icon-large bg-gradient-success text-white ms-auto"><i
-                                class="bi bi-currency-exchange"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col">
-            <div class="card radius-10">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div>
-                            <p class="mb-0 text-secondary">Total Customers</p>
-                            <h4 class="my-1">5.8K</h4>
-                            <p class="mb-0 font-13 text-danger"><i class="bi bi-caret-down-fill"></i> 2.7 from last week</p>
-                        </div>
-                        <div class="widget-icon-large bg-gradient-danger text-white ms-auto"><i
-                                class="bi bi-people-fill"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col">
-            <div class="card radius-10">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div>
-                            <p class="mb-0 text-secondary">Bounce Rate</p>
-                            <h4 class="my-1">38.15%</h4>
-                            <p class="mb-0 font-13 text-success"><i class="bi bi-caret-up-fill"></i> 12.2% from last week
-                            </p>
-                        </div>
-                        <div class="widget-icon-large bg-gradient-info text-white ms-auto"><i
-                                class="bi bi-bar-chart-line-fill"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div><!--end row-->
+    @php
+        $firstName = Str::of(auth()->user()->name)->trim()->explode(" ")->filter()->first() ?: "Sahabat";
+        $featuredPromotion = $promotions->first();
+        $otherPromotions = $promotions->skip(1);
+        $registrationTone = in_array($upcomingRegistration["status_tone"] ?? "neutral", ["warning", "success", "danger", "info"], true)
+            ? $upcomingRegistration["status_tone"]
+            : "neutral";
+    @endphp
 
-    <div class="row">
-        <div class="col-12 col-lg-8 col-xl-8 d-flex">
-            <div class="card radius-10 w-100">
-                <div class="card-body">
-                    <div class="row row-cols-1 row-cols-lg-2 g-3 align-items-center pb-3">
-                        <div class="col">
-                            <h5 class="mb-0">Sales Figures</h5>
-                        </div>
-                        <div class="col">
-                            <div class="d-flex align-items-center justify-content-sm-end gap-3 cursor-pointer">
-                                <div class="font-13"><i class="bi bi-circle-fill text-primary"></i><span
-                                        class="ms-2">Sales</span></div>
-                                <div class="font-13"><i class="bi bi-circle-fill text-success"></i><span
-                                        class="ms-2">Orders</span></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="chart1"></div>
-                </div>
+    <div class="patient-dashboard-shell">
+        <header class="patient-dashboard-welcome" aria-labelledby="dashboard-title">
+            <div class="patient-dashboard-welcome__copy">
+                <span class="patient-dashboard-eyebrow">
+                    <i class="bi bi-heart-pulse-fill" aria-hidden="true"></i>
+                    Beranda kesehatan Anda
+                </span>
+                <h1 id="dashboard-title">Halo, {{ $firstName }}!</h1>
+                <p>Temukan kabar terbaru dan siapkan kunjungan Anda dengan lebih mudah.</p>
             </div>
-        </div>
-        <div class="col-12 col-lg-4 col-xl-4 d-flex">
-            <div class="card radius-10 w-100">
-                <div class="card-header bg-transparent">
-                    <div class="row g-3 align-items-center">
-                        <div class="col">
-                            <h5 class="mb-0">Statistics</h5>
-                        </div>
-                        <div class="col">
-                            <div class="d-flex align-items-center justify-content-end gap-3 cursor-pointer">
-                                <div class="dropdown">
-                                    <a class="dropdown-toggle dropdown-toggle-nocaret" href="#"
-                                        data-bs-toggle="dropdown" aria-expanded="false"><i
-                                            class="bx bx-dots-horizontal-rounded font-22 text-option"></i>
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="javascript:;">Action</a>
-                                        </li>
-                                        <li><a class="dropdown-item" href="javascript:;">Another action</a>
-                                        </li>
-                                        <li>
-                                            <hr class="dropdown-divider">
-                                        </li>
-                                        <li><a class="dropdown-item" href="javascript:;">Something else here</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div id="chart2"></div>
-                </div>
-                <ul class="list-group list-group-flush mb-0">
-                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-top">
-                        New Orders<span class="badge bg-primary badge-pill">25%</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
-                        Completed<span class="badge bg-orange badge-pill">65%</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
-                        Pending<span class="badge bg-success badge-pill">10%</span>
-                    </li>
-                </ul>
+            <div class="patient-dashboard-today" aria-label="Tanggal hari ini">
+                <span class="patient-dashboard-today__icon"><i class="bi bi-calendar2-heart"></i></span>
+                <span><small>Hari ini</small><strong>{{ $todayLabel }}</strong></span>
             </div>
-        </div>
-    </div><!--end row-->
+        </header>
 
-    <div class="row">
-        <div class="col-12 col-lg-6 col-xl-6 d-flex">
-            <div class="card radius-10 w-100">
-                <div class="card-header bg-transparent">
-                    <div class="row g-3 align-items-center">
-                        <div class="col">
-                            <h5 class="mb-0">Statistics</h5>
-                        </div>
-                        <div class="col">
-                            <div class="d-flex align-items-center justify-content-end gap-3 cursor-pointer">
-                                <div class="dropdown">
-                                    <a class="dropdown-toggle dropdown-toggle-nocaret" href="#"
-                                        data-bs-toggle="dropdown" aria-expanded="false"><i
-                                            class="bx bx-dots-horizontal-rounded font-22 text-option"></i>
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="javascript:;">Action</a>
-                                        </li>
-                                        <li><a class="dropdown-item" href="javascript:;">Another action</a>
-                                        </li>
-                                        <li>
-                                            <hr class="dropdown-divider">
-                                        </li>
-                                        <li><a class="dropdown-item" href="javascript:;">Something else here</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="d-lg-flex align-items-center justify-content-center gap-4">
-                        <div id="chart3"></div>
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item"><i class="bi bi-circle-fill text-purple me-1"></i> Visitors: <span
-                                    class="me-1">89</span></li>
-                            <li class="list-group-item"><i class="bi bi-circle-fill text-info me-1"></i> Subscribers:
-                                <span class="me-1">45</span>
-                            </li>
-                            <li class="list-group-item"><i class="bi bi-circle-fill text-pink me-1"></i> Contributor:
-                                <span class="me-1">35</span>
-                            </li>
-                            <li class="list-group-item"><i class="bi bi-circle-fill text-success me-1"></i> Author: <span
-                                    class="me-1">62</span></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-lg-6 col-xl-6 d-flex">
-            <div class="card radius-10 w-100">
-                <div class="card-body">
-                    <div class="row row-cols-1 row-cols-lg-2 g-3 align-items-center">
-                        <div class="col">
-                            <h5 class="mb-0">Product Actions</h5>
-                        </div>
-                        <div class="col">
-                            <div class="d-flex align-items-center justify-content-sm-end gap-3 cursor-pointer">
-                                <div class="font-13"><i class="bi bi-circle-fill text-primary"></i><span
-                                        class="ms-2">Views</span></div>
-                                <div class="font-13"><i class="bi bi-circle-fill text-pink"></i><span
-                                        class="ms-2">Clicks</span></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="chart4"></div>
-                </div>
-            </div>
-        </div>
-    </div><!--end row-->
+        <nav class="patient-dashboard-mobile-index" aria-label="Navigasi bagian dashboard">
+            <a href="#dashboard-promotion-title"><i class="bi bi-megaphone-fill"></i><span>Info terbaru</span></a>
+            <a href="#dashboard-visit-title"><i class="bi bi-calendar2-check-fill"></i><span>Antrean</span></a>
+            <a href="#dashboard-schedule-title"><i class="bi bi-person-badge-fill"></i><span>Dokter hari ini</span></a>
+        </nav>
 
-    <div class="row">
-        <div class="col-12 col-lg-6 col-xl-4 d-flex">
-            <div class="card radius-10 w-100">
-                <div class="card-header bg-transparent">
-                    <div class="row g-3 align-items-center">
-                        <div class="col">
-                            <h5 class="mb-0">Top Categories</h5>
-                        </div>
-                        <div class="col">
-                            <div class="d-flex align-items-center justify-content-end gap-3 cursor-pointer">
-                                <div class="dropdown">
-                                    <a class="dropdown-toggle dropdown-toggle-nocaret" href="#"
-                                        data-bs-toggle="dropdown" aria-expanded="false"><i
-                                            class="bx bx-dots-horizontal-rounded font-22 text-option"></i>
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="javascript:;">Action</a>
-                                        </li>
-                                        <li><a class="dropdown-item" href="javascript:;">Another action</a>
-                                        </li>
-                                        <li>
-                                            <hr class="dropdown-divider">
-                                        </li>
-                                        <li><a class="dropdown-item" href="javascript:;">Something else here</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+        <div class="patient-dashboard-primary-grid">
+            <section class="patient-dashboard-panel patient-dashboard-promotions" aria-labelledby="dashboard-promotion-title">
+                <div class="patient-dashboard-heading">
+                    <div>
+                        <span class="patient-dashboard-heading__kicker">Pilihan untuk Anda</span>
+                        <h2 id="dashboard-promotion-title">Promosi &amp; informasi terbaru</h2>
                     </div>
+                    @can("EPASIEN.MENU.PROMOSI")
+                        <a href="{{ route("promotions.index") }}">Lihat semua <i class="bi bi-arrow-right"></i></a>
+                    @endcan
                 </div>
-                <div class="card-body">
-                    <div class="categories">
-                        <div class="progress-wrapper">
-                            <p class="mb-2">Electronic <span class="float-end">85%</span></p>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-gradient-purple" role="progressbar" style="width: 85%;">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="my-3 border-top"></div>
-                        <div class="progress-wrapper">
-                            <p class="mb-2">Furniture <span class="float-end">70%</span></p>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-gradient-danger" role="progressbar" style="width: 70%;">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="my-3 border-top"></div>
-                        <div class="progress-wrapper">
-                            <p class="mb-2">Fashion <span class="float-end">66%</span></p>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-gradient-success" role="progressbar" style="width: 66%;">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="my-3 border-top"></div>
-                        <div class="progress-wrapper">
-                            <p class="mb-2">Mobiles <span class="float-end">76%</span></p>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-gradient-info" role="progressbar" style="width: 76%;"></div>
-                            </div>
-                        </div>
-                        <div class="my-3 border-top"></div>
-                        <div class="progress-wrapper">
-                            <p class="mb-2">Accessories <span class="float-end">80%</span></p>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-gradient-warning" role="progressbar" style="width: 80%;">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="my-3 border-top"></div>
-                        <div class="progress-wrapper">
-                            <p class="mb-2">Watches <span class="float-end">65%</span></p>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-gradient-voilet" role="progressbar" style="width: 65%;">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="my-3 border-top"></div>
-                        <div class="progress-wrapper">
-                            <p class="mb-2">Sports <span class="float-end">45%</span></p>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-gradient-royal" role="progressbar" style="width: 45%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-lg-6 col-xl-4 d-flex">
-            <div class="card radius-10 w-100">
-                <div class="card-header bg-transparent">
-                    <div class="row g-3 align-items-center">
-                        <div class="col">
-                            <h5 class="mb-0">Best Products</h5>
-                        </div>
-                        <div class="col">
-                            <div class="d-flex align-items-center justify-content-end gap-3 cursor-pointer">
-                                <div class="dropdown">
-                                    <a class="dropdown-toggle dropdown-toggle-nocaret" href="#"
-                                        data-bs-toggle="dropdown" aria-expanded="false"><i
-                                            class="bx bx-dots-horizontal-rounded font-22 text-option"></i>
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="javascript:;">Action</a>
-                                        </li>
-                                        <li><a class="dropdown-item" href="javascript:;">Another action</a>
-                                        </li>
-                                        <li>
-                                            <hr class="dropdown-divider">
-                                        </li>
-                                        <li><a class="dropdown-item" href="javascript:;">Something else here</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="best-product p-2 mb-3">
-                        <div class="best-product-item">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="product-box border">
-                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/01.png") }}" alt="">
-                                </div>
-                                <div class="product-info">
-                                    <h6 class="product-name mb-1">White Polo T-Shirt</h6>
-                                    <div class="product-rating mb-0">
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                    </div>
-                                </div>
-                                <div class="sales-count ms-auto">
-                                    <p class="mb-0">245 Sales</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="best-product-item">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="product-box border">
-                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/02.png") }}" alt="">
-                                </div>
-                                <div class="product-info">
-                                    <h6 class="product-name mb-1">Formal Coat Pant</h6>
-                                    <div class="product-rating mb-0">
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                    </div>
-                                </div>
-                                <div class="sales-count ms-auto">
-                                    <p class="mb-0">325 Sales</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="best-product-item">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="product-box border">
-                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/03.png") }}" alt="">
-                                </div>
-                                <div class="product-info">
-                                    <h6 class="product-name mb-1">Blue Shade Jeans</h6>
-                                    <div class="product-rating mb-0">
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                    </div>
-                                </div>
-                                <div class="sales-count ms-auto">
-                                    <p class="mb-0">189 Sales</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="best-product-item">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="product-box border">
-                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/04.png") }}" alt="">
-                                </div>
-                                <div class="product-info">
-                                    <h6 class="product-name mb-1">Yellow Winter Jacket</h6>
-                                    <div class="product-rating mb-0">
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill"></i>
-                                        <i class="bi bi-star-fill"></i>
-                                    </div>
-                                </div>
-                                <div class="sales-count ms-auto">
-                                    <p class="mb-0">102 Sales</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="best-product-item">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="product-box border">
-                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/05.png") }}" alt="">
-                                </div>
-                                <div class="product-info">
-                                    <h6 class="product-name mb-1">Men Sports Shoes</h6>
-                                    <div class="product-rating mb-0">
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill"></i>
-                                    </div>
-                                </div>
-                                <div class="sales-count ms-auto">
-                                    <p class="mb-0">137 Sales</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="best-product-item">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="product-box border">
-                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/06.png") }}" alt="">
-                                </div>
-                                <div class="product-info">
-                                    <h6 class="product-name mb-1">Fancy Home Sofa</h6>
-                                    <div class="product-rating mb-0">
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                    </div>
-                                </div>
-                                <div class="sales-count ms-auto">
-                                    <p class="mb-0">453 Sales</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="best-product-item">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="product-box border">
-                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/07.png") }}" alt="">
-                                </div>
-                                <div class="product-info">
-                                    <h6 class="product-name mb-1">Sports Time Watch</h6>
-                                    <div class="product-rating mb-0">
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill"></i>
-                                    </div>
-                                </div>
-                                <div class="sales-count ms-auto">
-                                    <p class="mb-0">198 Sales</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="best-product-item">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="product-box border">
-                                    <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/08.png") }}" alt="">
-                                </div>
-                                <div class="product-info">
-                                    <h6 class="product-name mb-1">Women Blue Heals</h6>
-                                    <div class="product-rating mb-0">
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <i class="bi bi-star-fill"></i>
-                                        <i class="bi bi-star-fill"></i>
-                                    </div>
-                                </div>
-                                <div class="sales-count ms-auto">
-                                    <p class="mb-0">98 Sales</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-lg-12 col-xl-4 d-flex">
-            <div class="card radius-10 w-100">
-                <div class="card-header bg-transparent">
-                    <div class="row g-3 align-items-center">
-                        <div class="col">
-                            <h5 class="mb-0">Top Sellers</h5>
-                        </div>
-                        <div class="col">
-                            <div class="d-flex align-items-center justify-content-end gap-3 cursor-pointer">
-                                <div class="dropdown">
-                                    <a class="dropdown-toggle dropdown-toggle-nocaret" href="#"
-                                        data-bs-toggle="dropdown" aria-expanded="false"><i
-                                            class="bx bx-dots-horizontal-rounded font-22 text-option"></i>
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="javascript:;">Action</a>
-                                        </li>
-                                        <li><a class="dropdown-item" href="javascript:;">Another action</a>
-                                        </li>
-                                        <li>
-                                            <hr class="dropdown-divider">
-                                        </li>
-                                        <li><a class="dropdown-item" href="javascript:;">Something else here</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="top-sellers-list p-2 mb-3">
-                    <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-1.png") }}" class="rounded-circle"
-                            width="50" height="50" alt="">
-                        <div>
-                            <h6 class="mb-1">Thomas Hardy</h6>
-                            <p class="mb-0 font-13">Customer ID #84586</p>
-                        </div>
-                        <div class="d-flex align-items-center gap-3 fs-6 ms-auto">
-                            <p class="mb-0">5.0 <i class="bi bi-star-fill text-warning"></i></p>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-2.png") }}" class="rounded-circle"
-                            width="50" height="50" alt="">
-                        <div>
-                            <h6 class="mb-0">Pauline Bird</h6>
-                            <p class="mb-0 font-13">Customer ID #86572</p>
-                        </div>
-                        <div class="d-flex align-items-center gap-3 fs-6 ms-auto">
-                            <p class="mb-0">5.0 <i class="bi bi-star-fill text-warning"></i></p>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-3.png") }}" class="rounded-circle"
-                            width="50" height="50" alt="">
-                        <div>
-                            <h6 class="mb-0">Ralph Alva</h6>
-                            <p class="mb-0 font-13">Customer ID #98657</p>
-                        </div>
-                        <div class="d-flex align-items-center gap-3 fs-6 ms-auto">
-                            <p class="mb-0">4.8 <i class="bi bi-star-half text-warning"></i></p>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-4.png") }}" class="rounded-circle"
-                            width="50" height="50" alt="">
-                        <div>
-                            <h6 class="mb-0">John Roman</h6>
-                            <p class="mb-0 font-13">Customer ID #78542</p>
-                        </div>
-                        <div class="d-flex align-items-center gap-3 fs-6 ms-auto">
-                            <p class="mb-0">4.7 <i class="bi bi-star-half text-warning"></i></p>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-5.png") }}" class="rounded-circle"
-                            width="50" height="50" alt="">
-                        <div>
-                            <h6 class="mb-0">David Buckley</h6>
-                            <p class="mb-0 font-13">Customer ID #68574</p>
-                        </div>
-                        <div class="d-flex align-items-center gap-3 fs-6 ms-auto">
-                            <p class="mb-0">5.0 <i class="bi bi-star-fill text-warning"></i></p>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-6.png") }}" class="rounded-circle"
-                            width="50" height="50" alt="">
-                        <div>
-                            <h6 class="mb-0">Maria Anders</h6>
-                            <p class="mb-0 font-13">Customer ID #86952</p>
-                        </div>
-                        <div class="d-flex align-items-center gap-3 fs-6 ms-auto">
-                            <p class="mb-0">4.8 <i class="bi bi-star-half text-warning"></i></p>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-7.png") }}" class="rounded-circle"
-                            width="50" height="50" alt="">
-                        <div>
-                            <h6 class="mb-0">Martin Loother</h6>
-                            <p class="mb-0 font-13">Customer ID #83247</p>
-                        </div>
-                        <div class="d-flex align-items-center gap-3 fs-6 ms-auto">
-                            <p class="mb-0">5.0 <i class="bi bi-star-fill text-warning"></i></p>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-8.png") }}" class="rounded-circle"
-                            width="50" height="50" alt="">
-                        <div>
-                            <h6 class="mb-0">Victoria Hardy</h6>
-                            <p class="mb-0 font-13">Customer ID #67523</p>
-                        </div>
-                        <div class="d-flex align-items-center gap-3 fs-6 ms-auto">
-                            <p class="mb-0">3.9 <i class="bi bi-star-half text-warning"></i></p>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-9.png") }}" class="rounded-circle"
-                            width="50" height="50" alt="">
-                        <div>
-                            <h6 class="mb-0">David Buckley</h6>
-                            <p class="mb-0 font-13">Customer ID #94256</p>
-                        </div>
-                        <div class="d-flex align-items-center gap-3 fs-6 ms-auto">
-                            <p class="mb-0">3.5 <i class="bi bi-star-half text-warning"></i></p>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center gap-3 sellers-list-item">
-                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/avatars/avatar-10.png") }}" class="rounded-circle"
-                            width="50" height="50" alt="">
-                        <div>
-                            <h6 class="mb-0">Victoria Hardy</h6>
-                            <p class="mb-0 font-13">Customer ID #48759</p>
-                        </div>
-                        <div class="d-flex align-items-center gap-3 fs-6 ms-auto">
-                            <p class="mb-0">3.4 <i class="bi bi-star-half text-warning"></i></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div><!--end row-->
 
-    <div class="card radius-10">
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-12 col-lg-4 col-xl-4 d-flex">
-                    <div class="card mb-0 radius-10 border shadow-none w-100">
-                        <div class="card-body">
-                            <h5 class="card-title">Top Sales Locations</h5>
-                            <h4 class="mt-4">$36.2K <i class="flag-icon flag-icon-us rounded"></i></h4>
-                            <p class="mb-0 text-secondary font-13">Our Most Customers in US</p>
-                            <ul class="list-group list-group-flush mt-3">
-                                <li class="list-group-item border-top">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div><i class="flag-icon flag-icon-us"></i></div>
-                                        <div>United States</div>
-                                        <div class="ms-auto">289</div>
-                                    </div>
-                                </li>
-                                <li class="list-group-item">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div><i class="flag-icon flag-icon-au"></i></div>
-                                        <div>Malaysia</div>
-                                        <div class="ms-auto">562</div>
-                                    </div>
-                                </li>
-                                <li class="list-group-item">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div><i class="flag-icon flag-icon-in"></i></div>
-                                        <div>India</div>
-                                        <div class="ms-auto">354</div>
-                                    </div>
-                                </li>
-                                <li class="list-group-item">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div><i class="flag-icon flag-icon-ca"></i></div>
-                                        <div>Indonesia</div>
-                                        <div class="ms-auto">147</div>
-                                    </div>
-                                </li>
-                                <li class="list-group-item">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div><i class="flag-icon flag-icon-ad"></i></div>
-                                        <div>Turkey</div>
-                                        <div class="ms-auto">652</div>
-                                    </div>
-                                </li>
-                                <li class="list-group-item">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div><i class="flag-icon flag-icon-cu"></i></div>
-                                        <div>Netherlands</div>
-                                        <div class="ms-auto">287</div>
-                                    </div>
-                                </li>
-                                <li class="list-group-item">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div><i class="flag-icon flag-icon-is"></i></div>
-                                        <div>Italy</div>
-                                        <div class="ms-auto">634</div>
-                                    </div>
-                                </li>
-                                <li class="list-group-item">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div><i class="flag-icon flag-icon-ge"></i></div>
-                                        <div>Canada</div>
-                                        <div class="ms-auto">524</div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-8 col-xl-8 d-flex">
-                    <div class="card mb-0 radius-10 border shadow-none w-100">
-                        <div class="card-body">
-                            <div class="" id="geographic-map"></div>
-                        </div>
-                    </div>
-                </div>
-            </div><!--end row-->
-        </div>
-    </div>
-
-    <div class="card radius-10">
-        <div class="card-header bg-transparent">
-            <div class="row g-3 align-items-center">
-                <div class="col">
-                    <h5 class="mb-0">Recent Orders</h5>
-                </div>
-                <div class="col">
-                    <div class="d-flex align-items-center justify-content-end gap-3 cursor-pointer">
-                        <div class="dropdown">
-                            <a class="dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown"
-                                aria-expanded="false"><i class="bx bx-dots-horizontal-rounded font-22 text-option"></i>
+                @if ($featuredPromotion)
+                    <div class="patient-dashboard-promo-layout {{ $otherPromotions->isEmpty() ? "is-single" : "" }}">
+                        @can("EPASIEN.MENU.PROMOSI")
+                            <a class="patient-dashboard-promo-feature" href="{{ route("promotions.show", $featuredPromotion) }}">
+                        @else
+                            <article class="patient-dashboard-promo-feature">
+                        @endcan
+                                <img src="{{ $featuredPromotion->image_url }}" alt="{{ $featuredPromotion->title }}" decoding="async">
+                                <span class="patient-dashboard-promo-feature__shade" aria-hidden="true"></span>
+                                <div class="patient-dashboard-promo-feature__body">
+                                    <span class="patient-dashboard-promo-category is-{{ $featuredPromotion->category }}">
+                                        <i class="bi {{ $featuredPromotion->category_icon }}"></i>
+                                        {{ $featuredPromotion->category_label }}
+                                    </span>
+                                    <h3>{{ $featuredPromotion->title }}</h3>
+                                    <p>{{ Str::limit($featuredPromotion->caption, 120) }}</p>
+                                    <span class="patient-dashboard-promo-feature__action">Baca selengkapnya <i class="bi bi-arrow-up-right"></i></span>
+                                </div>
+                        @can("EPASIEN.MENU.PROMOSI")
                             </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="javascript:;">Action</a>
-                                </li>
-                                <li><a class="dropdown-item" href="javascript:;">Another action</a>
-                                </li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li><a class="dropdown-item" href="javascript:;">Something else here</a>
-                                </li>
-                            </ul>
-                        </div>
+                        @else
+                            </article>
+                        @endcan
+
+                        @if ($otherPromotions->isNotEmpty())
+                            <span class="patient-dashboard-mobile-scroll-hint">
+                                <i class="bi bi-arrow-left-right"></i> Geser untuk kabar lainnya
+                            </span>
+                            <div class="patient-dashboard-promo-list" aria-label="Informasi terbaru lainnya">
+                                @foreach ($otherPromotions as $promotion)
+                                    @can("EPASIEN.MENU.PROMOSI")
+                                        <a class="patient-dashboard-promo-mini" href="{{ route("promotions.show", $promotion) }}">
+                                    @else
+                                        <article class="patient-dashboard-promo-mini">
+                                    @endcan
+                                            <img src="{{ $promotion->image_url }}" alt="" loading="lazy" decoding="async">
+                                            <span class="patient-dashboard-promo-mini__body">
+                                                <small><i class="bi {{ $promotion->category_icon }}"></i>{{ $promotion->category_label }}</small>
+                                                <strong>{{ $promotion->title }}</strong>
+                                                <span>{{ Str::limit($promotion->caption, 62) }}</span>
+                                            </span>
+                                            <i class="bi bi-chevron-right patient-dashboard-promo-mini__arrow" aria-hidden="true"></i>
+                                    @can("EPASIEN.MENU.PROMOSI")
+                                        </a>
+                                    @else
+                                        </article>
+                                    @endcan
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
+                @elseif ($sectionErrors["promotions"] ?? false)
+                    <div class="patient-dashboard-state is-soft" role="status">
+                        <span><i class="bi bi-cloud-slash"></i></span>
+                        <div><h3>Informasi sedang diperbarui</h3><p>Silakan kembali beberapa saat lagi.</p></div>
+                    </div>
+                @else
+                    <div class="patient-dashboard-state is-soft">
+                        <span><i class="bi bi-megaphone"></i></span>
+                        <div><h3>Belum ada kabar terbaru</h3><p>Promosi dan informasi rumah sakit akan hadir di sini.</p></div>
+                    </div>
+                @endif
+            </section>
+
+            <section class="patient-dashboard-panel patient-dashboard-visit" aria-labelledby="dashboard-visit-title">
+                <div class="patient-dashboard-heading patient-dashboard-heading--compact">
+                    <div>
+                        <span class="patient-dashboard-heading__kicker">Agenda Anda</span>
+                        <h2 id="dashboard-visit-title">Kunjungan terdekat</h2>
+                    </div>
+                    <span class="patient-dashboard-heading__icon"><i class="bi bi-calendar2-check-fill"></i></span>
                 </div>
-            </div>
+
+                @if ($upcomingRegistration)
+                    <div class="patient-dashboard-visit__status is-{{ $registrationTone }}">
+                        <i class="bi bi-circle-fill"></i>{{ $upcomingRegistration["status"] }}
+                    </div>
+                    <div class="patient-dashboard-visit__date">
+                        <span class="patient-dashboard-date-card">
+                            <small>{{ $upcomingRegistration["hari_short"] }}</small>
+                            <strong>{{ $upcomingRegistration["tanggal_angka"] }}</strong>
+                            <em>{{ $upcomingRegistration["bulan_short"] }}</em>
+                        </span>
+                        <span>
+                            <small>Jadwal kunjungan</small>
+                            <strong>{{ $upcomingRegistration["tanggal_lengkap"] }}</strong>
+                            <em><i class="bi bi-clock"></i>{{ $upcomingRegistration["jam"] }} WIB</em>
+                        </span>
+                    </div>
+                    <div class="patient-dashboard-visit__clinic">
+                        <span><i class="bi bi-hospital"></i></span>
+                        <div><small>Poliklinik</small><strong>{{ $upcomingRegistration["poli"] }}</strong></div>
+                    </div>
+                    <dl class="patient-dashboard-visit__details">
+                        <div><dt>Dokter</dt><dd>{{ $upcomingRegistration["dokter"] }}</dd></div>
+                        <div><dt>No. antrean</dt><dd class="is-queue">{{ $upcomingRegistration["no_reg"] }}</dd></div>
+                        <div><dt>Penjamin</dt><dd>{{ $upcomingRegistration["penjamin"] }}</dd></div>
+                    </dl>
+                    @can("EPASIEN.MENU.PENDAFTARAN_ONLINE")
+                        <a class="patient-dashboard-primary-button" href="{{ route("daftarOnline.history") }}">
+                            Lihat detail kunjungan <i class="bi bi-arrow-right"></i>
+                        </a>
+                    @endcan
+                @elseif ($sectionErrors["registration"] ?? false)
+                    <div class="patient-dashboard-visit-empty">
+                        <span><i class="bi bi-cloud-slash"></i></span>
+                        <h3>Agenda belum dapat dimuat</h3>
+                        <p>Data kunjungan sedang diperbarui. Silakan coba kembali nanti.</p>
+                    </div>
+                @else
+                    <div class="patient-dashboard-visit-empty">
+                        <span><i class="bi bi-calendar2-plus"></i></span>
+                        <h3>Belum ada kunjungan</h3>
+                        <p>Anda belum memiliki antrean atau jadwal kunjungan yang akan datang.</p>
+                        @can("EPASIEN.MENU.PENDAFTARAN_ONLINE")
+                            <a class="patient-dashboard-primary-button" href="{{ route("daftarOnline.index") }}">
+                                <i class="bi bi-plus-lg"></i> Daftar online
+                            </a>
+                        @endcan
+                    </div>
+                @endif
+            </section>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>#ID</th>
-                            <th>Product</th>
-                            <th>Quantity</th>
-                            <th>Price</th>
-                            <th>Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>#89742</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="product-box border">
-                                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/11.png") }}" alt="">
-                                    </div>
-                                    <div class="product-info">
-                                        <h6 class="product-name mb-1">Smart Mobile Phone</h6>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>2</td>
-                            <td>$214</td>
-                            <td>Apr 8, 2021</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-3 fs-6">
-                                    <a href="javascript:;" class="text-primary" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="View detail"
-                                        aria-label="Views"><i class="bi bi-eye-fill"></i></a>
-                                    <a href="javascript:;" class="text-warning" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="Edit info"
-                                        aria-label="Edit"><i class="bi bi-pencil-fill"></i></a>
-                                    <a href="javascript:;" class="text-danger" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="Delete"
-                                        aria-label="Delete"><i class="bi bi-trash-fill"></i></a>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#68570</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="product-box border">
-                                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/07.png") }}" alt="">
-                                    </div>
-                                    <div class="product-info">
-                                        <h6 class="product-name mb-1">Sports Time Watch</h6>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>1</td>
-                            <td>$185</td>
-                            <td>Apr 9, 2021</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-3 fs-6">
-                                    <a href="javascript:;" class="text-primary" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="View detail"
-                                        aria-label="Views"><i class="bi bi-eye-fill"></i></a>
-                                    <a href="javascript:;" class="text-warning" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="Edit info"
-                                        aria-label="Edit"><i class="bi bi-pencil-fill"></i></a>
-                                    <a href="javascript:;" class="text-danger" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="Delete"
-                                        aria-label="Delete"><i class="bi bi-trash-fill"></i></a>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#38567</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="product-box border">
-                                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/17.png") }}" alt="">
-                                    </div>
-                                    <div class="product-info">
-                                        <h6 class="product-name mb-1">Women Red Heals</h6>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>3</td>
-                            <td>$356</td>
-                            <td>Apr 10, 2021</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-3 fs-6">
-                                    <a href="javascript:;" class="text-primary" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="View detail"
-                                        aria-label="Views"><i class="bi bi-eye-fill"></i></a>
-                                    <a href="javascript:;" class="text-warning" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="Edit info"
-                                        aria-label="Edit"><i class="bi bi-pencil-fill"></i></a>
-                                    <a href="javascript:;" class="text-danger" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="Delete"
-                                        aria-label="Delete"><i class="bi bi-trash-fill"></i></a>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#48572</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="product-box border">
-                                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/04.png") }}" alt="">
-                                    </div>
-                                    <div class="product-info">
-                                        <h6 class="product-name mb-1">Yellow Winter Jacket</h6>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>1</td>
-                            <td>$149</td>
-                            <td>Apr 11, 2021</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-3 fs-6">
-                                    <a href="javascript:;" class="text-primary" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="View detail"
-                                        aria-label="Views"><i class="bi bi-eye-fill"></i></a>
-                                    <a href="javascript:;" class="text-warning" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="Edit info"
-                                        aria-label="Edit"><i class="bi bi-pencil-fill"></i></a>
-                                    <a href="javascript:;" class="text-danger" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="Delete"
-                                        aria-label="Delete"><i class="bi bi-trash-fill"></i></a>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#96857</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="product-box border">
-                                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/10.png") }}" alt="">
-                                    </div>
-                                    <div class="product-info">
-                                        <h6 class="product-name mb-1">Orange Micro Headphone</h6>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>2</td>
-                            <td>$199</td>
-                            <td>Apr 15, 2021</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-3 fs-6">
-                                    <a href="javascript:;" class="text-primary" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="View detail"
-                                        aria-label="Views"><i class="bi bi-eye-fill"></i></a>
-                                    <a href="javascript:;" class="text-warning" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="Edit info"
-                                        aria-label="Edit"><i class="bi bi-pencil-fill"></i></a>
-                                    <a href="javascript:;" class="text-danger" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="Delete"
-                                        aria-label="Delete"><i class="bi bi-trash-fill"></i></a>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#68527</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="product-box border">
-                                        <img loading="lazy" decoding="async" src="{{ asset("epasien/assets/images/products/05.png") }}" alt="">
-                                    </div>
-                                    <div class="product-info">
-                                        <h6 class="product-name mb-1">Men Sports Shoes Nike</h6>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>1</td>
-                            <td>$124</td>
-                            <td>Apr 22, 2021</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-3 fs-6">
-                                    <a href="javascript:;" class="text-primary" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="View detail"
-                                        aria-label="Views"><i class="bi bi-eye-fill"></i></a>
-                                    <a href="javascript:;" class="text-warning" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="Edit info"
-                                        aria-label="Edit"><i class="bi bi-pencil-fill"></i></a>
-                                    <a href="javascript:;" class="text-danger" data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom" title="" data-bs-original-title="Delete"
-                                        aria-label="Delete"><i class="bi bi-trash-fill"></i></a>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+
+        <section class="patient-dashboard-panel patient-dashboard-schedules" aria-labelledby="dashboard-schedule-title">
+            <div class="patient-dashboard-heading">
+                <div>
+                    <span class="patient-dashboard-heading__kicker">Praktik hari ini</span>
+                    <h2 id="dashboard-schedule-title">Jadwal dokter hari ini</h2>
+                    <p>{{ $todayLabel }} · Jadwal dapat berubah sesuai kondisi pelayanan.</p>
+                </div>
+                @can("EPASIEN.MENU.JADWAL_DOKTER")
+                    <a href="{{ route("jadwalDokter.index") }}">Jadwal lengkap <i class="bi bi-arrow-right"></i></a>
+                @endcan
             </div>
+
+            @if ($doctorSchedules->isNotEmpty())
+                <span class="patient-dashboard-mobile-scroll-hint">
+                    <i class="bi bi-arrow-left-right"></i> Geser untuk melihat dokter lainnya
+                </span>
+                <div class="patient-dashboard-doctor-grid">
+                    @foreach ($doctorSchedules as $schedule)
+                        <article class="patient-dashboard-doctor-card">
+                            <div class="patient-dashboard-doctor-avatar">
+                                @if ($schedule["doctor_photo_url"])
+                                    <img src="{{ $schedule["doctor_photo_url"] }}" alt="Foto {{ $schedule["doctor_name"] }}" loading="lazy" decoding="async">
+                                @else
+                                    <span>{{ $schedule["doctor_initials"] }}</span>
+                                @endif
+                                <i class="bi bi-check-circle-fill" aria-label="Dokter aktif"></i>
+                            </div>
+                            <div class="patient-dashboard-doctor-card__body">
+                                <span class="patient-dashboard-doctor-clinic">{{ $schedule["clinic_name"] }}</span>
+                                <h3>{{ $schedule["doctor_name"] }}</h3>
+                                <div class="patient-dashboard-doctor-time"><i class="bi bi-clock-fill"></i>{{ $schedule["time_label"] }}</div>
+                                <div class="patient-dashboard-doctor-quota"><i class="bi bi-people"></i>Kuota {{ $schedule["quota_label"] }}</div>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+            @elseif ($sectionErrors["schedules"] ?? false)
+                <div class="patient-dashboard-state" role="status">
+                    <span><i class="bi bi-cloud-slash"></i></span>
+                    <div><h3>Jadwal belum dapat dimuat</h3><p>Koneksi jadwal dokter sedang diperbarui. Silakan coba kembali nanti.</p></div>
+                </div>
+            @else
+                <div class="patient-dashboard-state">
+                    <span><i class="bi bi-calendar2-x"></i></span>
+                    <div><h3>Tidak ada jadwal praktik hari ini</h3><p>Lihat jadwal hari lain untuk menemukan dokter yang Anda butuhkan.</p></div>
+                    @can("EPASIEN.MENU.JADWAL_DOKTER")
+                        <a href="{{ route("jadwalDokter.index") }}">Lihat hari lainnya</a>
+                    @endcan
+                </div>
+            @endif
+        </section>
+
+        <div class="patient-dashboard-secondary-grid">
+            @canany(["EPASIEN.MENU.PENDAFTARAN_ONLINE", "EPASIEN.MENU.RIWAYAT_PEMERIKSAAN", "EPASIEN.MENU.SURAT", "EPASIEN.MENU.PASIEN_SERVICE"])
+                <section class="patient-dashboard-panel patient-dashboard-shortcuts" aria-labelledby="dashboard-shortcut-title">
+                    <div class="patient-dashboard-heading patient-dashboard-heading--compact">
+                        <div><span class="patient-dashboard-heading__kicker">Tanpa antre lama</span><h2 id="dashboard-shortcut-title">Akses cepat</h2></div>
+                    </div>
+                    <div class="patient-dashboard-shortcut-grid">
+                        @can("EPASIEN.MENU.PENDAFTARAN_ONLINE")
+                            <a href="{{ route("daftarOnline.index") }}"><span class="is-teal"><i class="bi bi-calendar2-plus"></i></span><strong>Daftar online</strong><small>Buat kunjungan baru</small><i class="bi bi-arrow-right"></i></a>
+                        @endcan
+                        @can("EPASIEN.MENU.RIWAYAT_PEMERIKSAAN")
+                            <a href="{{ route("riwayatPemeriksaan.index") }}"><span class="is-blue"><i class="bi bi-clipboard2-pulse"></i></span><strong>Riwayat pemeriksaan</strong><small>Lihat kunjungan Anda</small><i class="bi bi-arrow-right"></i></a>
+                        @endcan
+                        @can("EPASIEN.MENU.SURAT")
+                            <a href="{{ route("suratKontrol.index") }}"><span class="is-amber"><i class="bi bi-file-earmark-medical"></i></span><strong>Surat kontrol</strong><small>Cek dokumen kontrol</small><i class="bi bi-arrow-right"></i></a>
+                        @endcan
+                        @can("EPASIEN.MENU.PASIEN_SERVICE")
+                            <a href="{{ route("patientService.index") }}"><span class="is-violet"><i class="bi bi-chat-heart"></i></span><strong>Pasien Service</strong><small>Tanyakan kebutuhan Anda</small><i class="bi bi-arrow-right"></i></a>
+                        @endcan
+                    </div>
+                </section>
+            @endcanany
+
+            <aside class="patient-dashboard-help" aria-labelledby="dashboard-help-title">
+                <span class="patient-dashboard-help__icon"><i class="bi bi-headset"></i></span>
+                <span class="patient-dashboard-heading__kicker">Kami siap membantu</span>
+                <h2 id="dashboard-help-title">Ada yang ingin ditanyakan?</h2>
+                <p>Tim kami siap membantu Anda memahami layanan dan persiapan kunjungan.</p>
+                @can("EPASIEN.MENU.PASIEN_SERVICE")
+                    <a href="{{ route("patientService.index") }}">Hubungi Pasien Service <i class="bi bi-arrow-right"></i></a>
+                @else
+                    <a href="{{ route("profile.edit") }}">Periksa data akun <i class="bi bi-arrow-right"></i></a>
+                @endcan
+            </aside>
         </div>
     </div>
 @endsection
-
-@push("script")
-    <script src="{{ asset("epasien/assets/plugins/apexcharts-bundle/js/apexcharts.min.js") }}"></script>
-    <script src="{{ asset("epasien/assets/js/index.js") }}"></script>
-    <script>
-        new PerfectScrollbar(".best-product")
-        new PerfectScrollbar(".top-sellers-list")
-    </script>
-@endpush
