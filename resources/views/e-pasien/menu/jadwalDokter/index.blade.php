@@ -244,7 +244,12 @@
                             <div class="doctor-schedule-doctor">
                                 <span class="doctor-schedule-avatar"
                                     aria-hidden="true">
-                                    {{ $schedule["doctor_initials"] }}
+                                    <span>{{ $schedule["doctor_initials"] }}</span>
+                                    @if (!empty($schedule["doctor_photo_url"] ?? null))
+                                        <img src="{{ $schedule["doctor_photo_url"] }}"
+                                            alt="" width="60" height="60" loading="lazy"
+                                            decoding="async" onerror="this.remove()">
+                                    @endif
                                 </span>
                                 <div>
                                     <small>Dokter spesialis</small>

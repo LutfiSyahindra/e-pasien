@@ -626,128 +626,60 @@
                                     <div class="team-swiper-wrapper-1">
                                         <div class="swiper team-swiper-container-h1">
                                             <div class="swiper-wrapper">
-
-                                                <div class="swiper-slide">
-                                                    <div class="single-team-area-start">
-                                                        <a href="doctor-details.html" class="thumbnail">
-                                                            <img src="{{ asset("landing/assets/images/team/01.jpg") }}"
-                                                                alt="team">
-                                                        </a>
-                                                        <div class="bottom">
-                                                            <a href="doctor-details.html">
-                                                                <h6 class="title">Dr. Rachel Evans</h6>
+                                                @php
+                                                    $displayDoctors = $landingDoctors !== []
+                                                        ? $landingDoctors
+                                                        : [
+                                                            [
+                                                                "doctor_name" => "Dr. Rachel Evans",
+                                                                "photo_url" => asset("landing/assets/images/team/01.jpg"),
+                                                                "doctor_label" => "MBBS, MD - Oncologists",
+                                                            ],
+                                                            [
+                                                                "doctor_name" => "Dr. Emily Carter",
+                                                                "photo_url" => asset("landing/assets/images/team/02.jpg"),
+                                                                "doctor_label" => "MBBS, MD - Oncologists",
+                                                            ],
+                                                            [
+                                                                "doctor_name" => "Dr. Lisa Morgan",
+                                                                "photo_url" => asset("landing/assets/images/team/03.jpg"),
+                                                                "doctor_label" => "MBBS, MD - Oncologists",
+                                                            ],
+                                                            [
+                                                                "doctor_name" => "Dr. Jessica Lee",
+                                                                "photo_url" => asset("landing/assets/images/team/04.jpg"),
+                                                                "doctor_label" => "MBBS, MD - Oncologists",
+                                                            ],
+                                                        ];
+                                                @endphp
+                                                @foreach ($displayDoctors as $doctor)
+                                                    <div class="swiper-slide">
+                                                        <div class="single-team-area-start">
+                                                            <a href="{{ route("jadwalDokter.index") }}" class="thumbnail">
+                                                                <img src="{{ $doctor["photo_url"] }}"
+                                                                    alt="Foto {{ $doctor["doctor_name"] }}"
+                                                                    width="450" height="450" loading="lazy"
+                                                                    decoding="async">
                                                             </a>
-                                                            <p>MBBS, MD - Oncologists</p>
-                                                            <div class="social-area-tranaparent">
-                                                                <ul>
-                                                                    <li><a href="#"><i
-                                                                                class="fa-brands fa-facebook-f"></i></a>
-                                                                    </li>
-                                                                    <li><a href="#"><i
-                                                                                class="fa-brands fa-linkedin-in"></i></a>
-                                                                    </li>
-                                                                    <li><a href="#"><i
-                                                                                class="fa-brands fa-youtube"></i></a>
-                                                                    </li>
-                                                                    <li><a href="#"><i
-                                                                                class="fa-brands fa-twitter"></i></a>
-                                                                    </li>
-                                                                </ul>
+                                                            <div class="bottom">
+                                                                <a href="{{ route("jadwalDokter.index") }}">
+                                                                    <h6 class="title">{{ $doctor["doctor_name"] }}</h6>
+                                                                </a>
+                                                                <p>{{ $doctor["doctor_label"] ?? "Dokter RS Arsy" }}</p>
+                                                                <div class="social-area-tranaparent">
+                                                                    <ul>
+                                                                        <li>
+                                                                            <a href="{{ route("jadwalDokter.index") }}"
+                                                                                aria-label="Lihat jadwal {{ $doctor["doctor_name"] }}">
+                                                                                <i class="fa-solid fa-calendar-days"></i>
+                                                                            </a>
+                                                                        </li>
+                                                                    </ul>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <div class="swiper-slide">
-                                                    <div class="single-team-area-start">
-                                                        <a href="doctor-details.html" class="thumbnail">
-                                                            <img src="{{ asset("landing/assets/images/team/02.jpg") }}"
-                                                                alt="team">
-                                                        </a>
-                                                        <div class="bottom">
-                                                            <a href="#">
-                                                                <h6 class="title">Dr. Emily Carter</h6>
-                                                            </a>
-                                                            <p>MBBS, MD - Oncologists</p>
-                                                            <div class="social-area-tranaparent">
-                                                                <ul>
-                                                                    <li><a href="#"><i
-                                                                                class="fa-brands fa-facebook-f"></i></a>
-                                                                    </li>
-                                                                    <li><a href="#"><i
-                                                                                class="fa-brands fa-linkedin-in"></i></a>
-                                                                    </li>
-                                                                    <li><a href="#"><i
-                                                                                class="fa-brands fa-youtube"></i></a>
-                                                                    </li>
-                                                                    <li><a href="#"><i
-                                                                                class="fa-brands fa-twitter"></i></a>
-                                                                    </li>
-                                                                </ul>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="swiper-slide">
-                                                    <div class="single-team-area-start">
-                                                        <a href="doctor-details.html" class="thumbnail">
-                                                            <img src="{{ asset("landing/assets/images/team/03.jpg") }}"
-                                                                alt="team">
-                                                        </a>
-                                                        <div class="bottom">
-                                                            <a href="doctor-details.html">
-                                                                <h6 class="title">Dr. Lisa Morgan,</h6>
-                                                            </a>
-                                                            <p>MBBS, MD - Oncologists</p>
-                                                            <div class="social-area-tranaparent">
-                                                                <ul>
-                                                                    <li><a href="#"><i
-                                                                                class="fa-brands fa-facebook-f"></i></a>
-                                                                    </li>
-                                                                    <li><a href="#"><i
-                                                                                class="fa-brands fa-linkedin-in"></i></a>
-                                                                    </li>
-                                                                    <li><a href="#"><i
-                                                                                class="fa-brands fa-youtube"></i></a>
-                                                                    </li>
-                                                                    <li><a href="#"><i
-                                                                                class="fa-brands fa-twitter"></i></a>
-                                                                    </li>
-                                                                </ul>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="swiper-slide">
-                                                    <div class="single-team-area-start">
-                                                        <a href="doctor-details.html" class="thumbnail">
-                                                            <img src="{{ asset("landing/assets/images/team/04.jpg") }}"
-                                                                alt="team">
-                                                        </a>
-                                                        <div class="bottom">
-                                                            <a href="doctor-details.html">
-                                                                <h6 class="title">Dr. Jessica Lee</h6>
-                                                            </a>
-                                                            <p>MBBS, MD - Oncologists</p>
-                                                            <div class="social-area-tranaparent">
-                                                                <ul>
-                                                                    <li><a href="#"><i
-                                                                                class="fa-brands fa-facebook-f"></i></a>
-                                                                    </li>
-                                                                    <li><a href="#"><i
-                                                                                class="fa-brands fa-linkedin-in"></i></a>
-                                                                    </li>
-                                                                    <li><a href="#"><i
-                                                                                class="fa-brands fa-youtube"></i></a>
-                                                                    </li>
-                                                                    <li><a href="#"><i
-                                                                                class="fa-brands fa-twitter"></i></a>
-                                                                    </li>
-                                                                </ul>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
+                                                @endforeach
                                             </div>
                                             <div class="swiper-pagination"></div>
                                         </div>

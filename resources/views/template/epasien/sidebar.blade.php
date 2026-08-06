@@ -13,6 +13,10 @@
             );
             $facilityMenuActive = request()->routeIs("kamar.*", "laboratorium.*", "poliklinik.*", "radiologi.*");
             $registrationMenuActive = request()->routeIs("daftarOnline.*");
+            $landingPageDataMenuActive = request()->routeIs(
+                "doctorScheduleSettings.*",
+                "doctorPhotoSettings.*",
+            );
         @endphp
 
         <!--start sidebar -->
@@ -88,14 +92,30 @@
                             </ul>
                         </li>
                         @can("EPASIEN.SETTINGS.JADWAL_DOKTER")
-                            <li class="{{ request()->routeIs("doctorScheduleSettings.*") ? "mm-active" : "" }}">
-                                <a href="{{ route("doctorScheduleSettings.index") }}"
-                                    @if (request()->routeIs("doctorScheduleSettings.*")) aria-current="page" @endif>
-                                    <div class="parent-icon">
-                                        <i class="bi bi-calendar2-check"></i>
-                                    </div>
-                                    <div class="menu-title">Atur Jadwal Dokter</div>
+                            <li class="{{ $landingPageDataMenuActive ? "mm-active" : "" }}">
+                                <a href="javascript:;" class="has-arrow"
+                                    aria-expanded="{{ $landingPageDataMenuActive ? "true" : "false" }}">
+                                    <div class="parent-icon"><i class="bi bi-window-stack"></i></div>
+                                    <div class="menu-title">Landing Page &amp; Data</div>
                                 </a>
+                                <ul class="{{ $landingPageDataMenuActive ? "mm-show" : "" }}">
+                                    <li>
+                                        <a href="{{ route("doctorScheduleSettings.index") }}"
+                                            class="{{ request()->routeIs("doctorScheduleSettings.*") ? "mm-active" : "" }}"
+                                            @if (request()->routeIs("doctorScheduleSettings.*")) aria-current="page" @endif>
+                                            <i class="bi bi-calendar2-check"></i>
+                                            Atur Jadwal Dokter
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route("doctorPhotoSettings.index") }}"
+                                            class="{{ request()->routeIs("doctorPhotoSettings.*") ? "mm-active" : "" }}"
+                                            @if (request()->routeIs("doctorPhotoSettings.*")) aria-current="page" @endif>
+                                            <i class="bi bi-person-bounding-box"></i>
+                                            Foto Dokter
+                                        </a>
+                                    </li>
+                                </ul>
                             </li>
                         @endcan
                     @endcan

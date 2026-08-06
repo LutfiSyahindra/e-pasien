@@ -23,14 +23,14 @@ use App\Http\Controllers\Epasien\PushSubscriptionController;
 use App\Http\Controllers\Epasien\settings\auth\permissionsController;
 use App\Http\Controllers\Epasien\settings\auth\rolesController;
 use App\Http\Controllers\Epasien\settings\auth\usersController;
+use App\Http\Controllers\Epasien\settings\DoctorPhotoController;
 use App\Http\Controllers\Epasien\settings\DoctorScheduleController;
 use App\Http\Controllers\Epasien\settings\RoleConfigurationController;
+use App\Http\Controllers\LandingPage\LandingPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('landingPage.landingPage');
-});
+Route::get('/', [LandingPageController::class, 'index'])->name('landingPage.index');
 
 Route::get('/dashboard', function () {
     return view('e-pasien.dashboard');
@@ -104,12 +104,18 @@ Route::middleware('auth')->group(function () {
                 ->middleware('role_or_permission:Super Admin|roles.update')
                 ->name('roleConfiguration.update');
 
-            // Pengaturan jadwal dokter
+            // Landing Page & Data
             Route::middleware('permission:EPASIEN.SETTINGS.JADWAL_DOKTER')->group(function () {
                 Route::get('/jadwal-dokter', [DoctorScheduleController::class, 'index'])
                     ->name('doctorScheduleSettings.index');
                 Route::put('/jadwal-dokter', [DoctorScheduleController::class, 'update'])
                     ->name('doctorScheduleSettings.update');
+                Route::get('/landing-page-data/foto-dokter', [DoctorPhotoController::class, 'index'])
+                    ->name('doctorPhotoSettings.index');
+                Route::post('/landing-page-data/foto-dokter', [DoctorPhotoController::class, 'update'])
+                    ->name('doctorPhotoSettings.update');
+                Route::delete('/landing-page-data/foto-dokter/{doctorCode}', [DoctorPhotoController::class, 'destroy'])
+                    ->name('doctorPhotoSettings.destroy');
             });
         });
 

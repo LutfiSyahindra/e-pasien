@@ -3,6 +3,7 @@
 namespace Tests\Unit\Services\Epasien\Menu;
 
 use App\Repositories\epasien\menu\JadwalDokterRepository;
+use App\Repositories\epasien\settings\DoctorPhotoRepository;
 use App\Services\epasien\menu\JadwalDokterService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -56,7 +57,7 @@ class JadwalDokterServiceTest extends TestCase
                 ],
             ]));
 
-        $page = (new JadwalDokterService($repository))->page(
+        $page = $this->service($repository)->page(
             ' anak ',
             'SELASA',
             'ANA'
@@ -90,7 +91,7 @@ class JadwalDokterServiceTest extends TestCase
             ->method('clinics')
             ->willReturn(new Collection);
 
-        $page = (new JadwalDokterService($repository))->page(
+        $page = $this->service($repository)->page(
             null,
             'SEMUA',
             null
@@ -130,7 +131,7 @@ class JadwalDokterServiceTest extends TestCase
             ->method('clinics')
             ->willReturn(new Collection);
 
-        $page = (new JadwalDokterService($repository))->page(
+        $page = $this->service($repository)->page(
             null,
             'MINGGU',
             null
@@ -172,11 +173,55 @@ class JadwalDokterServiceTest extends TestCase
                 ],
             ]));
 
-        $service = new JadwalDokterService($repository);
+        $service = $this->service($repository);
         $firstPage = $service->page(null, 'SEMUA', null);
         $secondPage = $service->page(null, 'SEMUA', null);
 
         $this->assertSame($firstPage['summary'], $secondPage['summary']);
         $this->assertSame($firstPage['clinics'], $secondPage['clinics']);
+    }
+
+    public function test_configured_doctor_photo_is_attached_after_schedule_cache(): void
+    {
+        $repository = $this->createMock(JadwalDokterRepository::class);
+        $photoRepository = $this->createMock(DoctorPhotoRepository::class);
+        $repository
+            ->expects($this->once())
+            ->method('paginateSchedules')
+            ->willReturn(new LengthAwarePaginator([
+                (object) [
+                    'kd_dokter' => 'D001',
+                    'nm_dokter' => 'dr. Sehat',
+                    'jk' => 'L',
+                    'kd_poli' => 'INT',
+                    'nm_poli' => 'Poliklinik Penyakit Dalam',
+                    'hari_kerja' => 'SENIN',
+                    'jam_mulai' => '08:00:00',
+                    'jam_selesai' => '10:00:00',
+                    'kuota' => 20,
+                ],
+            ], 1, 12));
+        $repository->expects($this->once())->method('summary')->willReturn(null);
+        $repository->expects($this->once())->method('clinics')->willReturn(collect());
+        $photoRepository
+            ->expects($this->once())
+            ->method('urlsForCodes')
+            ->with(['D001'])
+            ->willReturn(['D001' => '/storage/doctor-photos/d001.webp']);
+
+        $page = (new JadwalDokterService($repository, $photoRepository))->page(null, 'SENIN', null);
+
+        $this->assertSame(
+            '/storage/doctor-photos/d001.webp',
+            $page['schedules']->items()[0]['doctor_photo_url']
+        );
+    }
+
+    private function service(JadwalDokterRepository $repository): JadwalDokterService
+    {
+        $photoRepository = $this->createStub(DoctorPhotoRepository::class);
+        $photoRepository->method('urlsForCodes')->willReturn([]);
+
+        return new JadwalDokterService($repository, $photoRepository);
     }
 }

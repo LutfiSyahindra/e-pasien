@@ -3,6 +3,7 @@
 namespace App\Services\epasien\menu;
 
 use App\Repositories\epasien\menu\JadwalDokterRepository;
+use App\Repositories\epasien\settings\DoctorPhotoRepository;
 use App\Support\Epasien\DoctorScheduleDay;
 use Carbon\CarbonInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -32,7 +33,8 @@ class JadwalDokterService
     ];
 
     public function __construct(
-        private readonly JadwalDokterRepository $jadwalDokterRepository
+        private readonly JadwalDokterRepository $jadwalDokterRepository,
+        private readonly DoctorPhotoRepository $doctorPhotoRepository
     ) {}
 
     /**
@@ -76,6 +78,7 @@ class JadwalDokterService
             }
         );
         $schedules->setPath(LengthAwarePaginator::resolveCurrentPath());
+        $this->attachDoctorPhotos($schedules);
 
         $summary = Cache::flexible(
             'epasien:khanza:doctor-schedules:summary:v1',
@@ -224,6 +227,7 @@ class JadwalDokterService
             'doctor_code' => $this->text($schedule->kd_dokter ?? null),
             'doctor_name' => $doctorName,
             'doctor_initials' => $this->initials($doctorName),
+            'doctor_photo_url' => null,
             'gender_icon' => ($schedule->jk ?? null) === 'P'
                 ? 'bi-person-heart'
                 : 'bi-person',
@@ -282,6 +286,25 @@ class JadwalDokterService
             fn (string $word): string => mb_substr($word, 0, 1),
             $words
         )));
+    }
+
+    private function attachDoctorPhotos(LengthAwarePaginator $schedules): void
+    {
+        if ($schedules->isEmpty()) {
+            return;
+        }
+
+        $photoUrls = $this->doctorPhotoRepository->urlsForCodes(
+            $schedules->getCollection()->pluck('doctor_code')->all()
+        );
+
+        $schedules->setCollection($schedules->getCollection()->map(
+            function (array $schedule) use ($photoUrls): array {
+                $schedule['doctor_photo_url'] = $photoUrls[$schedule['doctor_code']] ?? null;
+
+                return $schedule;
+            }
+        ));
     }
 
     private function text(mixed $value): string
