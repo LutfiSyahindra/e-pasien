@@ -21,6 +21,9 @@ class PemeriksaanRadiologiPageTest extends TestCase
         $this->get(route('pemeriksaanRadiologi.result', [
             'noorder' => 'PR001',
         ]))->assertRedirect(route('login'));
+        $this->get(route('pemeriksaanRadiologi.resultPdf', [
+            'noorder' => 'PR001',
+        ]))->assertRedirect(route('login'));
         $this->get(route('pemeriksaanRadiologi.image', [
             'noorder' => 'PR001',
             'image' => 0,
@@ -129,7 +132,8 @@ class PemeriksaanRadiologiPageTest extends TestCase
             ->assertSee('id="radiologyFilterPanel"', false)
             ->assertSeeText('5 aktif')
             ->assertDontSee('target = "_blank"', false)
-            ->assertSee('data-result-url=', false);
+            ->assertSee('data-result-url=', false)
+            ->assertSee('data-result-pdf-url=', false);
     }
 
     public function test_result_endpoint_hides_an_order_owned_by_another_patient(): void
@@ -149,6 +153,104 @@ class PemeriksaanRadiologiPageTest extends TestCase
                 'message',
                 'Permintaan radiologi tidak ditemukan.'
             );
+    }
+
+    public function test_result_pdf_streams_a_private_branded_report_for_the_authenticated_patient(): void
+    {
+        $result = [
+            'permintaan' => [
+                'noorder' => 'PR20260729001',
+                'no_rawat' => '2026/07/29/000001',
+                'tanggal_hasil_lengkap' => 'Rabu, 29 Juli 2026',
+                'jam_hasil' => '10:00',
+                'jenis_layanan' => 'Rawat Jalan',
+                'dokter_perujuk' => 'dr. Sehat',
+                'poli' => 'Poli Umum',
+                'diagnosa_klinis' => 'Batuk persisten',
+                'informasi_tambahan' => 'Evaluasi paru',
+            ],
+            'ringkasan' => [
+                'jumlah_pemeriksaan' => 1,
+                'jumlah_hasil' => 1,
+                'jumlah_gambar' => 2,
+            ],
+            'pemeriksaan' => [[
+                'kode' => 'RAD001',
+                'nama' => 'Thorax PA Dewasa',
+                'status_bayar' => 'Sudah',
+            ]],
+            'hasil' => [[
+                'tanggal_lengkap' => 'Rabu, 29 Juli 2026',
+                'jam' => '09:58',
+                'narasi' => "Foto thorax proyeksi PA.\nCor dan pulmo dalam batas normal.",
+            ]],
+            'gambar' => [
+                [
+                    'nama_file' => 'thorax-pa-01.jpg',
+                    'tanggal_lengkap' => 'Rabu, 29 Juli 2026',
+                    'jam' => '09:45',
+                ],
+                [
+                    'nama_file' => 'thorax-pa-02.jpg',
+                    'tanggal_lengkap' => 'Rabu, 29 Juli 2026',
+                    'jam' => '09:46',
+                ],
+            ],
+        ];
+        $patient = (object) [
+            'no_rkm_medis' => '000123',
+            'nm_pasien' => 'Budi Santoso',
+            'jk' => 'L',
+            'tgl_lahir' => '1990-05-12',
+        ];
+
+        $this->mock(PemeriksaanRadiologiService::class, function (
+            MockInterface $mock
+        ) use ($result, $patient): void {
+            $mock->shouldReceive('resultForUser')
+                ->once()
+                ->withArgs(
+                    fn (User $user, string $orderNumber): bool => $user->username === '000123'
+                        && $orderNumber === 'PR20260729001'
+                )
+                ->andReturn($result);
+            $mock->shouldReceive('patientForUser')
+                ->once()
+                ->andReturn($patient);
+        });
+
+        $response = $this->actingAs($this->patientUser())->get(
+            route('pemeriksaanRadiologi.resultPdf', [
+                'noorder' => 'PR20260729001',
+            ])
+        );
+
+        $response
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertHeader('cache-control', 'max-age=0, no-store, private')
+            ->assertHeader('x-content-type-options', 'nosniff');
+
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
+        $this->assertGreaterThan(10000, strlen($response->getContent()));
+        $this->assertStringContainsString(
+            'Hasil-Radiologi-RS-ARSY-PR20260729001.pdf',
+            (string) $response->headers->get('content-disposition')
+        );
+    }
+
+    public function test_result_pdf_hides_an_order_that_is_not_owned_by_the_patient(): void
+    {
+        $this->mock(PemeriksaanRadiologiService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('resultForUser')->once()->andReturnNull();
+            $mock->shouldNotReceive('patientForUser');
+        });
+
+        $this->actingAs($this->patientUser())
+            ->get(route('pemeriksaanRadiologi.resultPdf', [
+                'noorder' => 'PR-MILIK-PASIEN-LAIN',
+            ]))
+            ->assertNotFound();
     }
 
     public function test_owned_radiology_image_is_proxied_from_configured_server(): void

@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Epasien\menu;
 
 use App\Http\Controllers\Controller;
 use App\Services\epasien\menu\RiwayatPemeriksaanService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Throwable;
@@ -145,6 +148,63 @@ class RiwayatPemeriksaanController extends Controller
             'message' => 'Nota pembayaran berhasil dimuat.',
             'data' => $payment,
         ]);
+    }
+
+    public function paymentPdf(Request $request): Response
+    {
+        $validated = $request->validate([
+            'no_rawat' => ['required', 'string', 'max:30'],
+        ]);
+
+        try {
+            $payment = $this->riwayatPemeriksaanService->paymentForUser(
+                $request->user(),
+                $validated['no_rawat']
+            );
+        } catch (Throwable $exception) {
+            Log::warning('Gagal membuat PDF nota pembayaran pasien.', [
+                'user_id' => $request->user()?->id,
+                'message' => $exception->getMessage(),
+            ]);
+
+            abort(503, 'PDF nota pembayaran belum dapat dibuat. Koneksi data Khanza tidak tersedia.');
+        }
+
+        abort_if($payment === null, 404, 'Nota pembayaran tidak ditemukan untuk kunjungan ini.');
+
+        $logoPath = public_path('landing/assets/imagesArsy/logoarsy.png');
+        $logoDataUri = is_file($logoPath)
+            ? 'data:image/png;base64,'.base64_encode((string) file_get_contents($logoPath))
+            : null;
+        $printedAt = Carbon::now('Asia/Jakarta')
+            ->locale('id')
+            ->translatedFormat('d F Y, H.i').' WIB';
+        $reference = preg_replace(
+            '/[^A-Za-z0-9]+/',
+            '-',
+            (string) ($payment['nomor_nota'] ?: $payment['no_rawat'])
+        );
+        $reference = trim((string) $reference, '-') ?: 'Pembayaran';
+        $filename = 'Nota-RS-ARSY-'.$reference.'.pdf';
+
+        $pdf = Pdf::loadView('e-pasien.menu.riwayatPemeriksaan.paymentPdf', [
+            'payment' => $payment,
+            'logoDataUri' => $logoDataUri,
+            'printedAt' => $printedAt,
+        ])
+            ->setPaper('a4', 'portrait')
+            ->setOption([
+                'defaultFont' => 'DejaVu Sans',
+                'dpi' => 150,
+                'isFontSubsettingEnabled' => true,
+                'isPhpEnabled' => true,
+            ]);
+
+        $response = $pdf->stream($filename, ['Attachment' => false]);
+        $response->headers->set('Cache-Control', 'private, no-store, max-age=0');
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
+
+        return $response;
     }
 
     private function emptyHistory(): LengthAwarePaginator

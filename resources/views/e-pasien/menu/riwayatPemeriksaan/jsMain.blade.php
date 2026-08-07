@@ -782,12 +782,11 @@
         });
 
         paymentPrint.addEventListener("click", () => {
-            document.body.classList.add("examination-payment-printing");
-            window.print();
-        });
+            const pdfUrl = paymentLastTrigger?.dataset.paymentPdfUrl;
 
-        window.addEventListener("afterprint", () => {
-            document.body.classList.remove("examination-payment-printing");
+            if (pdfUrl) {
+                window.open(pdfUrl, "_blank", "noopener,noreferrer");
+            }
         });
 
         paymentModalElement.addEventListener("hidden.bs.modal", () => {
@@ -802,7 +801,6 @@
             paymentPrint.hidden = true;
             paymentInformation.replaceChildren();
             paymentRows.replaceChildren();
-            document.body.classList.remove("examination-payment-printing");
         });
     });
 </script>

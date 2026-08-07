@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Epasien\menu\PermintaanTindakan;
 
 use App\Http\Controllers\Controller;
 use App\Services\epasien\menu\PermintaanTindakan\PemeriksaanRadiologiService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -120,6 +123,90 @@ class PemeriksaanRadiologiController extends Controller
             'message' => 'Hasil radiologi berhasil dimuat.',
             'data' => $result,
         ]);
+    }
+
+    public function resultPdf(Request $request): Response
+    {
+        $validated = $request->validate([
+            'noorder' => ['required', 'string', 'max:20'],
+        ]);
+
+        try {
+            $result = $this->pemeriksaanRadiologiService->resultForUser(
+                $request->user(),
+                $validated['noorder']
+            );
+        } catch (Throwable $exception) {
+            Log::warning('Gagal membuat PDF hasil radiologi pasien.', [
+                'user_id' => $request->user()?->id,
+                'noorder' => $validated['noorder'],
+                'message' => $exception->getMessage(),
+            ]);
+
+            abort(503, 'PDF hasil radiologi belum dapat dibuat. Koneksi data Khanza tidak tersedia.');
+        }
+
+        abort_if($result === null, 404, 'Permintaan radiologi tidak ditemukan.');
+        abort_if(
+            empty($result['hasil']) && empty($result['gambar']),
+            404,
+            'Hasil radiologi belum tersedia.'
+        );
+
+        try {
+            $patient = $this->pemeriksaanRadiologiService
+                ->patientForUser($request->user());
+        } catch (Throwable $exception) {
+            Log::warning('Gagal memuat identitas pasien untuk PDF hasil radiologi.', [
+                'user_id' => $request->user()?->id,
+                'noorder' => $validated['noorder'],
+                'message' => $exception->getMessage(),
+            ]);
+
+            abort(503, 'Identitas pasien untuk PDF hasil radiologi belum dapat dimuat.');
+        }
+
+        $patient ??= (object) [
+            'no_rkm_medis' => $request->user()?->username,
+            'nm_pasien' => $request->user()?->name,
+        ];
+        $logoPath = public_path('landing/assets/imagesArsy/logoarsy.png');
+        $logoDataUri = is_file($logoPath)
+            ? 'data:image/png;base64,'.base64_encode((string) file_get_contents($logoPath))
+            : null;
+        $printedAt = Carbon::now('Asia/Jakarta')
+            ->locale('id')
+            ->translatedFormat('d F Y, H.i').' WIB';
+        $reference = preg_replace(
+            '/[^A-Za-z0-9]+/',
+            '-',
+            (string) data_get($result, 'permintaan.noorder', $validated['noorder'])
+        );
+        $reference = trim((string) $reference, '-') ?: 'Radiologi';
+        $filename = 'Hasil-Radiologi-RS-ARSY-'.$reference.'.pdf';
+
+        $pdf = Pdf::loadView(
+            'e-pasien.menu.PermintaanTindakan.pemeriksaanRadiologi.resultPdf',
+            [
+                'result' => $result,
+                'patient' => $patient,
+                'logoDataUri' => $logoDataUri,
+                'printedAt' => $printedAt,
+            ]
+        )
+            ->setPaper('a4', 'portrait')
+            ->setOption([
+                'defaultFont' => 'DejaVu Sans',
+                'dpi' => 150,
+                'isFontSubsettingEnabled' => true,
+                'isPhpEnabled' => true,
+            ]);
+
+        $response = $pdf->stream($filename, ['Attachment' => false]);
+        $response->headers->set('Cache-Control', 'private, no-store, max-age=0');
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
+
+        return $response;
     }
 
     public function image(

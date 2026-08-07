@@ -273,8 +273,11 @@
         });
 
         printButton.addEventListener("click", () => {
-            document.body.classList.add("radiology-result-printing");
-            window.print();
+            const pdfUrl = lastTrigger?.dataset.resultPdfUrl;
+
+            if (pdfUrl) {
+                window.open(pdfUrl, "_blank", "noopener,noreferrer");
+            }
         });
 
         viewerClose.addEventListener("click", () => closeImageViewer());
@@ -304,10 +307,6 @@
             }
         });
 
-        window.addEventListener("afterprint", () => {
-            document.body.classList.remove("radiology-result-printing");
-        });
-
         modal.addEventListener("hidden.bs.modal", () => {
             closeImageViewer(false);
             requestSequence++;
@@ -323,7 +322,6 @@
             documentPanel.hidden = true;
             printButton.hidden = true;
             resetCollections();
-            document.body.classList.remove("radiology-result-printing");
         });
     });
 </script>

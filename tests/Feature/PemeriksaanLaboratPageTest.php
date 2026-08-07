@@ -111,6 +111,7 @@ class PemeriksaanLaboratPageTest extends TestCase
             ->assertSeeText('Puasa 8 jam')
             ->assertSeeText('Lihat Hasil')
             ->assertSee('data-result-url=', false)
+            ->assertSee('data-result-pdf-url=', false)
             ->assertSee('id="laboratoryResultModal"', false)
             ->assertSee('data-mobile-filter-toggle', false)
             ->assertSee('id="laboratoryFilterPanel"', false)
@@ -192,6 +193,107 @@ class PemeriksaanLaboratPageTest extends TestCase
                 'message',
                 'Permintaan laboratorium tidak ditemukan.'
             );
+    }
+
+    public function test_result_pdf_streams_a_private_branded_report_for_the_authenticated_patient(): void
+    {
+        $result = [
+            'permintaan' => [
+                'noorder' => 'PL20260729001',
+                'no_rawat' => '2026/07/29/000001',
+                'tanggal_hasil_lengkap' => 'Rabu, 29 Juli 2026',
+                'jam_hasil' => '10:00',
+                'jam_hasil_aktual' => '09:58, 10:00',
+                'jenis_layanan' => 'Rawat Jalan',
+                'dokter_perujuk' => 'dr. Sehat',
+                'poli' => 'Poli Umum',
+                'diagnosa_klinis' => 'Demam',
+                'informasi_tambahan' => 'Puasa 8 jam',
+            ],
+            'ringkasan' => [
+                'jumlah_jenis' => 1,
+                'jumlah_parameter' => 2,
+                'jumlah_catatan' => 1,
+            ],
+            'kelompok_hasil' => [[
+                'kode' => 'LAB001',
+                'nama' => 'Darah Lengkap',
+                'jumlah_parameter' => 2,
+                'parameter' => [
+                    [
+                        'nama' => 'Hemoglobin',
+                        'nilai' => '13.5',
+                        'satuan' => 'g/dL',
+                        'nilai_rujukan' => '12-16',
+                        'keterangan' => 'Normal',
+                        'memiliki_catatan' => false,
+                    ],
+                    [
+                        'nama' => 'Leukosit',
+                        'nilai' => '14.2',
+                        'satuan' => '10^3/uL',
+                        'nilai_rujukan' => '4.0-10.0',
+                        'keterangan' => 'Tinggi',
+                        'memiliki_catatan' => true,
+                    ],
+                ],
+            ]],
+        ];
+        $patient = (object) [
+            'no_rkm_medis' => '000123',
+            'nm_pasien' => 'Budi Santoso',
+            'jk' => 'L',
+            'tgl_lahir' => '1990-04-12',
+        ];
+
+        $this->mock(PemeriksaanLaboratService::class, function (MockInterface $mock) use (
+            $result,
+            $patient
+        ): void {
+            $mock->shouldReceive('resultForUser')
+                ->once()
+                ->withArgs(
+                    fn (User $user, string $orderNumber): bool => $user->username === '000123'
+                        && $orderNumber === 'PL20260729001'
+                )
+                ->andReturn($result);
+            $mock->shouldReceive('patientForUser')
+                ->once()
+                ->andReturn($patient);
+        });
+
+        $response = $this->actingAs($this->patientUser())->get(
+            route('pemeriksaanLaborat.resultPdf', [
+                'noorder' => 'PL20260729001',
+            ])
+        );
+
+        $response
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertHeader('cache-control', 'max-age=0, no-store, private')
+            ->assertHeader('x-content-type-options', 'nosniff');
+
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
+        $this->assertGreaterThan(10000, strlen($response->getContent()));
+        $this->assertStringContainsString(
+            'Hasil-Laboratorium-RS-ARSY-PL20260729001.pdf',
+            (string) $response->headers->get('content-disposition')
+        );
+    }
+
+    public function test_result_pdf_hides_an_order_that_is_not_owned_by_the_patient(): void
+    {
+        $this->mock(PemeriksaanLaboratService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('resultForUser')->once()->andReturnNull();
+            $mock->shouldNotReceive('patientForUser');
+        });
+
+        $this->actingAs($this->patientUser())
+            ->get(route('pemeriksaanLaborat.resultPdf', [
+                'noorder' => 'PL-MILIK-PASIEN-LAIN',
+            ]))
+            ->assertNotFound();
     }
 
     public function test_page_rejects_an_invalid_result_status(): void

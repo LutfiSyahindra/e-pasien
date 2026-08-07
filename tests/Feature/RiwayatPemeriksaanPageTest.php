@@ -95,6 +95,7 @@ class RiwayatPemeriksaanPageTest extends TestCase
             ->assertSeeText('Pembayaran')
             ->assertSeeText('Lihat Resume')
             ->assertSee('data-payment-url=', false)
+            ->assertSee('data-payment-pdf-url=', false)
             ->assertSee('data-resume-url=', false)
             ->assertSee('id="examinationPaymentModal"', false)
             ->assertSee('id="examinationResumeModal"', false)
@@ -257,6 +258,95 @@ class RiwayatPemeriksaanPageTest extends TestCase
         $response
             ->assertNotFound()
             ->assertJsonPath('message', 'Nota pembayaran tidak ditemukan untuk kunjungan ini.');
+    }
+
+    public function test_payment_pdf_streams_a_private_branded_receipt_for_the_authenticated_patient(): void
+    {
+        $payment = [
+            'no_rawat' => '2026/07/20/000007',
+            'no_rkm_medis' => '000123',
+            'nomor_nota' => '2026/07/20/RJ0007',
+            'tanggal_bayar_lengkap' => 'Senin, 20 Juli 2026',
+            'jam_registrasi' => '08:15',
+            'pasien' => 'Budi Santoso',
+            'dokter' => 'dr. Sehat',
+            'poli' => 'Poli Umum',
+            'penjamin' => 'Umum',
+            'status_bayar' => 'Sudah Bayar',
+            'status_lanjut' => 'Ralan',
+            'jenis_layanan' => 'Rawat Jalan',
+            'summary' => [
+                'subtotal' => 25000,
+                'tambahan' => 0,
+                'pengurang' => 0,
+                'total' => 25000,
+                'jumlah_item' => 1,
+                'jumlah_baris' => 2,
+            ],
+            'rows' => [
+                [
+                    'label' => 'No.Nota',
+                    'description' => '2026/07/20/RJ0007',
+                    'nm_perawatan' => ': 2026/07/20/RJ0007',
+                    'type' => 'information',
+                ],
+                [
+                    'label' => 'Jasa Periksa',
+                    'description' => '',
+                    'nm_perawatan' => 'Jasa Periksa',
+                    'status' => 'Dokter',
+                    'biaya' => 25000,
+                    'jumlah' => 1,
+                    'tambahan' => 0,
+                    'totalbiaya' => 25000,
+                    'type' => 'detail',
+                ],
+            ],
+        ];
+
+        $this->mock(RiwayatPemeriksaanService::class, function (MockInterface $mock) use ($payment): void {
+            $mock->shouldReceive('paymentForUser')
+                ->once()
+                ->withArgs(
+                    fn (User $user, string $noRawat): bool => $user->username === '000123'
+                        && $noRawat === '2026/07/20/000007'
+                )
+                ->andReturn($payment);
+        });
+
+        $response = $this->actingAs($this->patientUser())->get(
+            route('riwayatPemeriksaan.paymentPdf', [
+                'no_rawat' => '2026/07/20/000007',
+            ])
+        );
+
+        $response
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertHeader('cache-control', 'max-age=0, no-store, private')
+            ->assertHeader('x-content-type-options', 'nosniff');
+
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
+        $this->assertGreaterThan(10000, strlen($response->getContent()));
+        $this->assertStringContainsString(
+            'Nota-RS-ARSY-2026-07-20-RJ0007.pdf',
+            (string) $response->headers->get('content-disposition')
+        );
+    }
+
+    public function test_payment_pdf_hides_a_visit_that_does_not_belong_to_the_patient(): void
+    {
+        $this->mock(RiwayatPemeriksaanService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('paymentForUser')
+                ->once()
+                ->andReturnNull();
+        });
+
+        $this->actingAs($this->patientUser())
+            ->get(route('riwayatPemeriksaan.paymentPdf', [
+                'no_rawat' => '2026/07/21/999999',
+            ]))
+            ->assertNotFound();
     }
 
     public function test_page_rejects_an_unknown_care_type_filter(): void

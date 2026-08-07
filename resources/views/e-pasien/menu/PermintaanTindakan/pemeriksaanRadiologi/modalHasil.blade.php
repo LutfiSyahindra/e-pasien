@@ -145,8 +145,8 @@
                 </button>
                 <button type="button" class="laboratory-modal-primary"
                     id="radiologyResultPrint" hidden>
-                    <i class="bi bi-printer"></i>
-                    Cetak Hasil
+                    <i class="bi bi-file-earmark-pdf"></i>
+                    Cetak / Unduh PDF
                 </button>
             </div>
         </div>
