@@ -73,13 +73,15 @@
             $('#roleId').val('');
         });
 
+        const isMobileAccessTable = window.matchMedia('(max-width: 767.98px)').matches;
+
         let roleTable = $('#tableRoles').DataTable({
             processing: true,
             serverSide: true,
             responsive: false,
             autoWidth: false,
-            scrollX: true,
-            scrollCollapse: true,
+            scrollX: !isMobileAccessTable,
+            scrollCollapse: !isMobileAccessTable,
             dom: 'rt<"access-datatable-footer d-flex flex-wrap align-items-center justify-content-between gap-2 px-3 py-3"ip>',
             language: dataTableLanguage('role'),
             ajax: {
@@ -131,11 +133,15 @@
         });
 
         roleTable.on('draw.dt', function() {
-            roleTable.columns.adjust();
+            if (!window.matchMedia('(max-width: 767.98px)').matches) {
+                roleTable.columns.adjust();
+            }
         });
 
         $(window).on('resize.accessRolesTable', function() {
-            roleTable.columns.adjust();
+            if (!window.matchMedia('(max-width: 767.98px)').matches) {
+                roleTable.columns.adjust();
+            }
         });
 
         roleTable.on('xhr.dt', function(e, settings, json) {

@@ -26,53 +26,88 @@
             <ul class="navbar-nav align-items-center">
                 @can("EPASIEN.MENU.PASIEN_SERVICE")
                     <li class="nav-item dropdown ep-message-nav">
-                        <a class="nav-link dropdown-toggle dropdown-toggle-nocaret ep-navbar-action" href="#" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false" aria-label="Buka pesan Pasien Service"
-                            title="Pesan Pasien Service">
+                        <button class="nav-link dropdown-toggle dropdown-toggle-nocaret ep-navbar-action" type="button"
+                            data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"
+                            aria-label="Buka pesan Pasien Service"
+                            aria-controls="ep-navbar-message-panel" title="Pesan Pasien Service">
                             <span class="messages ep-message-button">
                                 <span class="notify-badge" data-message-badge hidden>0</span>
                                 <i class="bi bi-chat-heart-fill" aria-hidden="true"></i>
                             </span>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-end ep-message-menu p-0">
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end ep-message-menu p-0" id="ep-navbar-message-panel"
+                            role="dialog" aria-labelledby="ep-navbar-message-title">
+                            <span class="ep-navbar-sheet-grabber" aria-hidden="true"></span>
                             <div class="ep-message-header">
-                                <div><span>Percakapan realtime</span><h5>Pasien Service</h5></div>
-                                <span class="ep-message-live"><i></i> Aktif</span>
+                                <span class="ep-message-header__icon" aria-hidden="true"><i class="bi bi-chat-heart-fill"></i></span>
+                                <div class="ep-message-header__copy">
+                                    <span>Percakapan realtime</span>
+                                    <h5 id="ep-navbar-message-title">Pasien Service</h5>
+                                    <small data-message-unread-copy>Memuat percakapan...</small>
+                                </div>
+                                <div class="ep-message-header__actions">
+                                    <span class="ep-message-live"><i></i> Aktif</span>
+                                    <button class="ep-navbar-sheet-close" type="button" data-navbar-sheet-close
+                                        aria-label="Tutup percakapan" title="Tutup">
+                                        <i class="bi bi-x-lg" aria-hidden="true"></i>
+                                    </button>
+                                </div>
                             </div>
                             <label class="ep-message-search">
                                 <i class="bi bi-search" aria-hidden="true"></i>
-                                <input type="search" placeholder="Cari percakapan..." data-message-search>
+                                <input type="search" placeholder="Cari nama atau topik..." data-message-search
+                                    aria-label="Cari percakapan" autocomplete="off">
                             </label>
-                            <div class="ep-message-list" data-navbar-message-list aria-live="polite">
+                            <div class="ep-message-list" data-navbar-message-list aria-live="polite" aria-busy="true">
                                 <div class="ep-message-loading"><span></span><span></span><span></span></div>
                             </div>
                             <a class="ep-message-footer" href="{{ route("patientService.index") }}">
-                                <span>Lihat semua percakapan</span><i class="bi bi-arrow-right"></i>
+                                <span class="ep-message-footer__icon"><i class="bi bi-chat-dots-fill" aria-hidden="true"></i></span>
+                                <span><strong>Buka pusat percakapan</strong><small>Lihat dan balas semua pesan</small></span>
+                                <i class="bi bi-arrow-right" aria-hidden="true"></i>
                             </a>
                         </div>
                     </li>
                 @endcan
 
                 <li class="nav-item dropdown ep-notification-nav">
-                    <a class="nav-link dropdown-toggle dropdown-toggle-nocaret ep-navbar-action" href="#" role="button"
-                        data-bs-toggle="dropdown" aria-expanded="false" aria-label="Buka notifikasi" title="Notifikasi">
+                    <button class="nav-link dropdown-toggle dropdown-toggle-nocaret ep-navbar-action" type="button"
+                        data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Buka notifikasi"
+                        aria-controls="ep-navbar-notification-panel" title="Notifikasi">
                         <span class="notifications ep-notification-bell">
                             <span class="notify-badge" data-notification-badge hidden>0</span>
                             <i class="bi bi-bell-fill" aria-hidden="true"></i>
                         </span>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-end ep-notification-menu p-0">
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end ep-notification-menu p-0"
+                        id="ep-navbar-notification-panel" role="dialog" aria-labelledby="ep-navbar-notification-title">
+                        <span class="ep-navbar-sheet-grabber" aria-hidden="true"></span>
                         <div class="ep-notification-header">
-                            <div><span>Kabar terbaru</span><h5>Notifikasi</h5></div>
-                            <button type="button" data-notification-read-all>Tandai dibaca</button>
+                            <span class="ep-notification-header__icon" aria-hidden="true"><i class="bi bi-bell-fill"></i></span>
+                            <div class="ep-notification-header__copy">
+                                <span>Kabar terbaru</span>
+                                <h5 id="ep-navbar-notification-title">Notifikasi</h5>
+                                <small data-notification-unread-copy>Memuat kabar terbaru...</small>
+                            </div>
+                            <div class="ep-notification-header__actions">
+                                <button class="ep-notification-read-all" type="button" data-notification-read-all disabled
+                                    aria-label="Tandai semua notifikasi telah dibaca" title="Tandai semua dibaca">
+                                    <i class="bi bi-check2-all" aria-hidden="true"></i><span>Tandai dibaca</span>
+                                </button>
+                                <button class="ep-navbar-sheet-close" type="button" data-navbar-sheet-close
+                                    aria-label="Tutup notifikasi" title="Tutup">
+                                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div class="ep-notification-list" data-notification-list aria-live="polite">
+                        <div class="ep-notification-list" data-notification-list aria-live="polite" aria-busy="true">
                             <div class="ep-notification-loading"><span></span><span></span><span></span></div>
                         </div>
                         <div class="ep-notification-footer">
                             <button type="button" data-push-toggle>
-                                <i class="bi bi-phone-vibrate"></i>
+                                <i class="bi bi-phone-vibrate" aria-hidden="true"></i>
                                 <span>Aktifkan notifikasi perangkat</span>
+                                <i class="bi bi-chevron-right ep-notification-footer__arrow" aria-hidden="true"></i>
                             </button>
                             <small data-push-hint>Terima kabar meskipun E-Pasien sedang ditutup.</small>
                         </div>
@@ -130,4 +165,6 @@
             </ul>
         </div>
     </nav>
+    <button class="ep-navbar-sheet-backdrop" type="button" data-navbar-sheet-backdrop
+        aria-label="Tutup panel navbar" hidden></button>
 </header>

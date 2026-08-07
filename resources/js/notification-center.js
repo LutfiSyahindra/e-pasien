@@ -140,9 +140,24 @@ const forgetCachedNotifications = () => {
 const setBadge = (count) => {
     unreadCount = Number(count) || 0;
     const badge = document.querySelector('[data-notification-badge]');
-    if (!badge) return;
-    badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
-    badge.hidden = unreadCount < 1;
+    const trigger = document.querySelector('.ep-notification-nav [data-bs-toggle="dropdown"]');
+    const unreadCopy = document.querySelector('[data-notification-unread-copy]');
+    const readAll = document.querySelector('[data-notification-read-all]');
+
+    if (badge) {
+        badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+        badge.hidden = unreadCount < 1;
+    }
+    trigger?.setAttribute(
+        'aria-label',
+        unreadCount > 0 ? `Buka ${unreadCount} notifikasi yang belum dibaca` : 'Buka notifikasi',
+    );
+    if (unreadCopy) {
+        unreadCopy.textContent = unreadCount > 0
+            ? `${unreadCount} notifikasi belum dibaca`
+            : 'Semua kabar sudah dibaca';
+    }
+    if (readAll) readAll.disabled = unreadCount < 1;
 };
 
 const setPromotionBadge = (count) => {
@@ -161,6 +176,20 @@ const setPromotionBadge = (count) => {
     );
 };
 
+const notificationEmptyState = (
+    title = 'Belum ada notifikasi',
+    detail = 'Kabar terbaru akan muncul di sini.',
+    iconClass = 'bi bi-bell-slash',
+) => {
+    const empty = document.createElement('div');
+    empty.className = 'ep-notification-empty';
+    const icon = document.createElement('i'); icon.className = iconClass;
+    const strong = document.createElement('strong'); strong.textContent = title;
+    const small = document.createElement('small'); small.textContent = detail;
+    empty.append(icon, strong, small);
+    return empty;
+};
+
 const notificationItem = (item) => {
     const button = document.createElement('button');
     const data = normalizedNotificationData(item.data);
@@ -168,6 +197,7 @@ const notificationItem = (item) => {
     button.className = `ep-notification-item${item.read_at ? '' : ' is-unread'}`;
     button.dataset.id = item.id;
     button.dataset.url = data.url || '#';
+    button.setAttribute('aria-label', `${data.title || 'Notifikasi baru'}, ${item.time_label || 'baru saja'}${item.read_at ? '' : ', belum dibaca'}`);
 
     const visual = document.createElement('span');
     visual.className = 'ep-notification-item__image';
@@ -221,15 +251,10 @@ const renderNotifications = (payload) => {
     setBadge(payload.unread_count || 0);
     setPromotionBadge(payload.promotion_unread_count || 0);
     if (!list) return;
+    list.setAttribute('aria-busy', 'false');
     list.replaceChildren();
     if (!payload.notifications?.length) {
-        const empty = document.createElement('div');
-        empty.className = 'ep-notification-empty';
-        const icon = document.createElement('i'); icon.className = 'bi bi-bell-slash';
-        const strong = document.createElement('strong'); strong.textContent = 'Belum ada notifikasi';
-        const small = document.createElement('small'); small.textContent = 'Kabar terbaru akan muncul di sini.';
-        empty.append(icon, strong, small);
-        list.append(empty);
+        list.append(notificationEmptyState());
         return;
     }
     payload.notifications.forEach((item) => list.append(notificationItem(item)));
@@ -238,6 +263,7 @@ const renderNotifications = (payload) => {
 const loadNotifications = async ({ force = false } = {}) => {
     if (!listUrl || (notificationsLoaded && !force)) return;
     if (notificationsLoading) return notificationsLoading;
+    document.querySelector('[data-notification-list]')?.setAttribute('aria-busy', 'true');
 
     notificationsLoading = request(listUrl)
         .then((payload) => {
@@ -247,7 +273,14 @@ const loadNotifications = async ({ force = false } = {}) => {
         })
         .catch(() => {
             const list = document.querySelector('[data-notification-list]');
-            if (list) list.textContent = 'Notifikasi belum dapat dimuat.';
+            if (list) {
+                list.setAttribute('aria-busy', 'false');
+                list.replaceChildren(notificationEmptyState(
+                    'Notifikasi belum dapat dimuat',
+                    'Periksa koneksi, lalu buka kembali panel ini.',
+                    'bi bi-wifi-off',
+                ));
+            }
         })
         .finally(() => { notificationsLoading = null; });
 
@@ -283,7 +316,7 @@ const showLiveToast = (data) => {
     const title = document.createElement('strong'); title.textContent = data.title || 'Kabar baru';
     const body = document.createElement('p'); body.textContent = data.body || '';
     copy.append(title, body);
-    const close = document.createElement('button'); close.type = 'button'; close.innerHTML = '<i class="bi bi-x-lg"></i>'; close.addEventListener('click', (event) => { event.stopPropagation(); toast.remove(); });
+    const close = document.createElement('button'); close.type = 'button'; close.setAttribute('aria-label', 'Tutup notifikasi'); close.innerHTML = '<i class="bi bi-x-lg" aria-hidden="true"></i>'; close.addEventListener('click', (event) => { event.stopPropagation(); toast.remove(); });
     toast.append(copy, close);
     toast.addEventListener('click', () => { if (data.url) window.location.href = data.url; });
     document.body.append(toast);
