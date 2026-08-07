@@ -28,6 +28,7 @@ class RoleConfigurationController extends Controller
         $registrationRoles = $roles->where('registration_enabled', true);
         $emailOnboardingRoles = $roles->where('email_onboarding_enabled', true);
         $promotionNotificationRoles = $roles->where('promotion_notifications_enabled', true);
+        $promotionManagementRoles = $roles->where('promotion_management_enabled', true);
         $patientServiceRoles = $roles->where('patient_service_enabled', true);
         $configuredPromotionUsers = $this->configurationService->promotionNotificationUsers();
         $hasOldPromotionUsers = $request->session()->hasOldInput('promotion_notification_user_ids');
@@ -53,6 +54,8 @@ class RoleConfigurationController extends Controller
             'promotionNotificationRoleCount' => $promotionNotificationRoles->count(),
             'promotionNotificationUserCount' => $configuredPromotionUsers->count(),
             'promotionNotificationRecipientCount' => $this->recipientService->count(),
+            'promotionManagementRoleCount' => $promotionManagementRoles->count(),
+            'promotionManagementUserCount' => $promotionManagementRoles->sum('users_count'),
             'patientServiceRoleCount' => $patientServiceRoles->count(),
             'patientServiceUserCount' => $patientServiceRoles->sum('users_count'),
             'configuredPromotionUserIds' => $configuredPromotionUsers->pluck('id'),
@@ -122,6 +125,8 @@ class RoleConfigurationController extends Controller
                 'distinct',
                 Rule::exists('users', 'id'),
             ],
+            'promotion_management_role_ids' => ['nullable', 'array'],
+            'promotion_management_role_ids.*' => $roleRule,
             'patient_service_role_ids' => ['nullable', 'array'],
             'patient_service_role_ids.*' => $roleRule,
         ]);
@@ -146,12 +151,13 @@ class RoleConfigurationController extends Controller
             $validated['email_onboarding_role_ids'] ?? [],
             $validated['promotion_notification_role_ids'] ?? [],
             $validated['promotion_notification_user_ids'] ?? [],
+            $validated['promotion_management_role_ids'] ?? [],
             $validated['patient_service_role_ids'] ?? [],
             $request->user(),
         );
 
         return redirect()
             ->route('roleConfiguration.index')
-            ->with('status', 'Konfigurasi role, penerima notifikasi, dan admin Pasien Service berhasil disimpan.');
+            ->with('status', 'Konfigurasi role, pengelola konten, penerima notifikasi, dan admin Pasien Service berhasil disimpan.');
     }
 }

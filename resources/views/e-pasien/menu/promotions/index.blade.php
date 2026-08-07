@@ -73,7 +73,7 @@
                     <label class="promo-select-field">
                         <i class="bi bi-funnel"></i>
                         <select name="status" aria-label="Filter status" onchange="this.form.submit()">
-                            @foreach (["all" => "Semua status", "active" => "Sedang tayang", "scheduled" => "Terjadwal", "draft" => "Draf", "expired" => "Berakhir", "archived" => "Diarsipkan"] as $value => $label)
+                            @foreach (["all" => "Semua status", "active" => "Sedang tayang", "scheduled" => "Terjadwal", "draft" => "Draf", "archived" => "Diarsipkan"] as $value => $label)
                                 <option value="{{ $value }}" @selected($filters["status"] === $value)>{{ $label }}</option>
                             @endforeach
                         </select>
@@ -108,8 +108,13 @@
                                     <p>{{ Str::limit($promotion->caption, 115) }}</p>
                                     <div class="promo-schedule-line">
                                         <i class="bi bi-calendar3"></i>
-                                        <span><small>Periode tayang</small>{{ $promotion->starts_at->translatedFormat("d M Y, H:i") }} – {{ $promotion->ends_at->translatedFormat("d M Y, H:i") }}</span>
+                                        <span><small>Periode tayang (WIB)</small>{{ $promotion->starts_at_wib->translatedFormat("d M Y, H:i") }} – {{ $promotion->ends_at_wib->translatedFormat("d M Y, H:i") }}</span>
                                     </div>
+                                    <a class="promo-viewer-summary" href="{{ route("promotions.viewers", $promotion) }}">
+                                        <i class="bi bi-eye"></i>
+                                        <span><strong>{{ $promotion->views_count }} orang melihat</strong><small>Lihat siapa saja yang sudah membuka konten</small></span>
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
                                 </div>
                                 <div class="promo-card-actions">
                                     <a href="{{ route("promotions.edit", $promotion) }}"><i class="bi bi-pencil"></i><span>Edit</span></a>

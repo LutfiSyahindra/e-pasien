@@ -63,6 +63,7 @@ class RegistrationRoleConfigurationTest extends TestCase
             [$patientRole->id],
             [$configuredBy->id],
             [$bpjsRole->id],
+            [$bpjsRole->id],
             $configuredBy,
         );
 
@@ -76,6 +77,7 @@ class RegistrationRoleConfigurationTest extends TestCase
         $this->assertFalse((bool) $bpjsRole->fresh()->email_onboarding_enabled);
         $this->assertTrue((bool) $patientRole->fresh()->email_onboarding_enabled);
         $this->assertTrue((bool) $patientRole->fresh()->promotion_notifications_enabled);
+        $this->assertTrue($bpjsRole->fresh()->hasPermissionTo('EPASIEN.MENU.PROMOSI.KELOLA'));
         $this->assertTrue($bpjsRole->fresh()->hasPermissionTo('EPASIEN.MENU.PASIEN_SERVICE'));
         $this->assertTrue($bpjsRole->fresh()->hasPermissionTo('EPASIEN.MENU.PASIEN_SERVICE.KELOLA'));
         $this->assertDatabaseHas('promotion_notification_user_configurations', [
@@ -107,12 +109,16 @@ class RegistrationRoleConfigurationTest extends TestCase
             ->assertSeeText('Pendaftaran BPJS')
             ->assertSeeText('Animasi Onboarding Email')
             ->assertSeeText('Notifikasi Promosi & Informasi')
+            ->assertSeeText('Pengelola Promosi & Informasi')
             ->assertSeeText('Admin Pasien Service')
             ->assertSeeText('Seluruh pengguna aktif dari role terpilih menjadi Tim Pasien Service')
             ->assertSeeText('Pilih Pasien/User Tertentu')
+            ->assertSee('id="roleConfigurationSearch"', false)
+            ->assertSee('data-role-toggle', false)
             ->assertSee('name="registration_role_ids[]"', false)
             ->assertSee('name="email_onboarding_role_ids[]"', false)
             ->assertSee('name="promotion_notification_role_ids[]"', false)
+            ->assertSee('name="promotion_management_role_ids[]"', false)
             ->assertSee('name="patient_service_role_ids[]"', false)
             ->assertSee('name="promotion_notification_user_ids[]"', false);
     }
@@ -132,12 +138,15 @@ class RegistrationRoleConfigurationTest extends TestCase
             ->put(route('roleConfiguration.update'), [
                 'promotion_notification_role_ids' => [$patientRole->id],
                 'promotion_notification_user_ids' => [$target->id],
+                'promotion_management_role_ids' => [$serviceRole->id],
                 'patient_service_role_ids' => [$serviceRole->id],
             ])
             ->assertRedirect(route('roleConfiguration.index'))
             ->assertSessionHas('status');
 
         $this->assertTrue((bool) $patientRole->fresh()->promotion_notifications_enabled);
+        $this->assertTrue($serviceRole->fresh()->hasPermissionTo('EPASIEN.MENU.PROMOSI'));
+        $this->assertTrue($serviceRole->fresh()->hasPermissionTo('EPASIEN.MENU.PROMOSI.KELOLA'));
         $this->assertTrue($serviceRole->fresh()->hasPermissionTo('EPASIEN.MENU.PASIEN_SERVICE'));
         $this->assertTrue($serviceRole->fresh()->hasPermissionTo('EPASIEN.MENU.PASIEN_SERVICE.KELOLA'));
         $this->assertDatabaseHas('promotion_notification_user_configurations', [
@@ -166,6 +175,29 @@ class RegistrationRoleConfigurationTest extends TestCase
 
         $this->assertFalse($serviceRole->fresh()->hasPermissionTo('EPASIEN.MENU.PASIEN_SERVICE.KELOLA'));
         $this->assertTrue($serviceRole->fresh()->hasPermissionTo('EPASIEN.MENU.PASIEN_SERVICE'));
+    }
+
+    public function test_role_configuration_can_remove_promotion_management_from_a_role(): void
+    {
+        $admin = User::factory()->create(['username' => 'ADMIN-CONTENT']);
+        $admin->assignRole(Role::create([
+            'name' => config('access-control.super_admin_role', 'Super Admin'),
+            'guard_name' => 'web',
+        ]));
+        $contentRole = Role::create(['name' => 'Tim Konten', 'guard_name' => 'web']);
+        $contentRole->givePermissionTo([
+            'EPASIEN.MENU',
+            'EPASIEN.MENU.PROMOSI',
+            'EPASIEN.MENU.PROMOSI.KELOLA',
+        ]);
+
+        $this->actingAs($admin)
+            ->put(route('roleConfiguration.update'), ['promotion_management_role_ids' => []])
+            ->assertRedirect(route('roleConfiguration.index'));
+
+        $contentRole->refresh();
+        $this->assertFalse($contentRole->hasPermissionTo('EPASIEN.MENU.PROMOSI.KELOLA'));
+        $this->assertTrue($contentRole->hasPermissionTo('EPASIEN.MENU.PROMOSI'));
     }
 
     public function test_patient_role_cannot_be_configured_as_patient_service_handler(): void

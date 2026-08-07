@@ -78,9 +78,11 @@ class usersController extends Controller
             })
             ->editColumn('email', fn (User $user): string => '<span class="access-code">'.e($user->email).'</span>')
             ->addColumn('roles', function (User $user): string {
-                return $user->roles->pluck('name')->map(function (string $roleName) {
+                $badges = $user->roles->pluck('name')->map(function (string $roleName) {
                     return '<span class="access-badge purple"><i class="bi bi-person-badge"></i>'.e($roleName).'</span>';
                 })->implode(' ') ?: '<span class="access-badge gray">Belum ada role</span>';
+
+                return '<div class="access-role-stack">'.$badges.'</div>';
             })
             ->addColumn('actions', function (User $user) {
                 return '

@@ -2,15 +2,19 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Promotion extends Model
 {
     use HasFactory;
+
+    public const TIMEZONE = 'Asia/Jakarta';
 
     public const CATEGORY_PROMOTION = 'promotion';
 
@@ -56,14 +60,31 @@ class Promotion extends Model
         return $this->belongsTo(User::class, 'creator_id');
     }
 
+    public function views(): HasMany
+    {
+        return $this->hasMany(PromotionView::class);
+    }
+
     public function scopeActive(Builder $query, ?CarbonInterface $at = null): Builder
     {
-        $at ??= now();
+        $at = $at
+            ? CarbonImmutable::instance($at)->utc()
+            : now('UTC')->toImmutable();
 
         return $query
             ->where('status', self::STATUS_PUBLISHED)
             ->where('starts_at', '<=', $at)
             ->where('ends_at', '>', $at);
+    }
+
+    public function getStartsAtWibAttribute(): CarbonInterface
+    {
+        return $this->starts_at->copy()->setTimezone(self::TIMEZONE)->locale('id');
+    }
+
+    public function getEndsAtWibAttribute(): CarbonInterface
+    {
+        return $this->ends_at->copy()->setTimezone(self::TIMEZONE)->locale('id');
     }
 
     public function getImageUrlAttribute(): string

@@ -1,6 +1,11 @@
 @extends("template.epasien.appPasien")
 
-@php($editing = $promotion->exists)
+@php
+    $editing = $promotion->exists;
+    $startsAtWib = $promotion->starts_at?->copy()->setTimezone(\App\Models\Promotion::TIMEZONE);
+    $startsAtDate = old("starts_at_date", $startsAtWib?->format("Y-m-d"));
+    $startsAtTime = old("starts_at_time", $startsAtWib?->format("H:i"));
+@endphp
 @section("title", ($editing ? "Edit" : "Buat") . " Konten Promosi & Informasi - E-Pasien")
 
 @push("style")
@@ -62,12 +67,53 @@
             <aside class="promo-editor__side">
                 <div class="promo-editor-card promo-schedule-card">
                     <div class="promo-editor-card__heading"><span><i class="bi bi-calendar2-week"></i></span><div><h2>Jadwal tayang</h2><p>Atur kapan pasien melihat konten.</p></div></div>
-                    <label class="promo-field"><span>Mulai tayang <b>*</b></span><input name="starts_at" type="datetime-local" required value="{{ old("starts_at", optional($promotion->starts_at)->format("Y-m-d\TH:i")) }}"></label>
+                    <div class="promo-duration-fields">
+                        <label class="promo-field">
+                            <span>Tanggal mulai <b>*</b></span>
+                            <input name="starts_at_date" type="date" lang="id-ID" required value="{{ $startsAtDate }}">
+                        </label>
+                        <div class="promo-field promo-time-field">
+                            <label class="promo-time-field__label" for="promo-starts-at-time">Jam mulai (24 jam) <b>*</b></label>
+                            <div class="promo-time-control">
+                                <input id="promo-starts-at-time" name="starts_at_time" type="text" inputmode="numeric" autocomplete="off"
+                                    maxlength="5" pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]" placeholder="14:30"
+                                    title="Gunakan format 24 jam HH:MM, misalnya 14:30" aria-describedby="promo-timezone-note"
+                                    required value="{{ $startsAtTime }}">
+                                <button type="button" data-promo-time-toggle aria-controls="promo-time-picker"
+                                    aria-expanded="false" aria-label="Buka pemilih jam"><i class="bi bi-clock"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="promo-time-picker" class="promo-time-picker" data-promo-time-picker role="dialog"
+                        aria-label="Pemilih jam mulai tayang" hidden>
+                        <div class="promo-time-picker__header">
+                            <span><i class="bi bi-clock-history"></i><strong>Pilih jam tayang</strong></span>
+                            <button type="button" data-promo-time-now><i class="bi bi-lightning-charge"></i> Gunakan jam sekarang</button>
+                        </div>
+                        <div class="promo-time-picker__controls">
+                            <label><span>Jam</span><select data-promo-time-hour aria-label="Jam">
+                                @for ($hour = 0; $hour < 24; $hour++)
+                                    <option value="{{ sprintf("%02d", $hour) }}">{{ sprintf("%02d", $hour) }}</option>
+                                @endfor
+                            </select></label>
+                            <strong aria-hidden="true">:</strong>
+                            <label><span>Menit</span><select data-promo-time-minute aria-label="Menit">
+                                @for ($minute = 0; $minute < 60; $minute++)
+                                    <option value="{{ sprintf("%02d", $minute) }}">{{ sprintf("%02d", $minute) }}</option>
+                                @endfor
+                            </select></label>
+                        </div>
+                        <div class="promo-time-picker__actions">
+                            <button type="button" data-promo-time-cancel>Batal</button>
+                            <button type="button" data-promo-time-apply><i class="bi bi-check2"></i> Gunakan jam</button>
+                        </div>
+                    </div>
+                    <p id="promo-timezone-note" class="promo-timezone-note"><i class="bi bi-clock-history"></i> Seluruh jadwal menggunakan Waktu Indonesia Barat (WIB).</p>
                     <div class="promo-duration-fields">
                         <label class="promo-field"><span>Durasi <b>*</b></span><input name="duration_value" type="number" min="1" max="9999" required value="{{ old("duration_value", $promotion->duration_value) }}"></label>
                         <label class="promo-field"><span>Satuan <b>*</b></span><select name="duration_unit" required>@foreach (["hour" => "Jam", "day" => "Hari", "month" => "Bulan", "year" => "Tahun"] as $value => $label)<option value="{{ $value }}" @selected(old("duration_unit", $promotion->duration_unit) === $value)>{{ $label }}</option>@endforeach</select></label>
                     </div>
-                    <div class="promo-schedule-preview"><i class="bi bi-info-circle"></i><span>Konten otomatis berhenti ditampilkan setelah durasinya berakhir.</span></div>
+                    <div class="promo-schedule-preview"><i class="bi bi-info-circle"></i><span>Konten otomatis berhenti ditampilkan dan dihapus permanen setelah durasinya berakhir.</span></div>
                 </div>
 
                 <div class="promo-editor-card">

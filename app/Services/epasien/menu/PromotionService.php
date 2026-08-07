@@ -3,7 +3,7 @@
 namespace App\Services\epasien\menu;
 
 use App\Models\Promotion;
-use App\Models\PromotionConfiguration;
+use App\Models\PromotionView;
 use App\Models\User;
 use App\Notifications\PromotionPublishedNotification;
 use Carbon\CarbonImmutable;
@@ -26,11 +26,30 @@ class PromotionService
         ?CarbonInterface $at = null,
         int $limit = 4,
     ): Collection {
+        $this->deleteExpired();
+
         return Promotion::query()
             ->active($at)
             ->latest('starts_at')
             ->limit(max(1, min($limit, 12)))
             ->get();
+    }
+
+    public function recordView(Promotion $promotion, User $viewer): void
+    {
+        $now = now();
+
+        PromotionView::query()->upsert(
+            [[
+                'promotion_id' => $promotion->getKey(),
+                'user_id' => $viewer->getKey(),
+                'viewed_at' => $now,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]],
+            ['promotion_id', 'user_id'],
+            ['viewed_at', 'updated_at'],
+        );
     }
 
     public function create(array $data, User $creator): Promotion
@@ -139,16 +158,10 @@ class PromotionService
         Storage::disk('public')->delete($imagePath);
     }
 
-    public function deleteExpired(?PromotionConfiguration $configuration = null): int
+    public function deleteExpired(): int
     {
-        $configuration ??= PromotionConfiguration::current();
-
-        if (! $configuration->auto_delete_enabled) {
-            return 0;
-        }
-
         $deleted = 0;
-        $cutoff = $configuration->deletionCutoff();
+        $cutoff = now('UTC')->toImmutable();
 
         Promotion::query()
             ->whereIn('status', [Promotion::STATUS_PUBLISHED, Promotion::STATUS_ARCHIVED])
@@ -231,7 +244,7 @@ class PromotionService
 
     private function schedule(array $data): array
     {
-        $startsAt = CarbonImmutable::parse($data['starts_at']);
+        $startsAt = CarbonImmutable::parse($data['starts_at'], Promotion::TIMEZONE)->utc();
         $value = (int) $data['duration_value'];
 
         $endsAt = match ($data['duration_unit']) {

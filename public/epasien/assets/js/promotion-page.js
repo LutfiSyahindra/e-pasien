@@ -104,6 +104,97 @@
         update();
     });
 
+    document.querySelectorAll('[name="starts_at_time"]').forEach(function (field) {
+        var picker = document.querySelector("[data-promo-time-picker]");
+        var toggle = document.querySelector("[data-promo-time-toggle]");
+        var hour = picker && picker.querySelector("[data-promo-time-hour]");
+        var minute = picker && picker.querySelector("[data-promo-time-minute]");
+        var apply = picker && picker.querySelector("[data-promo-time-apply]");
+        var cancel = picker && picker.querySelector("[data-promo-time-cancel]");
+        var nowButton = picker && picker.querySelector("[data-promo-time-now]");
+
+        function formatTypedTime() {
+            var digits = field.value.replace(/\D/g, "").slice(0, 4);
+            field.value = digits.length > 2
+                ? digits.slice(0, 2) + ":" + digits.slice(2)
+                : digits;
+        }
+
+        function selectedTime() {
+            var match = field.value.match(/^([01][0-9]|2[0-3]):([0-5][0-9])$/);
+            return match ? { hour: match[1], minute: match[2] } : null;
+        }
+
+        function setTime(hourValue, minuteValue) {
+            field.value = hourValue + ":" + minuteValue;
+            field.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+
+        function currentWibTime() {
+            try {
+                var parts = new Intl.DateTimeFormat("en-GB", {
+                    timeZone: "Asia/Jakarta",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hourCycle: "h23"
+                }).formatToParts(new Date());
+                var values = {};
+                parts.forEach(function (part) { values[part.type] = part.value; });
+                return { hour: values.hour, minute: values.minute };
+            } catch (error) {
+                var local = new Date();
+                return {
+                    hour: String(local.getHours()).padStart(2, "0"),
+                    minute: String(local.getMinutes()).padStart(2, "0")
+                };
+            }
+        }
+
+        function closePicker(returnFocus) {
+            if (!picker || !toggle) return;
+            picker.hidden = true;
+            toggle.setAttribute("aria-expanded", "false");
+            if (returnFocus) toggle.focus();
+        }
+
+        function openPicker() {
+            if (!picker || !toggle || !hour || !minute) return;
+            var value = selectedTime() || currentWibTime();
+            hour.value = value.hour;
+            minute.value = value.minute;
+            picker.hidden = false;
+            toggle.setAttribute("aria-expanded", "true");
+            hour.focus();
+        }
+
+        field.addEventListener("input", formatTypedTime);
+
+        if (!picker || !toggle || !hour || !minute || !apply || !cancel || !nowButton) return;
+
+        toggle.addEventListener("click", function () {
+            picker.hidden ? openPicker() : closePicker(false);
+        });
+        apply.addEventListener("click", function () {
+            setTime(hour.value, minute.value);
+            closePicker(true);
+        });
+        cancel.addEventListener("click", function () { closePicker(true); });
+        nowButton.addEventListener("click", function () {
+            var value = currentWibTime();
+            hour.value = value.hour;
+            minute.value = value.minute;
+            setTime(value.hour, value.minute);
+            closePicker(true);
+        });
+        picker.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") closePicker(true);
+        });
+        document.addEventListener("click", function (event) {
+            if (picker.hidden || picker.contains(event.target) || toggle.contains(event.target)) return;
+            closePicker(false);
+        });
+    });
+
     document.querySelectorAll("[data-promo-delete]").forEach(function (form) {
         form.addEventListener("submit", function (event) {
             event.preventDefault();

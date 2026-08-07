@@ -1726,11 +1726,19 @@
 }
 
 @media (max-width: 767.98px) {
+    .page-content:has(.auth-premium-page) {
+        overflow-x: hidden;
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
     .auth-suite-bar {
         align-items: stretch;
         flex-direction: column;
         gap: 11px;
-        padding: 11px;
+        margin-right: -14px;
+        overflow: hidden;
+        padding: 11px 14px 11px 11px;
     }
 
     .auth-suite-bar::before {
@@ -1742,15 +1750,23 @@
     }
 
     .auth-suite-tabs {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        width: 100%;
+        display: flex;
+        gap: 5px;
+        margin-right: -14px;
+        overflow-x: auto;
+        padding: 4px 14px 6px 4px;
+        scroll-padding-left: 4px;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: thin;
+        width: auto;
     }
 
     .auth-suite-tab {
         font-size: 12px;
-        min-width: 0;
-        padding: 0 7px;
+        flex: 0 0 auto;
+        min-width: 126px;
+        padding: 0 11px;
+        scroll-snap-align: start;
     }
 
     .auth-premium-page .access-page-header {
@@ -1768,17 +1784,68 @@
     }
 
     .auth-header-actions {
-        justify-content: space-between;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        justify-content: stretch;
         width: 100%;
     }
 
+    .auth-header-actions .auth-security-state,
+    .auth-header-actions .auth-sync-state {
+        grid-column: 1 / -1;
+        justify-content: center;
+    }
+
+    .auth-header-actions .auth-security-state {
+        display: none;
+    }
+
+    .auth-header-actions .btn-access-primary {
+        justify-content: center;
+        min-height: 48px;
+        min-width: 0;
+        padding: 0 12px;
+        width: 100%;
+    }
+
+    .auth-roles-page .auth-header-actions,
+    .auth-permissions-page .auth-header-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-premium-page > .access-stats {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 10px;
+        margin-left: 0;
+        margin-right: -14px;
+        overflow-x: auto;
+        padding: 2px 14px 9px 0;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: thin;
+    }
+
+    .auth-premium-page > .access-stats > [class*="col-"] {
+        flex: 0 0 min(78vw, 285px);
+        padding: 0;
+        scroll-snap-align: start;
+        width: auto;
+    }
+
+    .auth-premium-page > .access-stats .access-stat-card {
+        height: 100%;
+        min-height: 96px;
+    }
+
     .auth-premium-page .access-panel-header {
-        padding: 17px;
+        gap: 15px;
+        padding: 16px 14px;
     }
 
     .auth-premium-page .access-filter {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 8px;
     }
 
     .auth-premium-page .access-search {
@@ -1792,8 +1859,326 @@
         width: 100%;
     }
 
+    .auth-premium-page .access-filter .form-control,
+    .auth-premium-page .access-filter .form-select {
+        border-radius: 11px;
+        font-size: 16px;
+        min-height: 48px;
+    }
+
+    .auth-premium-page .access-filter-button {
+        border-radius: 11px;
+        min-height: 48px;
+    }
+
+    .auth-premium-page .access-filter-button.icon-only {
+        width: 48px;
+    }
+
+    .auth-users-page .access-panel .table-responsive,
+    .auth-roles-page .access-panel .table-responsive,
+    .auth-permissions-page .access-panel .table-responsive,
+    .auth-users-page .access-panel .dataTables_wrapper,
+    .auth-roles-page .access-panel .dataTables_wrapper,
+    .auth-permissions-page .access-panel .dataTables_wrapper,
+    .auth-users-page .access-panel .dataTables_scroll,
+    .auth-roles-page .access-panel .dataTables_scroll,
+    .auth-permissions-page .access-panel .dataTables_scroll,
+    .auth-users-page .access-panel .dataTables_scrollBody,
+    .auth-roles-page .access-panel .dataTables_scrollBody,
+    .auth-permissions-page .access-panel .dataTables_scrollBody {
+        box-sizing: border-box;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: visible !important;
+        width: 100% !important;
+    }
+
+    .auth-users-page .access-panel .dataTables_scrollHead,
+    .auth-roles-page .access-panel .dataTables_scrollHead,
+    .auth-permissions-page .access-panel .dataTables_scrollHead {
+        display: none !important;
+    }
+
+    .auth-users-page .access-table,
+    .auth-roles-page .access-table,
+    .auth-permissions-page .access-table,
+    .auth-users-page .access-table tbody,
+    .auth-roles-page .access-table tbody,
+    .auth-permissions-page .access-table tbody {
+        box-sizing: border-box;
+        display: block;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    .auth-users-page .dataTables_scrollBody > .access-table,
+    .auth-roles-page .dataTables_scrollBody > .access-table,
+    .auth-permissions-page .dataTables_scrollBody > .access-table {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        table-layout: fixed;
+    }
+
+    .auth-users-page .access-table thead,
+    .auth-roles-page .access-table thead,
+    .auth-permissions-page .access-table thead {
+        display: none;
+    }
+
+    .auth-users-page .access-table tbody,
+    .auth-roles-page .access-table tbody,
+    .auth-permissions-page .access-table tbody {
+        background: #f5f7fa;
+        box-sizing: border-box;
+        padding: 12px;
+    }
+
+    .auth-users-page .access-table tbody tr,
+    .auth-roles-page .access-table tbody tr,
+    .auth-permissions-page .access-table tbody tr {
+        background: #fff;
+        border: 1px solid #dfe5ec;
+        border-left: 3px solid var(--auth-accent);
+        border-radius: 13px;
+        box-shadow: 0 7px 20px rgba(28, 38, 55, .055);
+        box-sizing: border-box;
+        display: block;
+        margin: 0 0 12px;
+        max-width: 100%;
+        overflow: hidden;
+        width: 100% !important;
+    }
+
+    .auth-users-page .access-table tbody tr:last-child,
+    .auth-roles-page .access-table tbody tr:last-child,
+    .auth-permissions-page .access-table tbody tr:last-child {
+        margin-bottom: 0;
+    }
+
+    .auth-users-page .access-table tbody td,
+    .auth-roles-page .access-table tbody td,
+    .auth-permissions-page .access-table tbody td {
+        align-items: start;
+        border: 0;
+        border-top: 1px solid #edf0f4;
+        box-sizing: border-box;
+        display: grid;
+        font-size: 12px;
+        grid-template-columns: minmax(76px, 92px) minmax(0, 1fr);
+        height: auto;
+        min-height: 46px;
+        min-width: 0 !important;
+        overflow: hidden;
+        padding: 10px 12px;
+        white-space: normal;
+        width: 100% !important;
+    }
+
+    .auth-users-page .access-table tbody td::before,
+    .auth-roles-page .access-table tbody td::before,
+    .auth-permissions-page .access-table tbody td::before {
+        color: #7b8798;
+        content: attr(data-label);
+        font-size: 9px;
+        font-weight: 800;
+        padding-top: 4px;
+        text-transform: uppercase;
+    }
+
+    .auth-users-page .access-table td[data-label="No"],
+    .auth-roles-page .access-table td[data-label="No"],
+    .auth-permissions-page .access-table td[data-label="No"] {
+        display: none;
+    }
+
+    .auth-users-page .access-table td[data-label="User"],
+    .auth-roles-page .access-table td[data-label="Role"],
+    .auth-permissions-page .access-table td[data-label="Permission"] {
+        background: linear-gradient(135deg, #fff, var(--auth-accent-soft));
+        border-top: 0;
+        display: block;
+        padding: 14px 12px;
+    }
+
+    .auth-users-page .access-table td[data-label="User"]::before,
+    .auth-roles-page .access-table td[data-label="Role"]::before,
+    .auth-permissions-page .access-table td[data-label="Permission"]::before,
+    .auth-users-page .access-table td[data-label="Aksi"]::before,
+    .auth-roles-page .access-table td[data-label="Aksi"]::before,
+    .auth-permissions-page .access-table td[data-label="Aksi"]::before {
+        display: none;
+    }
+
+    .auth-premium-page .access-person {
+        min-width: 0;
+    }
+
+    .auth-premium-page .access-person > span:last-child {
+        min-width: 0;
+    }
+
+    .auth-premium-page .access-person strong,
+    .auth-premium-page .access-person small {
+        overflow-wrap: anywhere;
+    }
+
+    .auth-premium-page .access-code {
+        display: inline-block;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        white-space: normal;
+    }
+
+    .auth-premium-page .access-role-stack {
+        max-width: none;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .auth-premium-page .access-badge {
+        font-size: 10px;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        white-space: normal;
+    }
+
+    .auth-users-page .access-table td[data-label="Aksi"],
+    .auth-roles-page .access-table td[data-label="Aksi"],
+    .auth-permissions-page .access-table td[data-label="Aksi"] {
+        background: #fafbfc;
+        display: block;
+        padding: 10px 12px;
+    }
+
+    .auth-premium-page .access-actions {
+        display: grid;
+        gap: 8px;
+        grid-auto-columns: minmax(64px, 1fr);
+        grid-auto-flow: column;
+        justify-content: stretch;
+        width: 100%;
+    }
+
+    .auth-premium-page .access-actions .access-icon-button {
+        flex-direction: column;
+        gap: 2px;
+        height: 50px;
+        min-width: 0;
+        width: auto;
+    }
+
+    .auth-premium-page .access-actions .access-icon-button::after {
+        content: attr(title);
+        font-size: 9px;
+        font-weight: 750;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .auth-premium-page .access-actions .access-icon-button.disabled::after,
+    .auth-premium-page .access-actions .access-icon-button:disabled::after {
+        content: "Terkunci";
+    }
+
+    .auth-premium-page .access-status-cell {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        min-width: 0;
+    }
+
+    .auth-premium-page .access-status-cell .form-check-input {
+        height: 24px;
+        width: 43px;
+    }
+
+    .auth-premium-page .access-datatable-footer {
+        align-items: center !important;
+        flex-direction: column;
+        gap: 10px !important;
+        padding: 13px 12px !important;
+        text-align: center;
+    }
+
+    .auth-premium-page .dataTables_paginate {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .auth-premium-page .dataTables_paginate .pagination {
+        flex-wrap: nowrap;
+    }
+
+    .auth-premium-page .dataTables_paginate .page-link {
+        height: 38px;
+        min-width: 38px;
+    }
+
+    .auth-premium-page .access-table tr:has(.dataTables_empty) {
+        border: 0;
+        box-shadow: none;
+    }
+
+    .auth-premium-page .access-table td.dataTables_empty {
+        border: 0;
+        display: block;
+        padding: 28px 14px;
+        text-align: center;
+    }
+
+    .auth-premium-page .access-table td.dataTables_empty::before {
+        display: none;
+    }
+
     .auth-premium-modal .modal-dialog {
-        margin: 12px;
+        align-items: flex-end;
+        margin: 0;
+        max-width: none;
+        min-height: 100%;
+        width: 100%;
+    }
+
+    .auth-premium-modal .modal-content {
+        border: 0;
+        border-radius: 20px 20px 0 0;
+        max-height: calc(100vh - 18px);
+        max-height: calc(100dvh - 18px);
+    }
+
+    .auth-premium-modal .modal-content > .access-form {
+        display: flex;
+        flex-direction: column;
+        max-height: calc(100vh - 18px);
+        max-height: calc(100dvh - 18px);
+        min-height: 0;
+    }
+
+    .auth-premium-modal .modal-header {
+        min-height: 74px;
+        padding: 14px 16px;
+    }
+
+    .auth-premium-modal .modal-body {
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .auth-premium-modal .access-form .form-control,
+    .auth-premium-modal .access-form .form-select,
+    .auth-premium-modal .select2-search__field,
+    .auth-premium-modal .select2-results__option {
+        font-size: 16px !important;
+    }
+
+    .auth-premium-modal .modal-footer {
+        bottom: 0;
+        padding-bottom: calc(13px + env(safe-area-inset-bottom));
+        position: sticky;
+        z-index: 3;
     }
 
     .auth-sync-float {
@@ -1838,6 +2223,10 @@
         width: 100%;
     }
 
+    .auth-premium-page > .access-stats > [class*="col-"] {
+        flex-basis: 82vw;
+    }
+
     .auth-sync-float {
         padding: 13px;
     }
@@ -1847,16 +2236,16 @@
     }
 
     .auth-premium-page .access-stat-card {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 10px;
-        min-height: 142px;
-        padding: 15px;
+        align-items: center;
+        flex-direction: row;
+        gap: 13px;
+        min-height: 96px;
+        padding: 14px;
     }
 
     .auth-premium-page .access-stat-card::before {
         height: 28px;
-        top: 57px;
+        top: 34px;
     }
 
     .auth-premium-page .access-stat-icon {

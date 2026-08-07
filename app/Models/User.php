@@ -23,6 +23,11 @@ class User extends Authenticatable
         return $this->hasMany(Promotion::class, 'creator_id');
     }
 
+    public function promotionViews(): HasMany
+    {
+        return $this->hasMany(PromotionView::class);
+    }
+
     public function patientServiceConversations(): HasMany
     {
         return $this->hasMany(PatientServiceConversation::class, 'patient_id');
