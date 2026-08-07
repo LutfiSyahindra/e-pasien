@@ -89,6 +89,13 @@
                     d.type = $('#filterRoleType').val();
                 }
             },
+            createdRow: function(row) {
+                const labels = ['No', 'Role', 'Guard', 'Permissions', 'Aksi'];
+
+                $('td', row).each(function(index) {
+                    this.dataset.label = labels[index] || '';
+                });
+            },
             columns: [{
                     data: 'DT_RowIndex',
                     name: 'DT_RowIndex',
@@ -135,8 +142,13 @@
             updateStats(json?.stats || {});
         });
 
-        $('#searchRole').on('keyup', function() {
-            roleTable.search(this.value).draw();
+        let roleSearchTimer;
+        $('#searchRole').on('input', function() {
+            const value = this.value;
+            clearTimeout(roleSearchTimer);
+            roleSearchTimer = setTimeout(function() {
+                roleTable.search(value).draw();
+            }, 300);
         });
 
         $('#filterRoleType').on('change', function() {
@@ -144,6 +156,7 @@
         });
 
         $('#resetRoleFilter').on('click', function() {
+            clearTimeout(roleSearchTimer);
             $('#searchRole').val('');
             $('#filterRoleType').val('');
             roleTable.search('').ajax.reload();

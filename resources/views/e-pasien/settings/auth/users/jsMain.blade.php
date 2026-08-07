@@ -311,6 +311,13 @@
                     d.status = $('#filterUserStatus').val();
                 }
             },
+            createdRow: function(row) {
+                const labels = ['No', 'User', 'Email', 'Roles', 'Status', 'Aksi'];
+
+                $('td', row).each(function(index) {
+                    this.dataset.label = labels[index] || '';
+                });
+            },
             columns: [{
                     data: 'DT_RowIndex',
                     name: 'DT_RowIndex',
@@ -377,8 +384,13 @@
             updateStats(json?.stats || {});
         });
 
-        $('#searchUser').on('keyup', function() {
-            userTable.search(this.value).draw();
+        let userSearchTimer;
+        $('#searchUser').on('input', function() {
+            const value = this.value;
+            clearTimeout(userSearchTimer);
+            userSearchTimer = setTimeout(function() {
+                userTable.search(value).draw();
+            }, 300);
         });
 
         $('#filterUserStatus').on('change', function() {
@@ -386,6 +398,7 @@
         });
 
         $('#resetUserFilter').on('click', function() {
+            clearTimeout(userSearchTimer);
             $('#searchUser').val('');
             $('#filterUserStatus').val('');
             userTable.search('').ajax.reload();

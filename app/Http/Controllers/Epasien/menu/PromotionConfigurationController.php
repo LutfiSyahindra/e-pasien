@@ -21,6 +21,9 @@ class PromotionConfigurationController extends Controller
     {
         PromotionConfiguration::current()->update([
             ...$request->validated(),
+            'auto_delete_enabled' => true,
+            'delete_grace_value' => 0,
+            'delete_grace_unit' => 'hour',
             'configured_by' => $request->user()->getKey(),
         ]);
 

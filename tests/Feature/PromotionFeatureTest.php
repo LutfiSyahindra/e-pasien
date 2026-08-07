@@ -10,9 +10,11 @@ use App\Models\User;
 use App\Notifications\PromotionPublishedNotification;
 use App\Services\epasien\menu\PromotionNotificationRecipientService;
 use App\Services\epasien\menu\PromotionService;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -35,10 +37,12 @@ class PromotionFeatureTest extends TestCase
 
     public function test_patient_only_sees_promotions_that_are_currently_active(): void
     {
+        Storage::fake('public');
+
         $patient = $this->patient();
         $this->promotion(['title' => 'Promo Aktif']);
         $this->promotion(['title' => 'Promo Draf', 'status' => Promotion::STATUS_DRAFT]);
-        $this->promotion(['title' => 'Promo Berakhir', 'starts_at' => now()->subDays(3), 'ends_at' => now()->subDay()]);
+        $expired = $this->promotion(['title' => 'Promo Berakhir', 'starts_at' => now()->subDays(3), 'ends_at' => now()->subDay()]);
 
         $this->actingAs($patient)
             ->get(route('promotions.index'))
@@ -51,6 +55,8 @@ class PromotionFeatureTest extends TestCase
             ->assertDontSeeText('Promo Draf')
             ->assertDontSeeText('Promo Berakhir')
             ->assertSee('promotion-premium.css');
+
+        $this->assertDatabaseMissing('promotions', ['id' => $expired->id]);
     }
 
     public function test_patient_can_distinguish_and_filter_promotions_and_information(): void
@@ -111,7 +117,7 @@ class PromotionFeatureTest extends TestCase
             'title' => 'Paket Jantung Sehat',
             'caption' => 'Dapatkan pemeriksaan kesehatan jantung dengan pelayanan terbaik.',
             'image' => UploadedFile::fake()->image('jantung-sehat.jpg', 1200, 800),
-            'starts_at' => now()->subMinute()->format('Y-m-d H:i:s'),
+            'starts_at' => now(Promotion::TIMEZONE)->subMinute()->format('Y-m-d H:i:s'),
             'duration_value' => 2,
             'duration_unit' => 'day',
             'status' => Promotion::STATUS_PUBLISHED,
@@ -147,7 +153,7 @@ class PromotionFeatureTest extends TestCase
             'title' => 'Perubahan Jadwal Poli Anak',
             'caption' => 'Poli Anak buka mulai pukul 09.00 WIB selama masa libur.',
             'image' => UploadedFile::fake()->image('jadwal-poli-anak.jpg', 1200, 800),
-            'starts_at' => now()->subMinute()->format('Y-m-d H:i:s'),
+            'starts_at' => now(Promotion::TIMEZONE)->subMinute()->format('Y-m-d H:i:s'),
             'duration_value' => 2,
             'duration_unit' => 'day',
             'status' => Promotion::STATUS_PUBLISHED,
@@ -177,7 +183,7 @@ class PromotionFeatureTest extends TestCase
             'title' => 'Promo Bulan Depan',
             'caption' => 'Promosi yang sudah dijadwalkan untuk bulan depan.',
             'image' => UploadedFile::fake()->image('promo.jpg'),
-            'starts_at' => now()->addMonth()->format('Y-m-d H:i:s'),
+            'starts_at' => now(Promotion::TIMEZONE)->addMonth()->format('Y-m-d H:i:s'),
             'duration_value' => 1,
             'duration_unit' => 'month',
             'status' => Promotion::STATUS_PUBLISHED,
@@ -185,6 +191,68 @@ class PromotionFeatureTest extends TestCase
 
         $this->assertNull(Promotion::query()->where('title', 'Promo Bulan Depan')->value('notified_at'));
         Notification::assertNotSentTo($patient, PromotionPublishedNotification::class);
+    }
+
+    public function test_promotion_schedule_uses_24_hour_wib_input_and_utc_storage(): void
+    {
+        Storage::fake('public');
+        Carbon::setTestNow(CarbonImmutable::parse('2026-08-07 05:00:00', 'UTC'));
+
+        try {
+            $marketing = $this->marketing();
+
+            $this->actingAs($marketing)->post(route('promotions.store'), [
+                'category' => Promotion::CATEGORY_INFORMATION,
+                'title' => 'Informasi Terjadwal WIB',
+                'caption' => 'Konten ini menggunakan jadwal waktu Indonesia.',
+                'image' => UploadedFile::fake()->image('jadwal-wib.jpg'),
+                'starts_at_date' => '2026-08-08',
+                'starts_at_time' => '14:30',
+                'duration_value' => 2,
+                'duration_unit' => 'hour',
+                'status' => Promotion::STATUS_DRAFT,
+            ])->assertRedirect(route('promotions.index'));
+
+            $promotion = Promotion::query()->where('title', 'Informasi Terjadwal WIB')->firstOrFail();
+
+            $this->assertTrue(
+                $promotion->starts_at->equalTo(CarbonImmutable::parse('2026-08-08 07:30:00', 'UTC'))
+            );
+            $this->assertTrue(
+                $promotion->ends_at->equalTo(CarbonImmutable::parse('2026-08-08 09:30:00', 'UTC'))
+            );
+
+            $this->actingAs($marketing)
+                ->get(route('promotions.edit', $promotion))
+                ->assertOk()
+                ->assertSee('name="starts_at_time"', false)
+                ->assertSee('value="14:30"', false)
+                ->assertSee('data-promo-time-picker', false)
+                ->assertSeeText('Gunakan jam sekarang')
+                ->assertSeeText('Waktu Indonesia Barat (WIB)')
+                ->assertDontSee('type="datetime-local"', false);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_promotion_schedule_rejects_am_pm_time_input(): void
+    {
+        Storage::fake('public');
+
+        $this->actingAs($this->marketing())->post(route('promotions.store'), [
+            'category' => Promotion::CATEGORY_PROMOTION,
+            'title' => 'Format Jam Tidak Valid',
+            'caption' => 'Jam dengan penanda AM atau PM tidak boleh digunakan.',
+            'image' => UploadedFile::fake()->image('jam.jpg'),
+            'starts_at_date' => '2026-08-08',
+            'starts_at_time' => '02:30 PM',
+            'duration_value' => 1,
+            'duration_unit' => 'day',
+            'status' => Promotion::STATUS_DRAFT,
+        ])->assertSessionHasErrors('starts_at_time');
+
+        $this->assertDatabaseMissing('promotions', ['title' => 'Format Jam Tidak Valid']);
     }
 
     public function test_notification_center_uses_current_relative_promotion_links(): void
@@ -288,6 +356,51 @@ class PromotionFeatureTest extends TestCase
         $this->assertNotNull($secondNotification->refresh()->read_at);
     }
 
+    public function test_patient_detail_view_is_recorded_once_and_visible_to_content_manager(): void
+    {
+        $patient = $this->patient();
+        $promotion = $this->promotion(['title' => 'Promo Dengan Pembaca']);
+
+        $this->actingAs($patient)->get(route('promotions.show', $promotion))->assertOk();
+        $this->actingAs($patient)->get(route('promotions.show', $promotion))->assertOk();
+
+        $this->assertDatabaseCount('promotion_views', 1);
+        $this->assertDatabaseHas('promotion_views', [
+            'promotion_id' => $promotion->id,
+            'user_id' => $patient->id,
+        ]);
+
+        $manager = $this->marketing();
+        $this->actingAs($manager)
+            ->get(route('promotions.index'))
+            ->assertOk()
+            ->assertSeeText('1 orang melihat')
+            ->assertSee(route('promotions.viewers', $promotion), false);
+
+        $this->actingAs($manager)
+            ->get(route('promotions.viewers', $promotion))
+            ->assertOk()
+            ->assertSeeText('Siapa yang sudah melihat?')
+            ->assertSeeText($patient->name);
+    }
+
+    public function test_content_manager_view_is_not_counted_and_patient_cannot_open_viewer_list(): void
+    {
+        $manager = $this->marketing();
+        $patient = $this->patient();
+        $promotion = $this->promotion();
+
+        $this->actingAs($manager)
+            ->get(route('promotions.show', $promotion))
+            ->assertOk();
+
+        $this->assertDatabaseCount('promotion_views', 0);
+
+        $this->actingAs($patient)
+            ->get(route('promotions.viewers', $promotion))
+            ->assertForbidden();
+    }
+
     public function test_promotion_can_be_limited_to_explicit_test_users(): void
     {
         Notification::fake();
@@ -315,7 +428,7 @@ class PromotionFeatureTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_marketing_can_configure_default_duration_and_expired_cleanup(): void
+    public function test_marketing_can_configure_default_duration_while_expired_cleanup_remains_immediate(): void
     {
         $marketing = $this->marketing();
 
@@ -323,9 +436,6 @@ class PromotionFeatureTest extends TestCase
             ->put(route('promotions.configuration.update'), [
                 'default_duration_value' => 5,
                 'default_duration_unit' => 'day',
-                'auto_delete_enabled' => 1,
-                'delete_grace_value' => 2,
-                'delete_grace_unit' => 'hour',
             ])
             ->assertRedirect()
             ->assertSessionHas('success');
@@ -335,7 +445,7 @@ class PromotionFeatureTest extends TestCase
             'default_duration_value' => 5,
             'default_duration_unit' => 'day',
             'auto_delete_enabled' => true,
-            'delete_grace_value' => 2,
+            'delete_grace_value' => 0,
             'delete_grace_unit' => 'hour',
             'configured_by' => $marketing->id,
         ]);
@@ -418,11 +528,12 @@ class PromotionFeatureTest extends TestCase
         Storage::disk('public')->assertExists($active->image_path);
     }
 
-    public function test_expired_cleanup_honors_the_configured_grace_period(): void
+    public function test_expired_cleanup_ignores_legacy_grace_period_and_deletes_immediately(): void
     {
         Storage::fake('public');
 
         PromotionConfiguration::current()->update([
+            'auto_delete_enabled' => false,
             'delete_grace_value' => 2,
             'delete_grace_unit' => 'day',
         ]);
@@ -439,12 +550,12 @@ class PromotionFeatureTest extends TestCase
         Storage::disk('public')->put($old->image_path, 'image-content');
         Storage::disk('public')->put($recent->image_path, 'image-content');
 
-        $this->assertSame(1, app(PromotionService::class)->deleteExpired());
+        $this->assertSame(2, app(PromotionService::class)->deleteExpired());
 
         $this->assertDatabaseMissing('promotions', ['id' => $old->id]);
         Storage::disk('public')->assertMissing($old->image_path);
-        $this->assertDatabaseHas('promotions', ['id' => $recent->id]);
-        Storage::disk('public')->assertExists($recent->image_path);
+        $this->assertDatabaseMissing('promotions', ['id' => $recent->id]);
+        Storage::disk('public')->assertMissing($recent->image_path);
     }
 
     public function test_authenticated_user_can_manage_push_subscription(): void

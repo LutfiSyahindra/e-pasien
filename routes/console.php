@@ -17,5 +17,5 @@ Schedule::call(fn () => app(PromotionNotificationService::class)->dispatchDue())
 
 Schedule::call(fn () => app(PromotionService::class)->deleteExpired())
     ->name('delete-expired-promotions')
-    ->everyFiveMinutes()
+    ->everyMinute()
     ->withoutOverlapping();

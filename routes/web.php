@@ -127,6 +127,8 @@ Route::middleware('auth')->group(function () {
                     ->whereNumber('promotion')->name('promotions.show');
 
                 Route::middleware('permission:EPASIEN.MENU.PROMOSI.KELOLA')->group(function () {
+                    Route::get('/promo-sehat/{promotion}/pembaca', [PromotionController::class, 'viewers'])
+                        ->whereNumber('promotion')->name('promotions.viewers');
                     Route::get('/promo-sehat/konfigurasi', [PromotionConfigurationController::class, 'edit'])
                         ->name('promotions.configuration.edit');
                     Route::put('/promo-sehat/konfigurasi', [PromotionConfigurationController::class, 'update'])

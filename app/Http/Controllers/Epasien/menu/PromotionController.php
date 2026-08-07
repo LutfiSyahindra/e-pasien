@@ -21,6 +21,8 @@ class PromotionController extends Controller
 
     public function index(Request $request): View
     {
+        $this->service->deleteExpired();
+
         $canManage = $request->user()->can('EPASIEN.MENU.PROMOSI.KELOLA');
         $now = now();
 
@@ -28,13 +30,16 @@ class PromotionController extends Controller
             'category' => ['nullable', 'in:all,promotion,information'],
             ...($canManage ? [
                 'q' => ['nullable', 'string', 'max:100'],
-                'status' => ['nullable', 'in:all,draft,published,archived,active,scheduled,expired'],
+                'status' => ['nullable', 'in:all,draft,published,archived,active,scheduled'],
             ] : []),
         ]);
         $category = $filters['category'] ?? 'all';
 
         if ($canManage) {
-            $query = Promotion::query()->with('creator:id,name')->orderByDesc('id');
+            $query = Promotion::query()
+                ->with('creator:id,name')
+                ->withCount('views')
+                ->orderByDesc('id');
             $search = trim((string) ($filters['q'] ?? ''));
             $status = $filters['status'] ?? 'all';
 
@@ -51,7 +56,6 @@ class PromotionController extends Controller
                 'draft', 'published', 'archived' => $query->where('status', $status),
                 'active' => $query->active($now),
                 'scheduled' => $query->where('status', Promotion::STATUS_PUBLISHED)->where('starts_at', '>', $now),
-                'expired' => $query->where('status', Promotion::STATUS_PUBLISHED)->where('ends_at', '<=', $now),
                 default => null,
             };
 
@@ -105,13 +109,28 @@ class PromotionController extends Controller
 
     public function show(Request $request, Promotion $promotion): View
     {
+        $this->deleteIfExpired($promotion);
+
         abort_unless($promotion->is_active || $request->user()->can('EPASIEN.MENU.PROMOSI.KELOLA'), 404);
 
         if (! $request->user()->can('EPASIEN.MENU.PROMOSI.KELOLA')) {
+            $this->service->recordView($promotion, $request->user());
             $this->markNotificationsAsRead($request, $promotion);
         }
 
         return view('e-pasien.menu.promotions.show', compact('promotion'));
+    }
+
+    public function viewers(Promotion $promotion): View
+    {
+        $this->deleteIfExpired($promotion);
+
+        $views = $promotion->views()
+            ->with('user:id,name,username,email,profile_photo_path')
+            ->latest('viewed_at')
+            ->paginate(20);
+
+        return view('e-pasien.menu.promotions.viewers', compact('promotion', 'views'));
     }
 
     public function create(): View
@@ -121,7 +140,7 @@ class PromotionController extends Controller
         return view('e-pasien.menu.promotions.form', [
             'promotion' => new Promotion([
                 'category' => Promotion::CATEGORY_PROMOTION,
-                'starts_at' => now()->addMinutes(5)->startOfMinute(),
+                'starts_at' => now(Promotion::TIMEZONE)->addMinutes(5)->startOfMinute(),
                 'duration_value' => $configuration->default_duration_value,
                 'duration_unit' => $configuration->default_duration_unit,
                 'status' => Promotion::STATUS_DRAFT,
@@ -141,11 +160,15 @@ class PromotionController extends Controller
 
     public function edit(Promotion $promotion): View
     {
+        $this->deleteIfExpired($promotion);
+
         return view('e-pasien.menu.promotions.form', compact('promotion'));
     }
 
     public function update(UpdatePromotionRequest $request, Promotion $promotion): RedirectResponse
     {
+        $this->deleteIfExpired($promotion);
+
         $this->service->update($promotion, $request->validated());
 
         return redirect()->route('promotions.index')->with('success', 'Konten berhasil diperbarui.');
@@ -153,6 +176,8 @@ class PromotionController extends Controller
 
     public function archive(Promotion $promotion): RedirectResponse
     {
+        $this->deleteIfExpired($promotion);
+
         $this->service->archive($promotion);
 
         return back()->with('success', 'Konten dipindahkan ke arsip.');
@@ -160,6 +185,8 @@ class PromotionController extends Controller
 
     public function restore(Promotion $promotion): RedirectResponse
     {
+        $this->deleteIfExpired($promotion);
+
         $this->service->restore($promotion);
 
         return back()->with('success', 'Konten dikembalikan sebagai draf.');
@@ -182,5 +209,14 @@ class PromotionController extends Controller
         }
 
         $notifications->update(['read_at' => now()]);
+    }
+
+    private function deleteIfExpired(Promotion $promotion): void
+    {
+        if (in_array($promotion->status, [Promotion::STATUS_PUBLISHED, Promotion::STATUS_ARCHIVED], true)
+            && $promotion->ends_at->lte(now())) {
+            $this->service->delete($promotion);
+            abort(404);
+        }
     }
 }

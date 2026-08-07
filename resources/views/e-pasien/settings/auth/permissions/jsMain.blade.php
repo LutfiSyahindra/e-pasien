@@ -82,6 +82,13 @@
                     d.type = $('#filterPermissionType').val();
                 }
             },
+            createdRow: function(row) {
+                const labels = ['No', 'Permission', 'Guard', 'Roles', 'Aksi'];
+
+                $('td', row).each(function(index) {
+                    this.dataset.label = labels[index] || '';
+                });
+            },
             columns: [{
                     data: 'DT_RowIndex',
                     name: 'DT_RowIndex',
@@ -128,8 +135,13 @@
             updateStats(json?.stats || {});
         });
 
-        $('#searchPermission').on('keyup', function() {
-            permissionTable.search(this.value).draw();
+        let permissionSearchTimer;
+        $('#searchPermission').on('input', function() {
+            const value = this.value;
+            clearTimeout(permissionSearchTimer);
+            permissionSearchTimer = setTimeout(function() {
+                permissionTable.search(value).draw();
+            }, 300);
         });
 
         $('#filterPermissionType').on('change', function() {
@@ -137,6 +149,7 @@
         });
 
         $('#resetPermissionFilter').on('click', function() {
+            clearTimeout(permissionSearchTimer);
             $('#searchPermission').val('');
             $('#filterPermissionType').val('');
             permissionTable.search('').ajax.reload();
