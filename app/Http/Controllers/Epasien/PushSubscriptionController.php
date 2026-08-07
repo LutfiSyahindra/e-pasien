@@ -9,6 +9,8 @@ use Illuminate\Validation\Rule;
 
 class PushSubscriptionController extends Controller
 {
+    public const SESSION_ENDPOINT_KEY = 'epasien_push_subscription_endpoint';
+
     public function config(Request $request): JsonResponse
     {
         return response()->json([
@@ -34,6 +36,7 @@ class PushSubscriptionController extends Controller
             $data['keys']['auth'],
             $data['content_encoding'] ?? 'aes128gcm',
         );
+        $request->session()->put(self::SESSION_ENDPOINT_KEY, $data['endpoint']);
 
         return response()->json(['message' => 'Notifikasi perangkat berhasil diaktifkan.'], 201);
     }
@@ -42,6 +45,10 @@ class PushSubscriptionController extends Controller
     {
         $data = $request->validate(['endpoint' => ['required', 'string', 'max:500']]);
         $request->user()->deletePushSubscription($data['endpoint']);
+
+        if ($request->session()->get(self::SESSION_ENDPOINT_KEY) === $data['endpoint']) {
+            $request->session()->forget(self::SESSION_ENDPOINT_KEY);
+        }
 
         return response()->json(['message' => 'Notifikasi perangkat dinonaktifkan.']);
     }

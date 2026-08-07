@@ -6,6 +6,7 @@ const readBaseUrl = meta('epasien-notifications-read-url');
 const readAllUrl = meta('epasien-notifications-read-all-url');
 const pushConfigUrl = meta('epasien-push-config-url');
 const pushSubscriptionUrl = meta('epasien-push-subscription-url');
+let pushSessionBound = meta('epasien-push-session-bound') === '1';
 const notificationSoundUrl = meta('epasien-notification-sound-url') || '/landing/assets/sound/notif.mp3';
 const pushOwnerStorageKey = 'epasien.push-owner.v1';
 const notificationSoundStorageKey = 'epasien.notification-sound.v1';
@@ -373,12 +374,48 @@ const rememberPushOwner = (ownerId) => {
     } catch (_) {}
 };
 
+const currentPushEndpoint = async () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return '';
+
+    const endpoint = (async () => {
+        const registration = await navigator.serviceWorker.getRegistration('/');
+        const subscription = await registration?.pushManager.getSubscription();
+        return subscription?.endpoint || '';
+    })().catch(() => '');
+
+    return Promise.race([
+        endpoint,
+        new Promise((resolve) => window.setTimeout(() => resolve(''), 1000)),
+    ]);
+};
+
+const submitLogoutWithPushEndpoint = async (form) => {
+    if (form.dataset.pushLogoutSubmitting === 'true') return;
+
+    form.dataset.pushLogoutSubmitting = 'true';
+    form.setAttribute('aria-busy', 'true');
+
+    const endpoint = await currentPushEndpoint();
+    if (endpoint) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'push_endpoint';
+        input.value = endpoint;
+        form.append(input);
+    }
+
+    rememberPushOwner(null);
+    pushSessionBound = false;
+    HTMLFormElement.prototype.submit.call(form);
+};
+
 const persistPushSubscription = async (subscription) => {
     const result = await request(pushSubscriptionUrl, {
         method: 'POST',
         body: JSON.stringify(pushSubscriptionPayload(subscription)),
     });
     rememberPushOwner(userId);
+    pushSessionBound = true;
     return result;
 };
 
@@ -399,7 +436,7 @@ const ensurePushSubscription = async () => {
         });
     }
 
-    if (rememberedPushOwner() !== userId) await persistPushSubscription(subscription);
+    if (rememberedPushOwner() !== userId || !pushSessionBound) await persistPushSubscription(subscription);
     updatePushButtons(true, 'Notifikasi dan suara wajib aktif untuk menggunakan E-Pasien.');
 
     return subscription;
@@ -600,7 +637,7 @@ const enforceRequiredNotifications = async () => {
         return;
     }
 
-    if (rememberedPushOwner() === userId) {
+    if (rememberedPushOwner() === userId && pushSessionBound) {
         updatePushButtons(true, 'Notifikasi dan suara wajib aktif untuk menggunakan E-Pasien.');
         hideNotificationGate();
         return;
@@ -613,7 +650,7 @@ const enforceRequiredNotifications = async () => {
 
         const subscription = await registration.pushManager.getSubscription();
         if (subscription) {
-            if (rememberedPushOwner() !== userId) await persistPushSubscription(subscription);
+            if (rememberedPushOwner() !== userId || !pushSessionBound) await persistPushSubscription(subscription);
             updatePushButtons(true, 'Notifikasi dan suara wajib aktif untuk menggunakan E-Pasien.');
             hideNotificationGate();
             return;
@@ -731,6 +768,13 @@ const initializeNotificationCenter = () => {
     enforceRequiredNotifications();
     subscribeToRealtime();
     document.querySelectorAll('[data-push-toggle]').forEach((button) => button.addEventListener('click', togglePush));
+    document.querySelectorAll('form[data-push-logout]').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            if (form.dataset.pushLogoutSubmitting === 'true') return;
+            event.preventDefault();
+            submitLogoutWithPushEndpoint(form);
+        });
+    });
     document.querySelector('[data-notification-read-all]')?.addEventListener('click', async () => {
         try {
             await request(readAllUrl, { method: 'PATCH', body: '{}' });

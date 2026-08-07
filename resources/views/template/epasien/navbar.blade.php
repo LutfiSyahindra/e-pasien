@@ -147,7 +147,7 @@
                                 <span><strong>Profil saya</strong><small>Kelola identitas dan akun</small></span>
                                 <i class="bi bi-chevron-right" aria-hidden="true"></i>
                             </a>
-                            <form method="POST" action="{{ route("logout") }}">
+                            <form method="POST" action="{{ route("logout") }}" data-push-logout>
                                 @csrf
                                 <button type="submit" class="dropdown-item ep-user-logout">
                                     <span class="ep-user-menu__action-icon"><i class="bi bi-box-arrow-right"></i></span>

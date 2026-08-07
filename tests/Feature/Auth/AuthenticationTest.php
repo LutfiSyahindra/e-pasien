@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Http\Controllers\Epasien\PushSubscriptionController;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -134,5 +135,47 @@ class AuthenticationTest extends TestCase
 
         $this->assertGuest();
         $response->assertRedirect('/');
+    }
+
+    public function test_logout_detaches_only_the_current_browser_push_subscription(): void
+    {
+        $user = User::factory()->create();
+        $chromeEndpoint = 'https://push.example.test/subscriptions/chrome';
+        $samsungEndpoint = 'https://push.example.test/subscriptions/samsung';
+
+        $user->updatePushSubscription($chromeEndpoint, 'chrome-key', 'chrome-token', 'aes128gcm');
+        $user->updatePushSubscription($samsungEndpoint, 'samsung-key', 'samsung-token', 'aes128gcm');
+
+        $response = $this->actingAs($user)
+            ->withSession([PushSubscriptionController::SESSION_ENDPOINT_KEY => $chromeEndpoint])
+            ->post('/logout');
+
+        $this->assertGuest();
+        $response->assertRedirect('/');
+        $this->assertDatabaseMissing('push_subscriptions', [
+            'endpoint' => $chromeEndpoint,
+            'subscribable_id' => $user->id,
+        ]);
+        $this->assertDatabaseHas('push_subscriptions', [
+            'endpoint' => $samsungEndpoint,
+            'subscribable_id' => $user->id,
+        ]);
+    }
+
+    public function test_logout_can_detach_the_subscription_reported_by_the_browser(): void
+    {
+        $user = User::factory()->create();
+        $endpoint = 'https://push.example.test/subscriptions/reported-browser';
+        $user->updatePushSubscription($endpoint, 'browser-key', 'browser-token', 'aes128gcm');
+
+        $this->actingAs($user)
+            ->post('/logout', ['push_endpoint' => $endpoint])
+            ->assertRedirect('/');
+
+        $this->assertGuest();
+        $this->assertDatabaseMissing('push_subscriptions', [
+            'endpoint' => $endpoint,
+            'subscribable_id' => $user->id,
+        ]);
     }
 }
