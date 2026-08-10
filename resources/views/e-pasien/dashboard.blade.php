@@ -208,10 +208,21 @@
                             <strong>{{ $queue["current_number"] }}</strong>
                         </div>
                         <div class="patient-dashboard-queue-card__body">
-                            <span class="patient-dashboard-queue-clinic">
-                                <i class="bi bi-hospital" aria-hidden="true"></i>{{ $queue["clinic_name"] }}
-                            </span>
-                            <h3>{{ $queue["doctor_name"] }}</h3>
+                            <div class="patient-dashboard-queue-doctor">
+                                <span class="patient-dashboard-queue-avatar">
+                                    <span aria-hidden="true">{{ $queue["doctor_initials"] }}</span>
+                                    @if ($queue["doctor_photo_url"])
+                                        <img src="{{ $queue["doctor_photo_url"] }}" alt="Foto {{ $queue["doctor_name"] }}" loading="lazy" decoding="async"
+                                            onerror="this.remove()">
+                                    @endif
+                                </span>
+                                <span class="patient-dashboard-queue-doctor__identity">
+                                    <span class="patient-dashboard-queue-clinic">
+                                        <i class="bi bi-hospital" aria-hidden="true"></i>{{ $queue["clinic_name"] }}
+                                    </span>
+                                    <h3>{{ $queue["doctor_name"] }}</h3>
+                                </span>
+                            </div>
                             @if ($queue["is_patient_queue"])
                                 <span class="patient-dashboard-queue-yours">
                                     <i class="bi bi-person-check-fill" aria-hidden="true"></i>

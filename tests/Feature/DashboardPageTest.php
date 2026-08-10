@@ -71,6 +71,8 @@ class DashboardPageTest extends TestCase
             'id' => 'queue-1',
             'doctor_code' => 'D001',
             'doctor_name' => 'dr. Achmad Yunus, Sp.A',
+            'doctor_initials' => 'AY',
+            'doctor_photo_url' => '/storage/doctor-photos/d001.webp',
             'clinic_code' => 'ANA',
             'clinic_name' => 'Poliklinik Anak',
             'current_number' => '007',
@@ -117,6 +119,8 @@ class DashboardPageTest extends TestCase
             ->assertSeeText('Antrean poli sedang berjalan')
             ->assertSeeText('Sedang dipanggil')
             ->assertSeeText('Antrean Anda sedang dipanggil. Silakan menuju poli sekarang.')
+            ->assertSee('class="patient-dashboard-queue-avatar"', false)
+            ->assertSee('src="/storage/doctor-photos/d001.webp"', false)
             ->assertSeeText('Jadwal dokter hari ini')
             ->assertSeeText('dr. Siti Aminah, Sp.PD')
             ->assertSeeText('08.00 – 11.00 WIB')

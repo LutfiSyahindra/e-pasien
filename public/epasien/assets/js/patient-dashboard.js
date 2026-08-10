@@ -48,6 +48,9 @@
         );
         const number = element("div", "patient-dashboard-queue-number");
         const body = element("div", "patient-dashboard-queue-card__body");
+        const doctor = element("div", "patient-dashboard-queue-doctor");
+        const avatar = element("span", "patient-dashboard-queue-avatar");
+        const identity = element("span", "patient-dashboard-queue-doctor__identity");
         const clinic = element("span", "patient-dashboard-queue-clinic");
 
         number.append(
@@ -55,8 +58,24 @@
             element("strong", "", queue.current_number || "-")
         );
 
+        avatar.append(element("span", "", queue.doctor_initials || "DR"));
+
+        if (queue.doctor_photo_url) {
+            const photo = element("img");
+            photo.src = queue.doctor_photo_url;
+            photo.alt = "Foto " + (queue.doctor_name || "dokter");
+            photo.loading = "lazy";
+            photo.decoding = "async";
+            photo.addEventListener("error", function () {
+                photo.remove();
+            });
+            avatar.append(photo);
+        }
+
         clinic.append(icon("bi-hospital"), document.createTextNode(queue.clinic_name || "Poliklinik"));
-        body.append(clinic, element("h3", "", queue.doctor_name || "Dokter belum tercatat"));
+        identity.append(clinic, element("h3", "", queue.doctor_name || "Dokter belum tercatat"));
+        doctor.append(avatar, identity);
+        body.append(doctor);
 
         if (queue.is_patient_queue) {
             const yours = element("span", "patient-dashboard-queue-yours");
