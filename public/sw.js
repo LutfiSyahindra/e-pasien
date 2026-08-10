@@ -43,6 +43,7 @@ self.addEventListener('push', function (event) {
             image: payload.image,
             tag: payload.tag || 'epasien-notification',
             renotify: Boolean(payload.renotify),
+            requireInteraction: Boolean(payload.requireInteraction),
             vibrate: payload.vibrate || [180, 80, 180],
             actions: payload.actions || [],
             data: payload.data || {},

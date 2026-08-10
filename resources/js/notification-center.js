@@ -57,12 +57,17 @@ const prepareNotificationSound = () => {
 const notificationSoundKey = (data = {}) => {
     if (data.promotion_id) return `promotion-${data.promotion_id}`;
     if (data.message_id) return `patient-service-message-${data.message_id}`;
+    if (data.doctor_arrival_event_id) return `doctor-arrival-${data.doctor_arrival_event_id}`;
+    if (data.patient_queue_call_event_id) return `patient-queue-called-${data.patient_queue_call_event_id}`;
     return data.tag || data.url || 'notification';
 };
 
-const notificationIconClass = (data = {}) => data.kind === 'patient_service_message'
-    ? 'bi bi-chat-heart-fill'
-    : 'bi bi-bell-fill';
+const notificationIconClass = (data = {}) => {
+    if (data.kind === 'patient_service_message') return 'bi bi-chat-heart-fill';
+    if (data.kind === 'patient_queue_called') return 'bi bi-megaphone-fill';
+    if (data.kind === 'doctor_arrival') return 'bi bi-person-check-fill';
+    return 'bi bi-bell-fill';
+};
 
 const playNotificationSound = (key, source = notificationSoundUrl) => {
     if (document.visibilityState !== 'visible') return;

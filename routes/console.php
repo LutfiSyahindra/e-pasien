@@ -1,5 +1,7 @@
 <?php
 
+use App\Services\epasien\menu\DoctorArrivalNotificationService;
+use App\Services\epasien\menu\PatientQueueNotificationService;
 use App\Services\epasien\menu\PromotionNotificationService;
 use App\Services\epasien\menu\PromotionService;
 use Illuminate\Foundation\Inspiring;
@@ -19,3 +21,13 @@ Schedule::call(fn () => app(PromotionService::class)->deleteExpired())
     ->name('delete-expired-promotions')
     ->everyMinute()
     ->withoutOverlapping();
+
+Schedule::call(fn () => app(DoctorArrivalNotificationService::class)->dispatchDetected())
+    ->name('dispatch-doctor-arrival-notifications')
+    ->everyMinute()
+    ->withoutOverlapping(5);
+
+Schedule::call(fn () => app(PatientQueueNotificationService::class)->dispatchDetected())
+    ->name('dispatch-patient-queue-notifications')
+    ->everyTenSeconds()
+    ->withoutOverlapping(2);

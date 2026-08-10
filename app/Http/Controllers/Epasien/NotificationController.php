@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Epasien;
 
 use App\Http\Controllers\Controller;
+use App\Models\DoctorPhoto;
 use App\Models\Promotion;
 use App\Notifications\PromotionPublishedNotification;
 use Illuminate\Http\JsonResponse;
@@ -23,12 +24,16 @@ class NotificationController extends Controller
             ->select(['id', 'category', 'title', 'image_path'])
             ->get()
             ->keyBy(fn (Promotion $promotion): string => (string) $promotion->getKey());
+        $doctorPhotos = DoctorPhoto::query()
+            ->whereIn('doctor_code', $notifications->pluck('data.doctor_code')->filter()->unique())
+            ->get()
+            ->keyBy(fn (DoctorPhoto $photo): string => trim((string) $photo->doctor_code));
 
         return response()->json([
             ...$this->unreadCounts($request),
             'notifications' => $notifications->map(fn ($notification): array => [
                 'id' => $notification->id,
-                'data' => $this->normalizeData($notification->data, $promotions),
+                'data' => $this->normalizeData($notification->data, $promotions, $doctorPhotos),
                 'read_at' => $notification->read_at?->toIso8601String(),
                 'created_at' => $notification->created_at->toIso8601String(),
                 'time_label' => $notification->created_at->locale('id')->diffForHumans(),
@@ -64,8 +69,17 @@ class NotificationController extends Controller
         ];
     }
 
-    private function normalizeData(array $data, Collection $promotions): array
+    private function normalizeData(array $data, Collection $promotions, Collection $doctorPhotos): array
     {
+        if (in_array(($data['kind'] ?? null), ['doctor_arrival', 'patient_queue_called'], true)) {
+            $doctorPhoto = $doctorPhotos->get(trim((string) ($data['doctor_code'] ?? '')));
+
+            return [
+                ...$data,
+                'image_url' => $doctorPhoto?->image_url,
+            ];
+        }
+
         if (($data['kind'] ?? null) !== 'promotion') {
             return $data;
         }

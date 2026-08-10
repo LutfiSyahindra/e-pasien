@@ -32,6 +32,8 @@ php artisan schedule:work
 
 Pada lingkungan pengembangan, `composer dev` sudah menjalankan web server, queue, scheduler, Vite, log viewer, dan Reverb bersama-sama. Push notification hanya bekerja pada HTTPS atau `localhost`, dan pada iPhone/iPad pengguna perlu menambahkan E-Pasien ke Home Screen sebelum mengaktifkan notifikasi.
 
+Scheduler juga memeriksa antrean poli setiap 10 detik. Saat nomor yang sedang dipanggil cocok dengan registrasi pasien aktif, sistem mengirim notifikasi in-app, broadcast real-time, dan Web Push satu kali kepada akun pasien dengan nomor rekam medis yang sesuai. Karena jadwal ini berjalan sub-menit, proses `php artisan schedule:work` atau pemanggilan `php artisan schedule:run` setiap menit harus tetap aktif bersama queue worker.
+
 Izin notifikasi dan langganan Web Push bersifat wajib pada seluruh halaman E-Pasien. Pengguna baru harus menekan **Aktifkan Sekarang** dan memilih **Izinkan** pada dialog browser sebelum dapat melanjutkan. Pastikan VAPID dan HTTPS sudah siap sebelum fitur ini diterapkan; konfigurasi yang belum siap akan membuat gerbang notifikasi tetap terkunci. Jika izin dicabut atau ditolak, pengguna harus mengubah izin situs menjadi **Izinkan** melalui pengaturan browser, lalu menekan **Periksa Kembali**.
 
 Scheduler menjalankan pembersihan konten Promosi & Informasi setiap lima menit agar beban pemeriksaan database tetap ringan. Pengelola dapat mengatur durasi bawaan, mengaktifkan/nonaktifkan pembersihan, dan menentukan masa tenggang melalui **Promosi & Informasi > Konfigurasi Konten**. Nilai masa tenggang `0` menghapus konten terbit/arsip pada siklus pembersihan berikutnya setelah waktu tayangnya berakhir; draf tidak ikut dihapus.

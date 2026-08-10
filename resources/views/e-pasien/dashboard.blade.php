@@ -35,6 +35,7 @@
         <nav class="patient-dashboard-mobile-index" aria-label="Navigasi bagian dashboard">
             <a href="#dashboard-promotion-title"><i class="bi bi-megaphone-fill"></i><span>Info terbaru</span></a>
             <a href="#dashboard-visit-title"><i class="bi bi-calendar2-check-fill"></i><span>Antrean</span></a>
+            <a href="#dashboard-queue-title"><i class="bi bi-broadcast-pin"></i><span>Sedang berjalan</span></a>
             <a href="#dashboard-schedule-title"><i class="bi bi-person-badge-fill"></i><span>Dokter hari ini</span></a>
         </nav>
 
@@ -174,6 +175,72 @@
             </section>
         </div>
 
+        <section class="patient-dashboard-panel patient-dashboard-queues" aria-labelledby="dashboard-queue-title"
+            data-doctor-queue-panel data-endpoint="{{ route("dashboard.doctorQueues") }}" data-refresh-interval="10000">
+            <div class="patient-dashboard-heading">
+                <div>
+                    <span class="patient-dashboard-heading__kicker">Panggilan langsung</span>
+                    <h2 id="dashboard-queue-title">Antrean poli sedang berjalan</h2>
+                    <p>Nomor berikutnya ditentukan otomatis dari progres pemeriksaan setiap dokter dan poliklinik.</p>
+                </div>
+                <div @class([
+                    "patient-dashboard-queue-live",
+                    "is-delayed" => $sectionErrors["queues"] ?? false,
+                ]) data-doctor-queue-live>
+                    <span>
+                        <i class="bi bi-broadcast-pin" aria-hidden="true"></i>
+                        <span data-doctor-queue-live-label>{{ ($sectionErrors["queues"] ?? false) ? "Tertunda" : "Live" }}</span>
+                    </span>
+                    <small data-doctor-queue-refreshed>
+                        {{ ($sectionErrors["queues"] ?? false) ? "Pembaruan tertunda" : ($doctorQueues->isNotEmpty() ? "Diperbarui otomatis" : "Menunggu panggilan") }}
+                    </small>
+                </div>
+            </div>
+
+            <div class="patient-dashboard-queue-grid" data-doctor-queue-list aria-live="polite" aria-busy="false">
+                @forelse ($doctorQueues as $queue)
+                    <article @class([
+                        "patient-dashboard-queue-card",
+                        "is-patient" => $queue["is_patient_queue"],
+                        ])>
+                        <div class="patient-dashboard-queue-number">
+                            <small>{{ $queue["number_label"] }}</small>
+                            <strong>{{ $queue["current_number"] }}</strong>
+                        </div>
+                        <div class="patient-dashboard-queue-card__body">
+                            <span class="patient-dashboard-queue-clinic">
+                                <i class="bi bi-hospital" aria-hidden="true"></i>{{ $queue["clinic_name"] }}
+                            </span>
+                            <h3>{{ $queue["doctor_name"] }}</h3>
+                            @if ($queue["is_patient_queue"])
+                                <span class="patient-dashboard-queue-yours">
+                                    <i class="bi bi-person-check-fill" aria-hidden="true"></i>
+                                    Antrean Anda {{ $queue["patient_number"] }}
+                                </span>
+                                <p>{{ $queue["patient_message"] }}</p>
+                            @else
+                                <p>{{ $queue["queue_message"] }}</p>
+                            @endif
+                            @if ($queue["serviced_at_label"])
+                                <time datetime="{{ $queue["serviced_at"] }}">
+                                    <i class="bi bi-clock-history" aria-hidden="true"></i>
+                                    Pembaruan pelayanan {{ $queue["serviced_at_label"] }}
+                                </time>
+                            @endif
+                        </div>
+                    </article>
+                @empty
+                    <div class="patient-dashboard-state patient-dashboard-queue-empty" role="status">
+                        <span><i class="bi {{ ($sectionErrors["queues"] ?? false) ? "bi-cloud-slash" : "bi-hourglass-split" }}"></i></span>
+                        <div>
+                            <h3>{{ ($sectionErrors["queues"] ?? false) ? "Antrean belum dapat dimuat" : "Belum ada antrean poli berjalan" }}</h3>
+                            <p>{{ ($sectionErrors["queues"] ?? false) ? "Koneksi antrean sedang diperbarui. Sistem akan mencoba kembali otomatis." : "Nomor antrean akan muncul saat petugas poli mulai memanggil pasien." }}</p>
+                        </div>
+                    </div>
+                @endforelse
+            </div>
+        </section>
+
         <section class="patient-dashboard-panel patient-dashboard-schedules" aria-labelledby="dashboard-schedule-title">
             <div class="patient-dashboard-heading">
                 <div>
@@ -263,3 +330,7 @@
         </div>
     </div>
 @endsection
+
+@push("script")
+    <script src="{{ asset("epasien/assets/js/patient-dashboard.js") }}"></script>
+@endpush

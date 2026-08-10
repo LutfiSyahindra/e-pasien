@@ -44,6 +44,7 @@
 
 #dashboard-promotion-title,
 #dashboard-visit-title,
+#dashboard-queue-title,
 #dashboard-schedule-title,
 #dashboard-shortcut-title,
 #dashboard-help-title {
@@ -648,6 +649,187 @@ a.patient-dashboard-promo-mini:hover {
     max-width: 300px;
 }
 
+.patient-dashboard-queues {
+    background:
+        radial-gradient(circle at 96% 0, rgba(239, 159, 56, 0.09), transparent 18rem),
+        var(--dashboard-surface);
+    margin-bottom: 1.25rem;
+}
+
+.patient-dashboard-queue-live {
+    align-items: flex-end;
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.patient-dashboard-queue-live > span {
+    align-items: center;
+    background: #e8f8ef;
+    border: 1px solid #ccebd9;
+    border-radius: 999px;
+    color: #187548;
+    display: inline-flex;
+    font-size: 0.67rem;
+    font-weight: 850;
+    gap: 0.34rem;
+    padding: 0.34rem 0.58rem;
+    text-transform: uppercase;
+}
+
+.patient-dashboard-queue-live > span i {
+    animation: patient-dashboard-live-pulse 1.7s ease-in-out infinite;
+}
+
+.patient-dashboard-queue-live small {
+    color: var(--dashboard-muted);
+    font-size: 0.62rem;
+    font-weight: 650;
+}
+
+.patient-dashboard-queue-live.is-delayed > span {
+    background: #fff5df;
+    border-color: #f4ddb2;
+    color: #a9670e;
+}
+
+.patient-dashboard-queue-grid {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.patient-dashboard-queue-card {
+    align-items: stretch;
+    background: linear-gradient(145deg, #fbfdfc 0%, #f4f9f7 100%);
+    border: 1px solid #dce9e5;
+    border-radius: 17px;
+    display: grid;
+    gap: 0.9rem;
+    grid-template-columns: 96px minmax(0, 1fr);
+    min-width: 0;
+    overflow: hidden;
+    padding: 0.8rem;
+    position: relative;
+}
+
+.patient-dashboard-queue-card.is-patient {
+    background: linear-gradient(145deg, #fffaf1 0%, #fff5df 100%);
+    border-color: #efc77f;
+    box-shadow: 0 10px 24px rgba(169, 103, 14, 0.1);
+}
+
+.patient-dashboard-queue-card.is-patient::after {
+    background: var(--dashboard-accent);
+    content: "";
+    inset: 0 auto 0 0;
+    position: absolute;
+    width: 4px;
+}
+
+.patient-dashboard-queue-number {
+    align-items: center;
+    background: linear-gradient(145deg, var(--dashboard-primary) 0%, #159187 100%);
+    border-radius: 13px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 112px;
+    padding: 0.65rem;
+    text-align: center;
+}
+
+.patient-dashboard-queue-card.is-patient .patient-dashboard-queue-number {
+    background: linear-gradient(145deg, #b56c0b 0%, #df9130 100%);
+}
+
+.patient-dashboard-queue-number small {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.58rem;
+    font-weight: 750;
+    line-height: 1.25;
+    text-transform: uppercase;
+}
+
+.patient-dashboard-queue-number strong {
+    color: #fff;
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
+    font-variant-numeric: tabular-nums;
+    font-weight: 850;
+    letter-spacing: 0.03em;
+    line-height: 1.1;
+    margin-top: 0.3rem;
+}
+
+.patient-dashboard-queue-card__body {
+    align-content: center;
+    display: grid;
+    min-width: 0;
+}
+
+.patient-dashboard-queue-clinic {
+    align-items: center;
+    color: var(--dashboard-primary);
+    display: flex;
+    font-size: 0.61rem;
+    font-weight: 850;
+    gap: 0.35rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.patient-dashboard-queue-card h3 {
+    color: var(--dashboard-ink);
+    display: -webkit-box;
+    font-size: 0.84rem;
+    font-weight: 800;
+    line-height: 1.35;
+    margin: 0.25rem 0 0.48rem;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.patient-dashboard-queue-card p {
+    color: var(--dashboard-muted);
+    font-size: 0.66rem;
+    line-height: 1.4;
+    margin: 0.34rem 0 0;
+}
+
+.patient-dashboard-queue-yours {
+    align-items: center;
+    color: #a4620d;
+    display: inline-flex;
+    font-size: 0.65rem;
+    font-weight: 800;
+    gap: 0.34rem;
+}
+
+.patient-dashboard-queue-card time {
+    align-items: center;
+    color: #7b918c;
+    display: flex;
+    font-size: 0.6rem;
+    font-weight: 650;
+    gap: 0.3rem;
+    margin-top: 0.5rem;
+}
+
+.patient-dashboard-queue-empty {
+    grid-column: 1 / -1;
+}
+
+@keyframes patient-dashboard-live-pulse {
+    0%, 100% { opacity: 0.55; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.08); }
+}
+
 .patient-dashboard-schedules {
     margin-bottom: 1.25rem;
 }
@@ -926,9 +1108,15 @@ a.patient-dashboard-promo-mini:hover {
 
 .dark-theme .patient-dashboard-promo-mini,
 .dark-theme .patient-dashboard-doctor-card,
+.dark-theme .patient-dashboard-queue-card,
 .dark-theme .patient-dashboard-state {
     background: #21312e;
     border-color: #334843;
+}
+
+.dark-theme .patient-dashboard-queue-card.is-patient {
+    background: #352d1f;
+    border-color: #7a633b;
 }
 
 .dark-theme .patient-dashboard-visit__clinic {
@@ -968,6 +1156,10 @@ a.patient-dashboard-promo-mini:hover {
     }
 
     .patient-dashboard-doctor-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .patient-dashboard-queue-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
@@ -1031,7 +1223,7 @@ a.patient-dashboard-promo-mini:hover {
         box-shadow: 0 8px 22px rgba(27, 69, 60, 0.1);
         display: grid;
         gap: 0.28rem;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         margin-bottom: 1rem;
         padding: 0.3rem;
         position: sticky;
@@ -1068,6 +1260,7 @@ a.patient-dashboard-promo-mini:hover {
 
     .patient-dashboard-primary-grid,
     .patient-dashboard-secondary-grid,
+    .patient-dashboard-queues,
     .patient-dashboard-schedules {
         margin-bottom: 1rem;
     }
@@ -1105,6 +1298,7 @@ a.patient-dashboard-promo-mini:hover {
     }
 
     .patient-dashboard-promo-list::-webkit-scrollbar,
+    .patient-dashboard-queue-grid::-webkit-scrollbar,
     .patient-dashboard-doctor-grid::-webkit-scrollbar {
         display: none;
     }
@@ -1149,6 +1343,29 @@ a.patient-dashboard-promo-mini:hover {
 
     .patient-dashboard-state.is-soft {
         min-height: 185px;
+    }
+
+    .patient-dashboard-queue-grid {
+        -webkit-overflow-scrolling: touch;
+        display: flex;
+        margin-left: -0.95rem;
+        margin-right: -0.95rem;
+        overscroll-behavior-inline: contain;
+        overflow-x: auto;
+        padding: 0 0.95rem 0.35rem;
+        scroll-padding-left: 0.95rem;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        touch-action: pan-x;
+    }
+
+    .patient-dashboard-queue-card {
+        flex: 0 0 min(330px, 91%);
+        scroll-snap-align: start;
+    }
+
+    .patient-dashboard-queue-empty {
+        flex-basis: 100%;
     }
 
     .patient-dashboard-doctor-grid {
@@ -1243,6 +1460,10 @@ a.patient-dashboard-promo-mini:hover {
 
     .patient-dashboard-heading > a {
         font-size: 0.67rem;
+    }
+
+    .patient-dashboard-queue-live small {
+        display: none;
     }
 
     .patient-dashboard-promo-feature,

@@ -101,7 +101,7 @@
 .role-config-feature-grid {
     display: grid;
     gap: 14px;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     margin: 18px 0;
 }
 
@@ -141,6 +141,10 @@
     background: #d97706;
 }
 
+.role-config-feature-card.tone-doctor-arrival::before {
+    background: #0891b2;
+}
+
 .role-config-feature-card.tone-promotion-management::before {
     background: #db2777;
 }
@@ -176,6 +180,12 @@
     background: #fff6e8;
     border: 1px solid #f3dfbd;
     color: #c66a08;
+}
+
+.tone-doctor-arrival .role-config-feature-icon {
+    background: #ecfeff;
+    border: 1px solid #bae6fd;
+    color: #0e7490;
 }
 
 .tone-promotion-management .role-config-feature-icon {
@@ -352,7 +362,7 @@
 .role-config-matrix-header,
 .role-config-matrix-row {
     display: grid;
-    grid-template-columns: minmax(220px, 1.25fr) 105px repeat(5, minmax(220px, 1fr));
+    grid-template-columns: minmax(220px, 1.25fr) 105px repeat(6, minmax(220px, 1fr));
 }
 
 .role-config-matrix-row[hidden] {

@@ -40,6 +40,14 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware([
     'permission:EPASIEN.MENU.DASHBOARD',
 ])->name('dashboard');
 
+Route::get('/dashboard/antrian-poli', [DashboardController::class, 'doctorQueues'])->middleware([
+    'auth',
+    'verified',
+    'permission:EPASIEN.MENU',
+    'permission:EPASIEN.MENU.DASHBOARD',
+    'throttle:120,1',
+])->name('dashboard.doctorQueues');
+
 Route::middleware('auth')->group(function () {
     Route::get('/e-pasien/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::patch('/e-pasien/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.readAll');

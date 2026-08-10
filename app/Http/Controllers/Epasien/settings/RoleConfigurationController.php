@@ -28,6 +28,7 @@ class RoleConfigurationController extends Controller
         $registrationRoles = $roles->where('registration_enabled', true);
         $emailOnboardingRoles = $roles->where('email_onboarding_enabled', true);
         $promotionNotificationRoles = $roles->where('promotion_notifications_enabled', true);
+        $doctorArrivalNotificationRoles = $roles->where('doctor_arrival_notifications_enabled', true);
         $promotionManagementRoles = $roles->where('promotion_management_enabled', true);
         $patientServiceRoles = $roles->where('patient_service_enabled', true);
         $configuredPromotionUsers = $this->configurationService->promotionNotificationUsers();
@@ -54,6 +55,7 @@ class RoleConfigurationController extends Controller
             'promotionNotificationRoleCount' => $promotionNotificationRoles->count(),
             'promotionNotificationUserCount' => $configuredPromotionUsers->count(),
             'promotionNotificationRecipientCount' => $this->recipientService->count(),
+            'doctorArrivalNotificationRoleCount' => $doctorArrivalNotificationRoles->count(),
             'promotionManagementRoleCount' => $promotionManagementRoles->count(),
             'promotionManagementUserCount' => $promotionManagementRoles->sum('users_count'),
             'patientServiceRoleCount' => $patientServiceRoles->count(),
@@ -119,6 +121,8 @@ class RoleConfigurationController extends Controller
             'email_onboarding_role_ids.*' => $roleRule,
             'promotion_notification_role_ids' => ['nullable', 'array'],
             'promotion_notification_role_ids.*' => $roleRule,
+            'doctor_arrival_notification_role_ids' => ['nullable', 'array'],
+            'doctor_arrival_notification_role_ids.*' => $roleRule,
             'promotion_notification_user_ids' => ['nullable', 'array'],
             'promotion_notification_user_ids.*' => [
                 'integer',
@@ -153,11 +157,12 @@ class RoleConfigurationController extends Controller
             $validated['promotion_notification_user_ids'] ?? [],
             $validated['promotion_management_role_ids'] ?? [],
             $validated['patient_service_role_ids'] ?? [],
+            $validated['doctor_arrival_notification_role_ids'] ?? [],
             $request->user(),
         );
 
         return redirect()
             ->route('roleConfiguration.index')
-            ->with('status', 'Konfigurasi role, pengelola konten, penerima notifikasi, dan admin Pasien Service berhasil disimpan.');
+            ->with('status', 'Konfigurasi role, pengelola konten, penerima notifikasi, notifikasi dokter datang, dan admin Pasien Service berhasil disimpan.');
     }
 }
