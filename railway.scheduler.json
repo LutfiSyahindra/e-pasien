@@ -1,0 +1,8 @@
+{
+    "$schema": "https://railway.com/railway.schema.json",
+    "deploy": {
+        "startCommand": "php artisan schedule:work",
+        "restartPolicyType": "ON_FAILURE",
+        "overlapSeconds": "0"
+    }
+}
