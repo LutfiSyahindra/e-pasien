@@ -44,6 +44,10 @@ class RoleConfigurationService
                     (bool) $role->promotion_notifications_enabled
                 );
                 $role->setAttribute(
+                    'doctor_arrival_notifications_enabled',
+                    (bool) $role->doctor_arrival_notifications_enabled
+                );
+                $role->setAttribute(
                     'promotion_management_enabled',
                     $role->name === $superAdminRole
                         || $role->permissions->contains('name', 'EPASIEN.MENU.PROMOSI.KELOLA')
@@ -101,6 +105,7 @@ class RoleConfigurationService
         array $promotionNotificationUserIds,
         array $promotionManagementRoleIds,
         array $patientServiceRoleIds,
+        array $doctorArrivalNotificationRoleIds,
         User $configuredBy
     ): void {
         $registrationRoleIds = $this->normalizeIds($registrationRoleIds);
@@ -109,6 +114,7 @@ class RoleConfigurationService
         $promotionNotificationUserIds = $this->normalizeIds($promotionNotificationUserIds);
         $promotionManagementRoleIds = $this->normalizeIds($promotionManagementRoleIds);
         $patientServiceRoleIds = $this->normalizeIds($patientServiceRoleIds);
+        $doctorArrivalNotificationRoleIds = $this->normalizeIds($doctorArrivalNotificationRoleIds);
 
         DB::connection(config('database.default'))->transaction(function () use (
             $registrationRoleIds,
@@ -117,6 +123,7 @@ class RoleConfigurationService
             $promotionNotificationUserIds,
             $promotionManagementRoleIds,
             $patientServiceRoleIds,
+            $doctorArrivalNotificationRoleIds,
             $configuredBy
         ): void {
             $this->replaceRegistrationRoles($registrationRoleIds, $configuredBy);
@@ -147,6 +154,17 @@ class RoleConfigurationService
                 $promotionNotificationUserIds,
                 $configuredBy
             );
+
+            Role::query()
+                ->where('guard_name', 'web')
+                ->update(['doctor_arrival_notifications_enabled' => false]);
+
+            if ($doctorArrivalNotificationRoleIds->isNotEmpty()) {
+                Role::query()
+                    ->where('guard_name', 'web')
+                    ->whereIn('id', $doctorArrivalNotificationRoleIds)
+                    ->update(['doctor_arrival_notifications_enabled' => true]);
+            }
 
             $this->syncPromotionManagementRoles($promotionManagementRoleIds);
             $this->syncPatientServiceRoles($patientServiceRoleIds);

@@ -6,6 +6,7 @@ const readBaseUrl = meta('epasien-notifications-read-url');
 const readAllUrl = meta('epasien-notifications-read-all-url');
 const pushConfigUrl = meta('epasien-push-config-url');
 const pushSubscriptionUrl = meta('epasien-push-subscription-url');
+let pushSessionBound = meta('epasien-push-session-bound') === '1';
 const notificationSoundUrl = meta('epasien-notification-sound-url') || '/landing/assets/sound/notif.mp3';
 const pushOwnerStorageKey = 'epasien.push-owner.v1';
 const notificationSoundStorageKey = 'epasien.notification-sound.v1';
@@ -56,12 +57,17 @@ const prepareNotificationSound = () => {
 const notificationSoundKey = (data = {}) => {
     if (data.promotion_id) return `promotion-${data.promotion_id}`;
     if (data.message_id) return `patient-service-message-${data.message_id}`;
+    if (data.doctor_arrival_event_id) return `doctor-arrival-${data.doctor_arrival_event_id}`;
+    if (data.patient_queue_call_event_id) return `patient-queue-called-${data.patient_queue_call_event_id}`;
     return data.tag || data.url || 'notification';
 };
 
-const notificationIconClass = (data = {}) => data.kind === 'patient_service_message'
-    ? 'bi bi-chat-heart-fill'
-    : 'bi bi-bell-fill';
+const notificationIconClass = (data = {}) => {
+    if (data.kind === 'patient_service_message') return 'bi bi-chat-heart-fill';
+    if (data.kind === 'patient_queue_called') return 'bi bi-megaphone-fill';
+    if (data.kind === 'doctor_arrival') return 'bi bi-person-check-fill';
+    return 'bi bi-bell-fill';
+};
 
 const playNotificationSound = (key, source = notificationSoundUrl) => {
     if (document.visibilityState !== 'visible') return;
@@ -140,9 +146,24 @@ const forgetCachedNotifications = () => {
 const setBadge = (count) => {
     unreadCount = Number(count) || 0;
     const badge = document.querySelector('[data-notification-badge]');
-    if (!badge) return;
-    badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
-    badge.hidden = unreadCount < 1;
+    const trigger = document.querySelector('.ep-notification-nav [data-bs-toggle="dropdown"]');
+    const unreadCopy = document.querySelector('[data-notification-unread-copy]');
+    const readAll = document.querySelector('[data-notification-read-all]');
+
+    if (badge) {
+        badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+        badge.hidden = unreadCount < 1;
+    }
+    trigger?.setAttribute(
+        'aria-label',
+        unreadCount > 0 ? `Buka ${unreadCount} notifikasi yang belum dibaca` : 'Buka notifikasi',
+    );
+    if (unreadCopy) {
+        unreadCopy.textContent = unreadCount > 0
+            ? `${unreadCount} notifikasi belum dibaca`
+            : 'Semua kabar sudah dibaca';
+    }
+    if (readAll) readAll.disabled = unreadCount < 1;
 };
 
 const setPromotionBadge = (count) => {
@@ -161,6 +182,20 @@ const setPromotionBadge = (count) => {
     );
 };
 
+const notificationEmptyState = (
+    title = 'Belum ada notifikasi',
+    detail = 'Kabar terbaru akan muncul di sini.',
+    iconClass = 'bi bi-bell-slash',
+) => {
+    const empty = document.createElement('div');
+    empty.className = 'ep-notification-empty';
+    const icon = document.createElement('i'); icon.className = iconClass;
+    const strong = document.createElement('strong'); strong.textContent = title;
+    const small = document.createElement('small'); small.textContent = detail;
+    empty.append(icon, strong, small);
+    return empty;
+};
+
 const notificationItem = (item) => {
     const button = document.createElement('button');
     const data = normalizedNotificationData(item.data);
@@ -168,6 +203,7 @@ const notificationItem = (item) => {
     button.className = `ep-notification-item${item.read_at ? '' : ' is-unread'}`;
     button.dataset.id = item.id;
     button.dataset.url = data.url || '#';
+    button.setAttribute('aria-label', `${data.title || 'Notifikasi baru'}, ${item.time_label || 'baru saja'}${item.read_at ? '' : ', belum dibaca'}`);
 
     const visual = document.createElement('span');
     visual.className = 'ep-notification-item__image';
@@ -221,15 +257,10 @@ const renderNotifications = (payload) => {
     setBadge(payload.unread_count || 0);
     setPromotionBadge(payload.promotion_unread_count || 0);
     if (!list) return;
+    list.setAttribute('aria-busy', 'false');
     list.replaceChildren();
     if (!payload.notifications?.length) {
-        const empty = document.createElement('div');
-        empty.className = 'ep-notification-empty';
-        const icon = document.createElement('i'); icon.className = 'bi bi-bell-slash';
-        const strong = document.createElement('strong'); strong.textContent = 'Belum ada notifikasi';
-        const small = document.createElement('small'); small.textContent = 'Kabar terbaru akan muncul di sini.';
-        empty.append(icon, strong, small);
-        list.append(empty);
+        list.append(notificationEmptyState());
         return;
     }
     payload.notifications.forEach((item) => list.append(notificationItem(item)));
@@ -238,6 +269,7 @@ const renderNotifications = (payload) => {
 const loadNotifications = async ({ force = false } = {}) => {
     if (!listUrl || (notificationsLoaded && !force)) return;
     if (notificationsLoading) return notificationsLoading;
+    document.querySelector('[data-notification-list]')?.setAttribute('aria-busy', 'true');
 
     notificationsLoading = request(listUrl)
         .then((payload) => {
@@ -247,7 +279,14 @@ const loadNotifications = async ({ force = false } = {}) => {
         })
         .catch(() => {
             const list = document.querySelector('[data-notification-list]');
-            if (list) list.textContent = 'Notifikasi belum dapat dimuat.';
+            if (list) {
+                list.setAttribute('aria-busy', 'false');
+                list.replaceChildren(notificationEmptyState(
+                    'Notifikasi belum dapat dimuat',
+                    'Periksa koneksi, lalu buka kembali panel ini.',
+                    'bi bi-wifi-off',
+                ));
+            }
         })
         .finally(() => { notificationsLoading = null; });
 
@@ -283,7 +322,7 @@ const showLiveToast = (data) => {
     const title = document.createElement('strong'); title.textContent = data.title || 'Kabar baru';
     const body = document.createElement('p'); body.textContent = data.body || '';
     copy.append(title, body);
-    const close = document.createElement('button'); close.type = 'button'; close.innerHTML = '<i class="bi bi-x-lg"></i>'; close.addEventListener('click', (event) => { event.stopPropagation(); toast.remove(); });
+    const close = document.createElement('button'); close.type = 'button'; close.setAttribute('aria-label', 'Tutup notifikasi'); close.innerHTML = '<i class="bi bi-x-lg" aria-hidden="true"></i>'; close.addEventListener('click', (event) => { event.stopPropagation(); toast.remove(); });
     toast.append(copy, close);
     toast.addEventListener('click', () => { if (data.url) window.location.href = data.url; });
     document.body.append(toast);
@@ -340,12 +379,48 @@ const rememberPushOwner = (ownerId) => {
     } catch (_) {}
 };
 
+const currentPushEndpoint = async () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return '';
+
+    const endpoint = (async () => {
+        const registration = await navigator.serviceWorker.getRegistration('/');
+        const subscription = await registration?.pushManager.getSubscription();
+        return subscription?.endpoint || '';
+    })().catch(() => '');
+
+    return Promise.race([
+        endpoint,
+        new Promise((resolve) => window.setTimeout(() => resolve(''), 1000)),
+    ]);
+};
+
+const submitLogoutWithPushEndpoint = async (form) => {
+    if (form.dataset.pushLogoutSubmitting === 'true') return;
+
+    form.dataset.pushLogoutSubmitting = 'true';
+    form.setAttribute('aria-busy', 'true');
+
+    const endpoint = await currentPushEndpoint();
+    if (endpoint) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'push_endpoint';
+        input.value = endpoint;
+        form.append(input);
+    }
+
+    rememberPushOwner(null);
+    pushSessionBound = false;
+    HTMLFormElement.prototype.submit.call(form);
+};
+
 const persistPushSubscription = async (subscription) => {
     const result = await request(pushSubscriptionUrl, {
         method: 'POST',
         body: JSON.stringify(pushSubscriptionPayload(subscription)),
     });
     rememberPushOwner(userId);
+    pushSessionBound = true;
     return result;
 };
 
@@ -366,7 +441,7 @@ const ensurePushSubscription = async () => {
         });
     }
 
-    if (rememberedPushOwner() !== userId) await persistPushSubscription(subscription);
+    if (rememberedPushOwner() !== userId || !pushSessionBound) await persistPushSubscription(subscription);
     updatePushButtons(true, 'Notifikasi dan suara wajib aktif untuk menggunakan E-Pasien.');
 
     return subscription;
@@ -567,7 +642,7 @@ const enforceRequiredNotifications = async () => {
         return;
     }
 
-    if (rememberedPushOwner() === userId) {
+    if (rememberedPushOwner() === userId && pushSessionBound) {
         updatePushButtons(true, 'Notifikasi dan suara wajib aktif untuk menggunakan E-Pasien.');
         hideNotificationGate();
         return;
@@ -580,7 +655,7 @@ const enforceRequiredNotifications = async () => {
 
         const subscription = await registration.pushManager.getSubscription();
         if (subscription) {
-            if (rememberedPushOwner() !== userId) await persistPushSubscription(subscription);
+            if (rememberedPushOwner() !== userId || !pushSessionBound) await persistPushSubscription(subscription);
             updatePushButtons(true, 'Notifikasi dan suara wajib aktif untuk menggunakan E-Pasien.');
             hideNotificationGate();
             return;
@@ -698,6 +773,13 @@ const initializeNotificationCenter = () => {
     enforceRequiredNotifications();
     subscribeToRealtime();
     document.querySelectorAll('[data-push-toggle]').forEach((button) => button.addEventListener('click', togglePush));
+    document.querySelectorAll('form[data-push-logout]').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            if (form.dataset.pushLogoutSubmitting === 'true') return;
+            event.preventDefault();
+            submitLogoutWithPushEndpoint(form);
+        });
+    });
     document.querySelector('[data-notification-read-all]')?.addEventListener('click', async () => {
         try {
             await request(readAllUrl, { method: 'PATCH', body: '{}' });

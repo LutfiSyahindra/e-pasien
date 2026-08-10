@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Promotion;
 use App\Models\User;
 use App\Services\epasien\menu\DaftarOnlineService;
+use App\Services\epasien\menu\DoctorQueueService;
 use App\Services\epasien\menu\JadwalDokterService;
 use App\Services\epasien\menu\PromotionService;
 use Illuminate\Support\Facades\Gate;
@@ -66,6 +67,24 @@ class DashboardPageTest extends TestCase
             'time_label' => '08.00 – 11.00 WIB',
             'quota_label' => '30 pasien',
         ]]);
+        $queues = collect([[
+            'id' => 'queue-1',
+            'doctor_code' => 'D001',
+            'doctor_name' => 'dr. Achmad Yunus, Sp.A',
+            'clinic_code' => 'ANA',
+            'clinic_name' => 'Poliklinik Anak',
+            'current_number' => '007',
+            'last_serviced_number' => '006',
+            'queue_state' => 'calling',
+            'number_label' => 'Sedang dipanggil',
+            'queue_message' => 'Panggilan antrean sedang berlangsung.',
+            'serviced_at' => '2026-08-07T08:20:00+07:00',
+            'serviced_at_label' => '08:20 WIB',
+            'is_patient_queue' => true,
+            'patient_number' => '007',
+            'remaining_before_patient' => 0,
+            'patient_message' => 'Antrean Anda sedang dipanggil. Silakan menuju poli sekarang.',
+        ]]);
 
         $this->mock(DaftarOnlineService::class, function (MockInterface $mock) use ($user, $registration): void {
             $mock->shouldReceive('upcomingRegistration')
@@ -75,6 +94,9 @@ class DashboardPageTest extends TestCase
         });
         $this->mock(JadwalDokterService::class, function (MockInterface $mock) use ($schedules): void {
             $mock->shouldReceive('today')->once()->with(6)->andReturn($schedules);
+        });
+        $this->mock(DoctorQueueService::class, function (MockInterface $mock) use ($registration, $queues): void {
+            $mock->shouldReceive('current')->once()->with($registration)->andReturn($queues);
         });
         $this->mock(PromotionService::class, function (MockInterface $mock) use ($promotion): void {
             $mock->shouldReceive('latestActive')->once()->withArgs(
@@ -92,6 +114,9 @@ class DashboardPageTest extends TestCase
             ->assertSeeText('Kunjungan terdekat')
             ->assertSeeText('Poliklinik Anak')
             ->assertSeeText('007')
+            ->assertSeeText('Antrean poli sedang berjalan')
+            ->assertSeeText('Sedang dipanggil')
+            ->assertSeeText('Antrean Anda sedang dipanggil. Silakan menuju poli sekarang.')
             ->assertSeeText('Jadwal dokter hari ini')
             ->assertSeeText('dr. Siti Aminah, Sp.PD')
             ->assertSeeText('08.00 – 11.00 WIB')
@@ -117,6 +142,12 @@ class DashboardPageTest extends TestCase
                 ->once()
                 ->andThrow(new RuntimeException('Khanza unavailable'));
         });
+        $this->mock(DoctorQueueService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('current')
+                ->once()
+                ->with(null)
+                ->andThrow(new RuntimeException('Khanza unavailable'));
+        });
         $this->mock(PromotionService::class, function (MockInterface $mock): void {
             $mock->shouldReceive('latestActive')->once()->andReturn(collect());
         });
@@ -125,7 +156,43 @@ class DashboardPageTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSeeText('Agenda belum dapat dimuat')
+            ->assertSeeText('Antrean belum dapat dimuat')
             ->assertSeeText('Jadwal belum dapat dimuat');
+    }
+
+    public function test_dashboard_queue_endpoint_returns_current_calls(): void
+    {
+        $user = $this->patientUser(['username' => '000123']);
+        $registration = [
+            'tanggal' => '2026-08-10',
+            'kd_dokter' => 'D001',
+            'kd_poli' => 'ANA',
+            'no_reg' => '007',
+        ];
+        $queues = collect([[
+            'id' => 'queue-1',
+            'doctor_code' => 'D001',
+            'clinic_code' => 'ANA',
+            'current_number' => '005',
+            'is_patient_queue' => true,
+        ]]);
+
+        $this->mock(DaftarOnlineService::class, function (MockInterface $mock) use ($user, $registration): void {
+            $mock->shouldReceive('upcomingRegistration')
+                ->once()
+                ->with($user)
+                ->andReturn($registration);
+        });
+        $this->mock(DoctorQueueService::class, function (MockInterface $mock) use ($registration, $queues): void {
+            $mock->shouldReceive('current')->once()->with($registration)->andReturn($queues);
+        });
+
+        $this->actingAs($user)
+            ->getJson(route('dashboard.doctorQueues'))
+            ->assertOk()
+            ->assertJsonPath('data.0.current_number', '005')
+            ->assertJsonPath('data.0.is_patient_queue', true)
+            ->assertJsonStructure(['meta' => ['refreshed_at', 'refreshed_at_label']]);
     }
 
     private function patientUser(array $attributes = []): User

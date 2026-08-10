@@ -17,6 +17,8 @@
         <meta name="epasien-notifications-read-all-url" content="{{ route("notifications.readAll") }}">
         <meta name="epasien-push-config-url" content="{{ route("push.config") }}">
         <meta name="epasien-push-subscription-url" content="{{ route("push.store") }}">
+        <meta name="epasien-push-session-bound"
+            content="{{ session()->has(\App\Http\Controllers\Epasien\PushSubscriptionController::SESSION_ENDPOINT_KEY) ? "1" : "0" }}">
         <meta name="epasien-notification-sound-url" content="{{ asset("landing/assets/sound/notif.mp3") }}">
         @can("EPASIEN.MENU.PASIEN_SERVICE")
             <meta name="epasien-patient-service-navbar-url" content="{{ route("patientService.navbar") }}">

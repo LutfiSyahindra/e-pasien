@@ -24,6 +24,11 @@
             ->pluck("id")
             ->map(fn ($roleId) => (int) $roleId)
             ->values();
+        $doctorArrivalNotificationConfiguredIds = $roles
+            ->where("doctor_arrival_notifications_enabled", true)
+            ->pluck("id")
+            ->map(fn ($roleId) => (int) $roleId)
+            ->values();
         $promotionManagementConfiguredIds = $roles
             ->where("promotion_management_enabled", true)
             ->pluck("id")
@@ -43,6 +48,10 @@
             ->values()
             ->all();
         $selectedPromotionNotificationIds = collect(old("promotion_notification_role_ids", $promotionNotificationConfiguredIds->all()))
+            ->map(fn ($roleId) => (int) $roleId)
+            ->values()
+            ->all();
+        $selectedDoctorArrivalNotificationIds = collect(old("doctor_arrival_notification_role_ids", $doctorArrivalNotificationConfiguredIds->all()))
             ->map(fn ($roleId) => (int) $roleId)
             ->values()
             ->all();
@@ -104,7 +113,7 @@
             <div class="auth-header-actions role-config-header-actions">
                 <span class="role-config-live-state">
                     <span class="role-config-live-dot"></span>
-                    <strong>5</strong>
+                    <strong>6</strong>
                     <span>fitur tersedia</span>
                 </span>
                 <a href="{{ route("roles.roles") }}" class="role-config-manage-link">
@@ -207,6 +216,19 @@
                 </span>
             </article>
 
+            <article class="role-config-feature-card tone-doctor-arrival">
+                <span class="role-config-feature-icon"><i class="bi bi-person-check-fill"></i></span>
+                <div>
+                    <span class="role-config-feature-kicker">Informasi Antrean</span>
+                    <h2>Notifikasi Dokter Datang</h2>
+                    <p>Pasien pada jadwal yang sama menerima notifikasi saat satu pasien memiliki minimal dua data pemeriksaan rawat jalan.</p>
+                </div>
+                <span class="role-config-feature-count">
+                    <strong data-doctor-arrival-summary>{{ $doctorArrivalNotificationRoleCount }}</strong>
+                    <small>role aktif</small>
+                </span>
+            </article>
+
             <article class="role-config-feature-card tone-promotion-management">
                 <span class="role-config-feature-icon"><i class="bi bi-pencil-square"></i></span>
                 <div>
@@ -247,7 +269,7 @@
                     <span><i class="bi bi-toggles"></i></span>
                     <div>
                         <small>Konfigurasi aktif</small>
-                        <strong><span id="activeConfigurationCount">{{ $registrationRoleCount + $emailOnboardingRoleCount + $promotionNotificationRoleCount + $promotionNotificationUserCount + $promotionManagementRoleCount + $patientServiceRoleCount }}</span> assignment</strong>
+                        <strong><span id="activeConfigurationCount">{{ $registrationRoleCount + $emailOnboardingRoleCount + $promotionNotificationRoleCount + $promotionNotificationUserCount + $doctorArrivalNotificationRoleCount + $promotionManagementRoleCount + $patientServiceRoleCount }}</span> assignment</strong>
                     </div>
                 </div>
             </div>
@@ -257,6 +279,7 @@
                 data-initial-registration="{{ $registrationConfiguredIds->sort()->implode(",") }}"
                 data-initial-email="{{ $emailOnboardingConfiguredIds->sort()->implode(",") }}"
                 data-initial-promotion-roles="{{ $promotionNotificationConfiguredIds->sort()->implode(",") }}"
+                data-initial-doctor-arrival="{{ $doctorArrivalNotificationConfiguredIds->sort()->implode(",") }}"
                 data-initial-promotion-management="{{ $promotionManagementConfiguredIds->sort()->implode(",") }}"
                 data-initial-patient-service="{{ $patientServiceConfiguredIds->sort()->implode(",") }}"
                 data-initial-promotion-users="{{ $configuredPromotionUserIds->sort()->implode(",") }}">
@@ -270,6 +293,8 @@
                     $errors->has("email_onboarding_role_ids.*") ||
                     $errors->has("promotion_notification_role_ids") ||
                     $errors->has("promotion_notification_role_ids.*") ||
+                    $errors->has("doctor_arrival_notification_role_ids") ||
+                    $errors->has("doctor_arrival_notification_role_ids.*") ||
                     $errors->has("promotion_management_role_ids") ||
                     $errors->has("promotion_management_role_ids.*") ||
                     $errors->has("patient_service_role_ids") ||
@@ -280,7 +305,7 @@
                     <div class="role-config-alert-error" role="alert">
                         <i class="bi bi-exclamation-triangle"></i>
                         <span>
-                            {{ $errors->first("registration_role_ids") ?: $errors->first("registration_role_ids.*") ?: $errors->first("email_onboarding_role_ids") ?: $errors->first("email_onboarding_role_ids.*") ?: $errors->first("promotion_notification_role_ids") ?: $errors->first("promotion_notification_role_ids.*") ?: $errors->first("promotion_management_role_ids") ?: $errors->first("promotion_management_role_ids.*") ?: $errors->first("patient_service_role_ids") ?: $errors->first("patient_service_role_ids.*") ?: $errors->first("promotion_notification_user_ids") ?: $errors->first("promotion_notification_user_ids.*") }}
+                            {{ $errors->first("registration_role_ids") ?: $errors->first("registration_role_ids.*") ?: $errors->first("email_onboarding_role_ids") ?: $errors->first("email_onboarding_role_ids.*") ?: $errors->first("promotion_notification_role_ids") ?: $errors->first("promotion_notification_role_ids.*") ?: $errors->first("doctor_arrival_notification_role_ids") ?: $errors->first("doctor_arrival_notification_role_ids.*") ?: $errors->first("promotion_management_role_ids") ?: $errors->first("promotion_management_role_ids.*") ?: $errors->first("patient_service_role_ids") ?: $errors->first("patient_service_role_ids.*") ?: $errors->first("promotion_notification_user_ids") ?: $errors->first("promotion_notification_user_ids.*") }}
                         </span>
                     </div>
                 @endif
@@ -317,6 +342,10 @@
                                 Notifikasi Konten
                             </span>
                             <span role="columnheader">
+                                <i class="bi bi-person-check-fill"></i>
+                                Dokter Datang
+                            </span>
+                            <span role="columnheader">
                                 <i class="bi bi-pencil-square"></i>
                                 Pengelola Konten
                             </span>
@@ -331,12 +360,14 @@
                                 $registrationSelected = in_array((int) $role->id, $selectedRegistrationIds, true);
                                 $emailSelected = in_array((int) $role->id, $selectedEmailOnboardingIds, true);
                                 $promotionSelected = in_array((int) $role->id, $selectedPromotionNotificationIds, true);
+                                $doctorArrivalSelected = in_array((int) $role->id, $selectedDoctorArrivalNotificationIds, true);
                                 $promotionManagementSelected = in_array((int) $role->id, $selectedPromotionManagementIds, true);
                                 $patientServiceSelected = in_array((int) $role->id, $selectedPatientServiceIds, true);
                                 $roleActiveFeatureCount = collect([
                                     $registrationSelected,
                                     $emailSelected,
                                     $promotionSelected,
+                                    $doctorArrivalSelected,
                                     $promotionManagementSelected,
                                     $patientServiceSelected && ! $role->patient_service_patient_role,
                                 ])->filter()->count();
@@ -410,6 +441,22 @@
                                         <span class="role-config-toggle-copy">
                                             <strong data-toggle-state>{{ $promotionSelected ? "Aktif" : "Nonaktif" }}</strong>
                                             <small>Semua user aktif pada role ini</small>
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <div class="role-config-cell" role="cell">
+                                    <span class="role-config-mobile-label">Notifikasi Dokter Datang</span>
+                                    <label class="role-config-toggle" for="doctor-arrival-role-{{ $role->id }}">
+                                        <input class="role-config-checkbox" type="checkbox"
+                                            id="doctor-arrival-role-{{ $role->id }}"
+                                            name="doctor_arrival_notification_role_ids[]" value="{{ $role->id }}"
+                                            data-feature="doctorArrival" data-users="{{ $role->users_count }}"
+                                            @checked($doctorArrivalSelected)>
+                                        <span class="role-config-switch" aria-hidden="true"><span></span></span>
+                                        <span class="role-config-toggle-copy">
+                                            <strong data-toggle-state>{{ $doctorArrivalSelected ? "Aktif" : "Nonaktif" }}</strong>
+                                            <small>Pasien sesuai jadwal dokter &amp; poli</small>
                                         </span>
                                     </label>
                                 </div>
@@ -566,6 +613,7 @@
                 registration: (form.dataset.initialRegistration || "").split(",").filter(Boolean).sort(),
                 email: (form.dataset.initialEmail || "").split(",").filter(Boolean).sort(),
                 promotion: (form.dataset.initialPromotionRoles || "").split(",").filter(Boolean).sort(),
+                doctorArrival: (form.dataset.initialDoctorArrival || "").split(",").filter(Boolean).sort(),
                 promotionManagement: (form.dataset.initialPromotionManagement || "").split(",").filter(Boolean).sort(),
                 patientService: (form.dataset.initialPatientService || "").split(",").filter(Boolean).sort(),
                 promotionUsers: (form.dataset.initialPromotionUsers || "").split(",").filter(Boolean).sort(),
@@ -632,19 +680,21 @@
                 const registrationIds = selectedIds("registration");
                 const emailIds = selectedIds("email");
                 const promotionIds = selectedIds("promotion");
+                const doctorArrivalIds = selectedIds("doctorArrival");
                 const promotionManagementIds = selectedIds("promotionManagement");
                 const patientServiceIds = selectedIds("patientService");
                 const promotionUserIds = selectedUserIds();
                 const registrationChanged = registrationIds.join(",") !== initial.registration.join(",");
                 const emailChanged = emailIds.join(",") !== initial.email.join(",");
                 const promotionChanged = promotionIds.join(",") !== initial.promotion.join(",");
+                const doctorArrivalChanged = doctorArrivalIds.join(",") !== initial.doctorArrival.join(",");
                 const promotionManagementChanged = promotionManagementIds.join(",") !== initial.promotionManagement.join(",");
                 const patientServiceChanged = patientServiceIds.join(",") !== initial.patientService.join(",");
                 const promotionUsersChanged = promotionUserIds.join(",") !== initial.promotionUsers.join(",");
-                const hasChanges = registrationChanged || emailChanged || promotionChanged || promotionManagementChanged ||
+                const hasChanges = registrationChanged || emailChanged || promotionChanged || doctorArrivalChanged || promotionManagementChanged ||
                     patientServiceChanged || promotionUsersChanged;
                 const assignmentCount = registrationIds.length + emailIds.length +
-                    promotionIds.length + promotionManagementIds.length + patientServiceIds.length + promotionUserIds.length;
+                    promotionIds.length + doctorArrivalIds.length + promotionManagementIds.length + patientServiceIds.length + promotionUserIds.length;
 
                 inputs.forEach(refreshToggle);
                 refreshRoleRows();
@@ -659,6 +709,7 @@
                 document.querySelector("[data-registration-summary]").textContent = registrationIds.length;
                 document.querySelector("[data-email-summary]").textContent = emailIds.length;
                 document.querySelector("[data-promotion-summary]").textContent = promotionIds.length;
+                document.querySelector("[data-doctor-arrival-summary]").textContent = doctorArrivalIds.length;
                 document.querySelector("[data-promotion-management-summary]").textContent = promotionManagementIds.length;
                 document.querySelector("[data-patient-service-summary]").textContent = patientServiceIds.length;
                 document.querySelector("[data-direct-user-summary]").textContent = promotionUserIds.length;
@@ -684,7 +735,7 @@
                     ? "Ada perubahan yang belum disimpan"
                     : "Konfigurasi sudah tersimpan";
                 changeHint.textContent = hasChanges
-                    ? `${promotionManagementIds.length} role dapat mengelola konten; ${patientServiceIds.length} role menangani Pasien Service; ${promotionIds.length} role dan ${promotionUserIds.length} user menjadi target informasi.`
+                    ? `${promotionManagementIds.length} role dapat mengelola konten; ${patientServiceIds.length} role menangani Pasien Service; ${promotionIds.length} role menjadi target informasi; ${doctorArrivalIds.length} role menerima notifikasi dokter datang.`
                     : "Ubah sakelar untuk mengaktifkan tombol simpan.";
             };
 

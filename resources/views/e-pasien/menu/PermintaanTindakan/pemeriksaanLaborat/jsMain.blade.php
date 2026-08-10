@@ -248,12 +248,11 @@
         });
 
         printButton.addEventListener("click", () => {
-            document.body.classList.add("laboratory-result-printing");
-            window.print();
-        });
+            const pdfUrl = lastTrigger?.dataset.resultPdfUrl;
 
-        window.addEventListener("afterprint", () => {
-            document.body.classList.remove("laboratory-result-printing");
+            if (pdfUrl) {
+                window.open(pdfUrl, "_blank", "noopener,noreferrer");
+            }
         });
 
         modalElement.addEventListener("hidden.bs.modal", () => {
@@ -267,7 +266,6 @@
             documentPanel.hidden = true;
             printButton.hidden = true;
             groups.replaceChildren();
-            document.body.classList.remove("laboratory-result-printing");
         });
     });
 </script>

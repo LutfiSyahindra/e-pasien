@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Epasien\PushSubscriptionController;
 use App\Jobs\DispatchPromotionNotifications;
 use App\Models\Promotion;
 use App\Models\PromotionConfiguration;
@@ -572,10 +573,15 @@ class PromotionFeatureTest extends TestCase
             'content_encoding' => 'aes128gcm',
         ];
 
-        $this->actingAs($patient)->postJson(route('push.store'), $payload)->assertCreated();
+        $this->actingAs($patient)
+            ->postJson(route('push.store'), $payload)
+            ->assertCreated()
+            ->assertSessionHas(PushSubscriptionController::SESSION_ENDPOINT_KEY, $payload['endpoint']);
         $this->assertDatabaseHas('push_subscriptions', ['endpoint' => $payload['endpoint'], 'subscribable_id' => $patient->id]);
 
-        $this->deleteJson(route('push.destroy'), ['endpoint' => $payload['endpoint']])->assertOk();
+        $this->deleteJson(route('push.destroy'), ['endpoint' => $payload['endpoint']])
+            ->assertOk()
+            ->assertSessionMissing(PushSubscriptionController::SESSION_ENDPOINT_KEY);
         $this->assertDatabaseMissing('push_subscriptions', ['endpoint' => $payload['endpoint']]);
     }
 

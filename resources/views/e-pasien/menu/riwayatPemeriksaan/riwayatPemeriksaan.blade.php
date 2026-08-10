@@ -304,6 +304,9 @@
                                         data-payment-url="{{ route("riwayatPemeriksaan.payment", [
                                             "no_rawat" => $examination["no_rawat"],
                                         ]) }}"
+                                        data-payment-pdf-url="{{ route("riwayatPemeriksaan.paymentPdf", [
+                                            "no_rawat" => $examination["no_rawat"],
+                                        ]) }}"
                                         data-no-rawat="{{ $examination["no_rawat"] }}">
                                         <i class="bi bi-wallet2"></i>
                                         <span>Pembayaran</span>

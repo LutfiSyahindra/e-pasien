@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Epasien\PushSubscriptionController;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\epasien\Profile\PatientEmailOnboardingService;
 use Illuminate\Http\RedirectResponse;
@@ -70,6 +71,20 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $sessionEndpoint = $request->session()->get(PushSubscriptionController::SESSION_ENDPOINT_KEY);
+        $reportedEndpoint = $request->input('push_endpoint');
+
+        $endpoints = array_filter(
+            [$sessionEndpoint, $reportedEndpoint],
+            static fn (mixed $endpoint): bool => is_string($endpoint)
+                && $endpoint !== ''
+                && strlen($endpoint) <= 500,
+        );
+
+        foreach (array_unique($endpoints) as $endpoint) {
+            $request->user()?->deletePushSubscription($endpoint);
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

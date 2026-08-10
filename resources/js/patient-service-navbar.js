@@ -33,6 +33,7 @@ if (endpoint && (nav || sidebarBadge)) {
 
     const setBadge = (count) => {
         const value = Number(count) || 0;
+        const unreadCopy = nav?.querySelector('[data-message-unread-copy]');
         const label = value > 0
             ? `Buka ${value} pesan Pasien Service yang belum dibaca`
             : 'Buka Pasien Service';
@@ -45,7 +46,12 @@ if (endpoint && (nav || sidebarBadge)) {
             sidebarBadge.textContent = value > 99 ? '99+' : String(value);
             sidebarBadge.hidden = value < 1;
         }
-        nav?.querySelector('a[role="button"]')?.setAttribute(
+        if (unreadCopy) {
+            unreadCopy.textContent = value > 0
+                ? `${value} pesan belum dibaca`
+                : 'Semua pesan sudah dibaca';
+        }
+        nav?.querySelector('[data-bs-toggle="dropdown"]')?.setAttribute(
             'aria-label',
             value > 0 ? `Buka ${value} pesan Pasien Service yang belum dibaca` : 'Buka pesan Pasien Service',
         );
@@ -64,9 +70,15 @@ if (endpoint && (nav || sidebarBadge)) {
 
     const messageItem = (conversation) => {
         const link = document.createElement('a');
+        const conversationUnread = Number(conversation.unread_count) || 0;
         link.className = `ep-message-item${conversation.unread_count > 0 ? ' is-unread' : ''}`;
         link.href = conversation.url;
-        link.dataset.searchValue = `${conversation.name} ${conversation.subject} ${conversation.preview}`.toLocaleLowerCase('id');
+        link.dataset.searchValue = [conversation.name, conversation.subject, conversation.preview]
+            .filter(Boolean).join(' ').toLocaleLowerCase('id');
+        link.setAttribute(
+            'aria-label',
+            `${conversation.name}, ${conversation.subject}, ${conversationUnread > 0 ? `${conversationUnread} pesan belum dibaca` : 'semua pesan sudah dibaca'}`,
+        );
 
         const avatar = document.createElement('span');
         avatar.className = 'ep-message-avatar';
@@ -116,6 +128,7 @@ if (endpoint && (nav || sidebarBadge)) {
     const render = (payload) => {
         setBadge(payload.unread_count);
         if (!list) return;
+        list.setAttribute('aria-busy', 'false');
         list.replaceChildren();
         if (!payload.conversations?.length) {
             list.append(emptyState());
@@ -128,6 +141,7 @@ if (endpoint && (nav || sidebarBadge)) {
     const load = ({ force = false } = {}) => {
         if (loaded && !force) return Promise.resolve();
         if (loading) return loading;
+        list?.setAttribute('aria-busy', 'true');
 
         loading = fetch(endpoint, {
             credentials: 'same-origin',
@@ -140,6 +154,7 @@ if (endpoint && (nav || sidebarBadge)) {
             render(payload);
             acknowledgeDeliveries(payload.pending_delivery_message_ids || []);
         }).catch(() => {
+            list?.setAttribute('aria-busy', 'false');
             list?.replaceChildren(emptyState('Pesan belum dapat dimuat', 'Periksa koneksi lalu buka kembali menu pesan.'));
         }).finally(() => { loading = null; });
 

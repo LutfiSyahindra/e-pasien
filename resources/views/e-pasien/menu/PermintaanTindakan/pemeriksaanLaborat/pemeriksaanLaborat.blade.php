@@ -378,6 +378,9 @@
                                         data-bs-toggle="modal" data-bs-target="#laboratoryResultModal"
                                         data-result-url="{{ route("pemeriksaanLaborat.result", [
                                             "noorder" => $laboratoryRequest["noorder"],
+                                        ]) }}"
+                                        data-result-pdf-url="{{ route("pemeriksaanLaborat.resultPdf", [
+                                            "noorder" => $laboratoryRequest["noorder"],
                                         ]) }}">
                                         <i class="bi bi-eye"></i>
                                         <span>Lihat Hasil</span>

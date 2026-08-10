@@ -295,13 +295,15 @@
             $('#userId').val('');
         });
 
+        const isMobileAccessTable = window.matchMedia('(max-width: 767.98px)').matches;
+
         let userTable = $('#tableUsers').DataTable({
             processing: true,
             serverSide: true,
             responsive: false,
             autoWidth: false,
-            scrollX: true,
-            scrollCollapse: true,
+            scrollX: !isMobileAccessTable,
+            scrollCollapse: !isMobileAccessTable,
             dom: 'rt<"access-datatable-footer d-flex flex-wrap align-items-center justify-content-between gap-2 px-3 py-3"ip>',
             language: dataTableLanguage('user'),
             ajax: {
@@ -373,11 +375,15 @@
         applySyncFloatMode();
 
         userTable.on('draw.dt', function() {
-            userTable.columns.adjust();
+            if (!window.matchMedia('(max-width: 767.98px)').matches) {
+                userTable.columns.adjust();
+            }
         });
 
         $(window).on('resize.accessUsersTable', function() {
-            userTable.columns.adjust();
+            if (!window.matchMedia('(max-width: 767.98px)').matches) {
+                userTable.columns.adjust();
+            }
         });
 
         userTable.on('xhr.dt', function(e, settings, json) {

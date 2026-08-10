@@ -377,6 +377,9 @@
                                         data-bs-toggle="modal" data-bs-target="#radiologyResultModal"
                                         data-result-url="{{ route("pemeriksaanRadiologi.result", [
                                             "noorder" => $radiologyRequest["noorder"],
+                                        ]) }}"
+                                        data-result-pdf-url="{{ route("pemeriksaanRadiologi.resultPdf", [
+                                            "noorder" => $radiologyRequest["noorder"],
                                         ]) }}">
                                         <i class="bi bi-eye"></i>
                                         <span>Lihat Hasil</span>

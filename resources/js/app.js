@@ -22,6 +22,10 @@ const scheduleNotificationCenter = () => {
 
 startAlpine();
 
+if (document.querySelector('.ep-premium-navbar')) {
+    import('./navbar-mobile').catch(() => {});
+}
+
 if (document.querySelector('meta[name="epasien-patient-service-navbar-url"]')) {
     import('./patient-service-navbar').catch(() => {});
 }

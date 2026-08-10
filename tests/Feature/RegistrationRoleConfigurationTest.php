@@ -64,6 +64,7 @@ class RegistrationRoleConfigurationTest extends TestCase
             [$configuredBy->id],
             [$bpjsRole->id],
             [$bpjsRole->id],
+            [$patientRole->id],
             $configuredBy,
         );
 
@@ -77,6 +78,7 @@ class RegistrationRoleConfigurationTest extends TestCase
         $this->assertFalse((bool) $bpjsRole->fresh()->email_onboarding_enabled);
         $this->assertTrue((bool) $patientRole->fresh()->email_onboarding_enabled);
         $this->assertTrue((bool) $patientRole->fresh()->promotion_notifications_enabled);
+        $this->assertTrue((bool) $patientRole->fresh()->doctor_arrival_notifications_enabled);
         $this->assertTrue($bpjsRole->fresh()->hasPermissionTo('EPASIEN.MENU.PROMOSI.KELOLA'));
         $this->assertTrue($bpjsRole->fresh()->hasPermissionTo('EPASIEN.MENU.PASIEN_SERVICE'));
         $this->assertTrue($bpjsRole->fresh()->hasPermissionTo('EPASIEN.MENU.PASIEN_SERVICE.KELOLA'));
@@ -109,6 +111,7 @@ class RegistrationRoleConfigurationTest extends TestCase
             ->assertSeeText('Pendaftaran BPJS')
             ->assertSeeText('Animasi Onboarding Email')
             ->assertSeeText('Notifikasi Promosi & Informasi')
+            ->assertSeeText('Notifikasi Dokter Datang')
             ->assertSeeText('Pengelola Promosi & Informasi')
             ->assertSeeText('Admin Pasien Service')
             ->assertSeeText('Seluruh pengguna aktif dari role terpilih menjadi Tim Pasien Service')
@@ -118,6 +121,7 @@ class RegistrationRoleConfigurationTest extends TestCase
             ->assertSee('name="registration_role_ids[]"', false)
             ->assertSee('name="email_onboarding_role_ids[]"', false)
             ->assertSee('name="promotion_notification_role_ids[]"', false)
+            ->assertSee('name="doctor_arrival_notification_role_ids[]"', false)
             ->assertSee('name="promotion_management_role_ids[]"', false)
             ->assertSee('name="patient_service_role_ids[]"', false)
             ->assertSee('name="promotion_notification_user_ids[]"', false);
@@ -137,6 +141,7 @@ class RegistrationRoleConfigurationTest extends TestCase
         $this->actingAs($admin)
             ->put(route('roleConfiguration.update'), [
                 'promotion_notification_role_ids' => [$patientRole->id],
+                'doctor_arrival_notification_role_ids' => [$patientRole->id],
                 'promotion_notification_user_ids' => [$target->id],
                 'promotion_management_role_ids' => [$serviceRole->id],
                 'patient_service_role_ids' => [$serviceRole->id],
@@ -145,6 +150,7 @@ class RegistrationRoleConfigurationTest extends TestCase
             ->assertSessionHas('status');
 
         $this->assertTrue((bool) $patientRole->fresh()->promotion_notifications_enabled);
+        $this->assertTrue((bool) $patientRole->fresh()->doctor_arrival_notifications_enabled);
         $this->assertTrue($serviceRole->fresh()->hasPermissionTo('EPASIEN.MENU.PROMOSI'));
         $this->assertTrue($serviceRole->fresh()->hasPermissionTo('EPASIEN.MENU.PROMOSI.KELOLA'));
         $this->assertTrue($serviceRole->fresh()->hasPermissionTo('EPASIEN.MENU.PASIEN_SERVICE'));

@@ -40,6 +40,14 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware([
     'permission:EPASIEN.MENU.DASHBOARD',
 ])->name('dashboard');
 
+Route::get('/dashboard/antrian-poli', [DashboardController::class, 'doctorQueues'])->middleware([
+    'auth',
+    'verified',
+    'permission:EPASIEN.MENU',
+    'permission:EPASIEN.MENU.DASHBOARD',
+    'throttle:120,1',
+])->name('dashboard.doctorQueues');
+
 Route::middleware('auth')->group(function () {
     Route::get('/e-pasien/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::patch('/e-pasien/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.readAll');
@@ -191,10 +199,14 @@ Route::middleware('auth')->group(function () {
                     ->name('pemeriksaanLaborat.index');
                 Route::get('/permintaan-tindakan/pemeriksaan-laborat/hasil', [PemeriksaanLaboratController::class, 'result'])
                     ->name('pemeriksaanLaborat.result');
+                Route::get('/permintaan-tindakan/pemeriksaan-laborat/hasil/pdf', [PemeriksaanLaboratController::class, 'resultPdf'])
+                    ->name('pemeriksaanLaborat.resultPdf');
                 Route::get('/permintaan-tindakan/pemeriksaan-radiologi', [PemeriksaanRadiologiController::class, 'index'])
                     ->name('pemeriksaanRadiologi.index');
                 Route::get('/permintaan-tindakan/pemeriksaan-radiologi/hasil', [PemeriksaanRadiologiController::class, 'result'])
                     ->name('pemeriksaanRadiologi.result');
+                Route::get('/permintaan-tindakan/pemeriksaan-radiologi/hasil/pdf', [PemeriksaanRadiologiController::class, 'resultPdf'])
+                    ->name('pemeriksaanRadiologi.resultPdf');
                 Route::get('/permintaan-tindakan/resep-obat', [ResepObatController::class, 'index'])
                     ->name('resepObat.index');
                 Route::get('/permintaan-tindakan/operasi', [OperasiController::class, 'index'])
@@ -216,6 +228,8 @@ Route::middleware('auth')->group(function () {
                     ->name('riwayatPemeriksaan.resume');
                 Route::get('/riwayat-pemeriksaan/pembayaran', [RiwayatPemeriksaanController::class, 'payment'])
                     ->name('riwayatPemeriksaan.payment');
+                Route::get('/riwayat-pemeriksaan/pembayaran/pdf', [RiwayatPemeriksaanController::class, 'paymentPdf'])
+                    ->name('riwayatPemeriksaan.paymentPdf');
             });
 
             Route::middleware('permission:EPASIEN.MENU.RIWAYAT_MCU')->group(function () {
