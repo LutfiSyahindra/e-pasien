@@ -3,7 +3,7 @@
 @section("title", "Promosi & Informasi - E-Pasien")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/promotion-premium.css") }}" rel="stylesheet">
+    <link href="{{ versioned_asset("epasien/assets/css/promotion-premium.css") }}" rel="stylesheet">
 @endpush
 
 @section("content")
@@ -212,8 +212,8 @@
 @if ($canManage)
     @push("script")
         <script
-            src="{{ asset("epasien/assets/js/promotion-page.js") }}"
-            data-premium-css="{{ asset("epasien/assets/css/sweetalert-premium.css") }}"
+            src="{{ versioned_asset("epasien/assets/js/promotion-page.js") }}"
+            data-premium-css="{{ versioned_asset("epasien/assets/css/sweetalert-premium.css") }}"
         ></script>
     @endpush
 @endif

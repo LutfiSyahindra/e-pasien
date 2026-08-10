@@ -3,7 +3,7 @@
 @section("title", "Riwayat Pemeriksaan | E-Pasien")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/riwayat-pemeriksaan.css") }}" rel="stylesheet" />
+    <link href="{{ versioned_asset("epasien/assets/css/riwayat-pemeriksaan.css") }}" rel="stylesheet" />
 @endpush
 
 @section("content")

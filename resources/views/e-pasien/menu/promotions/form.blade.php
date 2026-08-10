@@ -9,7 +9,7 @@
 @section("title", ($editing ? "Edit" : "Buat") . " Konten Promosi & Informasi - E-Pasien")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/promotion-premium.css") }}" rel="stylesheet">
+    <link href="{{ versioned_asset("epasien/assets/css/promotion-premium.css") }}" rel="stylesheet">
 @endpush
 
 @section("content")
@@ -133,5 +133,5 @@
 @endsection
 
 @push("script")
-    <script src="{{ asset("epasien/assets/js/promotion-page.js") }}"></script>
+    <script src="{{ versioned_asset("epasien/assets/js/promotion-page.js") }}"></script>
 @endpush

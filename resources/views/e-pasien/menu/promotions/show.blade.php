@@ -3,7 +3,7 @@
 @section("title", $promotion->title . " - Promosi & Informasi")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/promotion-premium.css") }}" rel="stylesheet">
+    <link href="{{ versioned_asset("epasien/assets/css/promotion-premium.css") }}" rel="stylesheet">
 @endpush
 
 @section("content")
@@ -43,5 +43,5 @@
 @endsection
 
 @push("script")
-    <script src="{{ asset("epasien/assets/js/promotion-image-viewer.js") }}"></script>
+    <script src="{{ versioned_asset("epasien/assets/js/promotion-image-viewer.js") }}"></script>
 @endpush

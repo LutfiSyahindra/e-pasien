@@ -56,6 +56,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Static Asset Version
+    |--------------------------------------------------------------------------
+    |
+    | Railway changes this value for every deployment. Appending it to static
+    | CSS and JavaScript URLs prevents a mobile browser or installed PWA from
+    | combining files from different application releases.
+    |
+    */
+
+    'asset_version' => env(
+        'ASSET_VERSION',
+        env('RAILWAY_DEPLOYMENT_ID', env('RAILWAY_GIT_COMMIT_SHA'))
+    ),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

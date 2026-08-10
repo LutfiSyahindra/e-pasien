@@ -3,9 +3,9 @@
 @section("title", "Riwayat Pendaftaran Online | E-Pasien")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/plugins/datetimepicker/css/classic.css") }}" rel="stylesheet" />
-    <link href="{{ asset("epasien/assets/plugins/datetimepicker/css/classic.date.css") }}" rel="stylesheet" />
-    <link href="{{ asset("epasien/assets/css/daftar-online.css") }}" rel="stylesheet" />
+    <link href="{{ versioned_asset("epasien/assets/plugins/datetimepicker/css/classic.css") }}" rel="stylesheet" />
+    <link href="{{ versioned_asset("epasien/assets/plugins/datetimepicker/css/classic.date.css") }}" rel="stylesheet" />
+    <link href="{{ versioned_asset("epasien/assets/css/daftar-online.css") }}" rel="stylesheet" />
 @endpush
 
 @section("content")
@@ -372,8 +372,8 @@
 @endsection
 
 @push("script")
-    <script src="{{ asset("epasien/assets/plugins/datetimepicker/js/picker.js") }}"></script>
-    <script src="{{ asset("epasien/assets/plugins/datetimepicker/js/picker.date.js") }}"></script>
+    <script src="{{ versioned_asset("epasien/assets/plugins/datetimepicker/js/picker.js") }}"></script>
+    <script src="{{ versioned_asset("epasien/assets/plugins/datetimepicker/js/picker.date.js") }}"></script>
     <script>
         $(document).ready(function() {
             const historyItems = @json($historyItems);

@@ -3,7 +3,7 @@
 @section("title", "Pendaftaran Online | E-Pasien")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/daftar-online.css") }}" rel="stylesheet" />
+    <link href="{{ versioned_asset("epasien/assets/css/daftar-online.css") }}" rel="stylesheet" />
 @endpush
 
 @section("content")

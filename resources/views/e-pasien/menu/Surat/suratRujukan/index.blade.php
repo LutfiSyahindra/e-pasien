@@ -3,7 +3,7 @@
 @section("title", "Surat Rujukan | E-Pasien")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/surat-rujukan.css") }}" rel="stylesheet" />
+    <link href="{{ versioned_asset("epasien/assets/css/surat-rujukan.css") }}" rel="stylesheet" />
 @endpush
 
 @section("content")
@@ -367,5 +367,5 @@
     <script>
         window.suratRujukanConfig = @json($referralPageConfig);
     </script>
-    <script src="{{ asset("epasien/assets/js/surat-rujukan.js") }}"></script>
+    <script src="{{ versioned_asset("epasien/assets/js/surat-rujukan.js") }}"></script>
 @endpush

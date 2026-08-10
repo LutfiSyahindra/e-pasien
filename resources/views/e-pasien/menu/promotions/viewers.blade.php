@@ -3,7 +3,7 @@
 @section("title", "Pembaca {$promotion->title} - Promosi & Informasi")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/promotion-premium.css") }}" rel="stylesheet">
+    <link href="{{ versioned_asset("epasien/assets/css/promotion-premium.css") }}" rel="stylesheet">
 @endpush
 
 @section("content")
