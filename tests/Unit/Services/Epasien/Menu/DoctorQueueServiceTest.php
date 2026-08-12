@@ -3,6 +3,7 @@
 namespace Tests\Unit\Services\Epasien\Menu;
 
 use App\Repositories\epasien\menu\DoctorArrivalRepository;
+use App\Repositories\epasien\settings\DoctorPhotoRepository;
 use App\Services\epasien\menu\DoctorQueueService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -13,7 +14,7 @@ class DoctorQueueServiceTest extends TestCase
     public function test_current_formats_latest_calls_and_marks_the_patients_queue(): void
     {
         $serviceDate = '2026-09-14';
-        Cache::forget('epasien:khanza:doctor-queues:v2:'.$serviceDate);
+        Cache::forget('epasien:khanza:doctor-queues:v3:'.$serviceDate);
 
         $repository = $this->createMock(DoctorArrivalRepository::class);
         $repository
@@ -52,6 +53,12 @@ class DoctorQueueServiceTest extends TestCase
                     'serviced_at' => '2026-09-14 09:12:00',
                 ],
             ]));
+        $photoRepository = $this->createMock(DoctorPhotoRepository::class);
+        $photoRepository
+            ->expects($this->once())
+            ->method('urlsForCodes')
+            ->with(['D001', 'D002'])
+            ->willReturn(['D001' => '/storage/doctor-photos/d001.webp']);
 
         $registration = [
             'tanggal' => $serviceDate,
@@ -60,7 +67,7 @@ class DoctorQueueServiceTest extends TestCase
             'no_reg' => '009',
         ];
 
-        $queues = (new DoctorQueueService($repository))->current(
+        $queues = (new DoctorQueueService($repository, $photoRepository))->current(
             $registration,
             Carbon::parse($serviceDate.' 09:16:00', 'Asia/Jakarta'),
         );
@@ -78,12 +85,15 @@ class DoctorQueueServiceTest extends TestCase
             $patientQueue['patient_message']
         );
         $this->assertSame('09:15 WIB', $patientQueue['serviced_at_label']);
+        $this->assertSame('SS', $patientQueue['doctor_initials']);
+        $this->assertSame('/storage/doctor-photos/d001.webp', $patientQueue['doctor_photo_url']);
+        $this->assertNull($queues->firstWhere('doctor_code', 'D002')['doctor_photo_url']);
     }
 
     public function test_current_does_not_mark_a_registration_from_another_date(): void
     {
         $serviceDate = '2026-09-15';
-        Cache::forget('epasien:khanza:doctor-queues:v2:'.$serviceDate);
+        Cache::forget('epasien:khanza:doctor-queues:v3:'.$serviceDate);
 
         $repository = $this->createMock(DoctorArrivalRepository::class);
         $repository
@@ -100,8 +110,14 @@ class DoctorQueueServiceTest extends TestCase
                 'clinic_name' => 'Poliklinik Anak',
                 'serviced_at' => null,
             ]]));
+        $photoRepository = $this->createMock(DoctorPhotoRepository::class);
+        $photoRepository
+            ->expects($this->once())
+            ->method('urlsForCodes')
+            ->with(['D001'])
+            ->willReturn([]);
 
-        $queue = (new DoctorQueueService($repository))->current(
+        $queue = (new DoctorQueueService($repository, $photoRepository))->current(
             [
                 'tanggal' => '2026-09-16',
                 'kd_dokter' => 'D001',

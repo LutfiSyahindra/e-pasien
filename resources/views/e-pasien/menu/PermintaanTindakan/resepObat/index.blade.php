@@ -3,7 +3,7 @@
 @section("title", "Resep Obat | E-Pasien")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/resep-obat.css") }}" rel="stylesheet" />
+    <link href="{{ versioned_asset("epasien/assets/css/resep-obat.css") }}" rel="stylesheet" />
 @endpush
 
 @section("content")

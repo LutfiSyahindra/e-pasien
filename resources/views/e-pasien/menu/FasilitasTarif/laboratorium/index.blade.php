@@ -3,7 +3,7 @@
 @section("title", "Laboratorium | Fasilitas & Tarif")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/laboratorium-tarif.css") }}"
+    <link href="{{ versioned_asset("epasien/assets/css/laboratorium-tarif.css") }}"
         rel="stylesheet" />
 @endpush
 

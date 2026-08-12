@@ -3,7 +3,7 @@
 @section("title", "Pengaturan Jadwal Dokter | E-Pasien")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/doctor-schedule-settings.css") }}"
+    <link href="{{ versioned_asset("epasien/assets/css/doctor-schedule-settings.css") }}"
         rel="stylesheet" />
 @endpush
 

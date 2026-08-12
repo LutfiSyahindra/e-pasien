@@ -3,7 +3,7 @@
 @section("title", "Pasien Service - E-Pasien")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/patient-service.css") }}" rel="stylesheet">
+    <link href="{{ versioned_asset("epasien/assets/css/patient-service.css") }}" rel="stylesheet">
 @endpush
 
 @section("content")
@@ -251,5 +251,5 @@
 @endsection
 
 @push("script")
-    <script src="{{ asset("epasien/assets/js/patient-service.js") }}"></script>
+    <script src="{{ versioned_asset("epasien/assets/js/patient-service.js") }}"></script>
 @endpush

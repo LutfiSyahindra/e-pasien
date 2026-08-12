@@ -12,12 +12,12 @@
         <link rel="icon" href="{{ asset("epasien/assets/images/pwa-icon-32.png") }}" type="image/png" />
         <link rel="apple-touch-icon" href="{{ asset("epasien/assets/images/pwa-icon-180.png") }}">
 
-        <link href="{{ asset("epasien/assets/css/bootstrap.min.css") }}" rel="stylesheet">
-        <link href="{{ asset("epasien/assets/css/bootstrap-extended.css") }}" rel="stylesheet">
-        <link href="{{ asset("epasien/assets/css/style.css") }}" rel="stylesheet">
-        <link href="{{ asset("epasien/assets/css/icons.css") }}" rel="stylesheet">
-        <link href="{{ asset("epasien/assets/css/pace.min.css") }}" rel="stylesheet">
-        <link href="{{ asset("epasien/assets/css/pwa-splash.css") }}" rel="stylesheet">
+        <link href="{{ versioned_asset("epasien/assets/css/bootstrap.min.css") }}" rel="stylesheet">
+        <link href="{{ versioned_asset("epasien/assets/css/bootstrap-extended.css") }}" rel="stylesheet">
+        <link href="{{ versioned_asset("epasien/assets/css/style.css") }}" rel="stylesheet">
+        <link href="{{ versioned_asset("epasien/assets/css/icons.css") }}" rel="stylesheet">
+        <link href="{{ versioned_asset("epasien/assets/css/pace.min.css") }}" rel="stylesheet">
+        <link href="{{ versioned_asset("epasien/assets/css/pwa-splash.css") }}" rel="stylesheet">
 
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
 
@@ -625,9 +625,9 @@
 
         </div>
 
-        <script src="{{ asset("epasien/assets/js/jquery.min.js") }}"></script>
-        <script src="{{ asset("epasien/assets/js/bootstrap.bundle.min.js") }}"></script>
-        <script src="{{ asset("epasien/assets/js/pace.min.js") }}"></script>
+        <script src="{{ versioned_asset("epasien/assets/js/jquery.min.js") }}"></script>
+        <script src="{{ versioned_asset("epasien/assets/js/bootstrap.bundle.min.js") }}"></script>
+        <script src="{{ versioned_asset("epasien/assets/js/pace.min.js") }}"></script>
         <script>
             document.querySelectorAll("[data-password-toggle]").forEach(function (button) {
                 button.addEventListener("click", function () {

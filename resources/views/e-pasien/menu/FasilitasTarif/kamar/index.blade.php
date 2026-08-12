@@ -3,7 +3,7 @@
 @section("title", "Kamar | Fasilitas & Tarif")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/kamar.css") }}" rel="stylesheet" />
+    <link href="{{ versioned_asset("epasien/assets/css/kamar.css") }}" rel="stylesheet" />
 @endpush
 
 @section("content")

@@ -3,6 +3,7 @@
 namespace App\Services\epasien\menu;
 
 use App\Repositories\epasien\menu\DoctorArrivalRepository;
+use App\Repositories\epasien\settings\DoctorPhotoRepository;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -14,7 +15,10 @@ class DoctorQueueService
 
     private const CACHE_SECONDS = 5;
 
-    public function __construct(private readonly DoctorArrivalRepository $repository) {}
+    public function __construct(
+        private readonly DoctorArrivalRepository $repository,
+        private readonly DoctorPhotoRepository $doctorPhotoRepository,
+    ) {}
 
     /**
      * @param  array<string, mixed>|null  $patientRegistration
@@ -35,7 +39,7 @@ class DoctorQueueService
 
         $patientQueue = $this->patientQueueForDate($patientRegistration, $serviceDate);
 
-        return collect($calls)
+        $queues = collect($calls)
             ->map(fn (object $call): array => $this->formatCall($call, $patientQueue))
             ->unique(fn (array $call): string => $call['doctor_code'].'|'.$call['clinic_code'])
             ->sortBy([
@@ -43,6 +47,20 @@ class DoctorQueueService
                 ['doctor_name', 'asc'],
             ], SORT_NATURAL | SORT_FLAG_CASE)
             ->values();
+
+        if ($queues->isEmpty()) {
+            return $queues;
+        }
+
+        $photoUrls = $this->doctorPhotoRepository->urlsForCodes(
+            $queues->pluck('doctor_code')->all()
+        );
+
+        return $queues->map(function (array $queue) use ($photoUrls): array {
+            $queue['doctor_photo_url'] = $photoUrls[$queue['doctor_code']] ?? null;
+
+            return $queue;
+        });
     }
 
     /**
@@ -66,10 +84,14 @@ class DoctorQueueService
             ? $this->remainingQueueNumbers($currentNumber, $patientQueue['queue_number'])
             : null;
 
+        $doctorName = $this->text($call->doctor_name ?? null, 'Dokter belum tercatat');
+
         return [
             'id' => md5($doctorCode.'|'.$clinicCode),
             'doctor_code' => $doctorCode,
-            'doctor_name' => $this->text($call->doctor_name ?? null, 'Dokter belum tercatat'),
+            'doctor_name' => $doctorName,
+            'doctor_initials' => $this->initials($doctorName),
+            'doctor_photo_url' => null,
             'clinic_code' => $clinicCode,
             'clinic_name' => $this->text($call->clinic_name ?? null, 'Poliklinik'),
             'current_number' => $currentNumber !== '' ? $currentNumber : '-',
@@ -159,5 +181,21 @@ class DoctorQueueService
         $value = trim((string) $value);
 
         return $value !== '' ? $value : null;
+    }
+
+    private function initials(string $name): string
+    {
+        $name = preg_replace('/\bdr\.?\b/iu', '', $name) ?? $name;
+        preg_match_all('/[\p{L}]+/u', $name, $matches);
+        $words = array_slice($matches[0] ?? [], 0, 2);
+
+        if ($words === []) {
+            return 'DR';
+        }
+
+        return mb_strtoupper(implode('', array_map(
+            fn (string $word): string => mb_substr($word, 0, 1),
+            $words
+        )));
     }
 }

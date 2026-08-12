@@ -3,8 +3,8 @@
 @section("title", "Konfigurasi Roles | E-Pasien")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/auth-premium.css") }}" rel="stylesheet" />
-    <link href="{{ asset("epasien/assets/css/role-configurations.css") }}" rel="stylesheet" />
+    <link href="{{ versioned_asset("epasien/assets/css/auth-premium.css") }}" rel="stylesheet" />
+    <link href="{{ versioned_asset("epasien/assets/css/role-configurations.css") }}" rel="stylesheet" />
 @endpush
 
 @section("content")

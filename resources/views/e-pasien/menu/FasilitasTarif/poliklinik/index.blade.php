@@ -3,7 +3,7 @@
 @section("title", "Poliklinik | Fasilitas & Tarif")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/poliklinik-tarif.css") }}"
+    <link href="{{ versioned_asset("epasien/assets/css/poliklinik-tarif.css") }}"
         rel="stylesheet" />
 @endpush
 

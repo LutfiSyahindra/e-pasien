@@ -3,7 +3,7 @@
 @section("title", "Jadwal Dokter")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/jadwal-dokter.css") }}"
+    <link href="{{ versioned_asset("epasien/assets/css/jadwal-dokter.css") }}"
         rel="stylesheet" />
 @endpush
 

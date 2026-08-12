@@ -769,6 +769,44 @@ a.patient-dashboard-promo-mini:hover {
     min-width: 0;
 }
 
+.patient-dashboard-queue-doctor {
+    align-items: center;
+    display: flex;
+    gap: 0.58rem;
+    min-width: 0;
+}
+
+.patient-dashboard-queue-avatar {
+    align-items: center;
+    background: linear-gradient(145deg, #dff4ee 0%, #cce9e1 100%);
+    border: 2px solid #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(32, 88, 75, 0.12);
+    color: var(--dashboard-primary);
+    display: inline-flex;
+    flex: 0 0 48px;
+    font-size: 0.78rem;
+    font-weight: 850;
+    height: 52px;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    width: 48px;
+}
+
+.patient-dashboard-queue-avatar img {
+    height: 100%;
+    inset: 0;
+    object-fit: cover;
+    position: absolute;
+    width: 100%;
+}
+
+.patient-dashboard-queue-doctor__identity {
+    display: block;
+    min-width: 0;
+}
+
 .patient-dashboard-queue-clinic {
     align-items: center;
     color: var(--dashboard-primary);
@@ -788,7 +826,7 @@ a.patient-dashboard-promo-mini:hover {
     font-size: 0.84rem;
     font-weight: 800;
     line-height: 1.35;
-    margin: 0.25rem 0 0.48rem;
+    margin: 0.25rem 0 0;
     overflow: hidden;
     overflow-wrap: anywhere;
     -webkit-box-orient: vertical;
@@ -799,7 +837,7 @@ a.patient-dashboard-promo-mini:hover {
     color: var(--dashboard-muted);
     font-size: 0.66rem;
     line-height: 1.4;
-    margin: 0.34rem 0 0;
+    margin: 0.48rem 0 0;
 }
 
 .patient-dashboard-queue-yours {
@@ -809,6 +847,7 @@ a.patient-dashboard-promo-mini:hover {
     font-size: 0.65rem;
     font-weight: 800;
     gap: 0.34rem;
+    margin-top: 0.48rem;
 }
 
 .patient-dashboard-queue-card time {

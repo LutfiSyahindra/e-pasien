@@ -1,9 +1,9 @@
  <!-- Bootstrap bundle JS -->
- <script src="{{ asset("epasien/assets/js/bootstrap.bundle.min.js") }}"></script>
+ <script src="{{ versioned_asset("epasien/assets/js/bootstrap.bundle.min.js") }}"></script>
  <!--plugins-->
- <script src="{{ asset("epasien/assets/js/jquery.min.js") }}"></script>
+ <script src="{{ versioned_asset("epasien/assets/js/jquery.min.js") }}"></script>
  @if (request()->routeIs("users.*", "roles.*", "roleConfiguration.*", "daftarOnline.index"))
-     <script src="{{ asset("epasien/assets/plugins/select2/js/select2.min.js") }}"></script>
+     <script src="{{ versioned_asset("epasien/assets/plugins/select2/js/select2.min.js") }}"></script>
  @endif
  @if (request()->routeIs("profile.*", "users.*", "roles.*", "permissions.*", "daftarOnline.*"))
      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -113,12 +113,12 @@
      })();
      </script>
  @endif
- <script src="{{ asset("epasien/assets/plugins/simplebar/js/simplebar.min.js") }}"></script>
- <script src="{{ asset("epasien/assets/plugins/metismenu/js/metisMenu.min.js") }}"></script>
+ <script src="{{ versioned_asset("epasien/assets/plugins/simplebar/js/simplebar.min.js") }}"></script>
+ <script src="{{ versioned_asset("epasien/assets/plugins/metismenu/js/metisMenu.min.js") }}"></script>
  @if (request()->routeIs("users.*", "roles.*", "permissions.*"))
-     <script src="{{ asset("epasien/assets/plugins/datatable/js/jquery.dataTables.min.js") }}"></script>
-     <script src="{{ asset("epasien/assets/plugins/datatable/js/dataTables.bootstrap5.min.js") }}"></script>
+     <script src="{{ versioned_asset("epasien/assets/plugins/datatable/js/jquery.dataTables.min.js") }}"></script>
+     <script src="{{ versioned_asset("epasien/assets/plugins/datatable/js/dataTables.bootstrap5.min.js") }}"></script>
  @endif
  <!--app-->
- <script src="{{ asset("epasien/assets/js/app.js") }}"></script>
- {{-- <script src="{{ asset("epasien/assets/js/index.js") }}"></script> --}}
+ <script src="{{ versioned_asset("epasien/assets/js/app.js") }}"></script>
+ {{-- <script src="{{ versioned_asset("epasien/assets/js/index.js") }}"></script> --}}

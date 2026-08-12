@@ -3,7 +3,7 @@
 @section("title", "Surat Kontrol | E-Pasien")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/surat-kontrol.css") }}" rel="stylesheet" />
+    <link href="{{ versioned_asset("epasien/assets/css/surat-kontrol.css") }}" rel="stylesheet" />
 @endpush
 
 @section("content")
@@ -457,5 +457,5 @@
             hasPatient: @json($hasPatient)
         };
     </script>
-    <script src="{{ asset("epasien/assets/js/surat-kontrol.js") }}"></script>
+    <script src="{{ versioned_asset("epasien/assets/js/surat-kontrol.js") }}"></script>
 @endpush

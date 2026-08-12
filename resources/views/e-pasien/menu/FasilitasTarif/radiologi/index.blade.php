@@ -3,7 +3,7 @@
 @section("title", "Radiologi | Fasilitas & Tarif")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/radiologi-tarif.css") }}"
+    <link href="{{ versioned_asset("epasien/assets/css/radiologi-tarif.css") }}"
         rel="stylesheet" />
 @endpush
 

@@ -3,7 +3,7 @@
 @section("title", "Foto Dokter | E-Pasien")
 
 @push("style")
-    <link href="{{ asset("epasien/assets/css/doctor-photo-settings.css") }}" rel="stylesheet" />
+    <link href="{{ versioned_asset("epasien/assets/css/doctor-photo-settings.css") }}" rel="stylesheet" />
 @endpush
 
 @section("content")
@@ -291,5 +291,5 @@
 @endsection
 
 @push("script")
-    <script src="{{ asset("epasien/assets/js/doctor-photo-crop.js") }}"></script>
+    <script src="{{ versioned_asset("epasien/assets/js/doctor-photo-crop.js") }}"></script>
 @endpush
