@@ -698,8 +698,8 @@
     display: none;
 }
 
-.landing-pwa--integrated + .hospital-services {
-    padding-top: 88px;
+.landing-pwa--integrated + .patient-login-cta {
+    padding-top: 54px;
 }
 
 .landing-pwa__surface {
@@ -1595,8 +1595,8 @@
         padding: 58px 0 22px;
     }
 
-    .landing-pwa--integrated + .hospital-services {
-        padding-top: 72px;
+    .landing-pwa--integrated + .patient-login-cta {
+        padding-top: 40px;
     }
 
     .landing-pwa__surface {

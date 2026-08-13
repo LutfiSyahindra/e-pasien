@@ -27,7 +27,7 @@
                             <div class="premium-hero__actions wow fadeInUp" data-wow-delay=".55s"
                                 data-wow-duration=".8s">
                                 <a href="{{ route("login") }}" class="rts-btn btn-primary premium-hero__primary">
-                                    Buat Janji Temu
+                                    Masuk ke E-Pasien
                                     <img src="{{ asset("landing/assets/images/banner/icons/arrow--up-right.svg") }}"
                                         alt="" aria-hidden="true">
                                 </a>
@@ -210,6 +210,79 @@
         </div>
     </section>
     <!-- PWA application area end -->
+
+    <!-- patient login call-to-action start -->
+    <section id="akses-epasien" class="patient-login-cta" aria-labelledby="patient-login-cta-title">
+        <div class="container patient-login-cta__container">
+            <div class="patient-login-cta__surface">
+                <span class="patient-login-cta__glow patient-login-cta__glow--one" aria-hidden="true"></span>
+                <span class="patient-login-cta__glow patient-login-cta__glow--two" aria-hidden="true"></span>
+
+                <div class="patient-login-cta__content wow fadeInLeft" data-wow-duration=".8s">
+                    <span class="patient-login-cta__eyebrow">
+                        <i class="fa-solid fa-sparkles" aria-hidden="true"></i>
+                        Layanan digital khusus pasien
+                    </span>
+                    <h2 id="patient-login-cta-title">
+                        Seluruh layanan E-Pasien, <span>cukup satu kali login.</span>
+                    </h2>
+                    <p>
+                        Masuk dengan akun pasien Anda untuk mengurus kebutuhan kesehatan dengan lebih cepat,
+                        aman, dan praktis dari mana saja.
+                    </p>
+
+                    <ul class="patient-login-cta__services" aria-label="Layanan yang tersedia setelah login">
+                        <li>
+                            <span><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
+                            <div><strong>Daftar online</strong><small>Buat kunjungan tanpa antre lama</small></div>
+                        </li>
+                        <li>
+                            <span><i class="fa-regular fa-file-medical" aria-hidden="true"></i></span>
+                            <div><strong>Riwayat kesehatan</strong><small>Lihat pemeriksaan dan hasil penunjang</small></div>
+                        </li>
+                        <li>
+                            <span><i class="fa-regular fa-pills" aria-hidden="true"></i></span>
+                            <div><strong>Resep &amp; surat</strong><small>Akses dokumen layanan pasien</small></div>
+                        </li>
+                    </ul>
+                </div>
+
+                <aside class="patient-login-cta__action wow fadeInRight" data-wow-duration=".8s"
+                    aria-label="Akses akun E-Pasien">
+                    <div class="patient-login-cta__action-top">
+                        <span class="patient-login-cta__action-icon" aria-hidden="true">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </span>
+                        <span class="patient-login-cta__status"><i class="fa-solid fa-circle"></i> Portal pasien aman</span>
+                    </div>
+
+                    @auth
+                        <span class="patient-login-cta__action-label">Akun Anda sudah aktif</span>
+                        <h3>Lanjutkan ke layanan E-Pasien</h3>
+                        <p>Buka dashboard untuk mengakses layanan dan informasi kesehatan Anda.</p>
+                        <a href="{{ route("dashboard") }}" class="patient-login-cta__button">
+                            <span>Buka E-Pasien</span>
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    @else
+                        <span class="patient-login-cta__action-label">Sudah menjadi pasien RS ARSY?</span>
+                        <h3>Masuk dan nikmati semua layanan</h3>
+                        <p>Siapkan email atau nomor rekam medis Anda untuk melanjutkan.</p>
+                        <a href="{{ route("login") }}" class="patient-login-cta__button">
+                            <span>Masuk ke E-Pasien</span>
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    @endauth
+
+                    <small class="patient-login-cta__privacy">
+                        <i class="fa-solid fa-shield-check" aria-hidden="true"></i>
+                        Akses pribadi untuk menjaga keamanan data kesehatan Anda.
+                    </small>
+                </aside>
+            </div>
+        </div>
+    </section>
+    <!-- patient login call-to-action end -->
 
     <!-- hospital services area start -->
     @php

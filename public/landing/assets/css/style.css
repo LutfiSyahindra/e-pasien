@@ -25429,6 +25429,468 @@ li.has-dropdown:hover .submenu {
   }
 }
 
+/* E-Pasien patient login call-to-action */
+.patient-login-cta {
+  position: relative;
+  padding: 54px 0 22px;
+  overflow: hidden;
+  background: #f7fbf9;
+  scroll-margin-top: 110px;
+}
+
+.patient-login-cta__container {
+  position: relative;
+  z-index: 1;
+}
+
+.patient-login-cta__surface {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(340px, .65fr);
+  align-items: stretch;
+  gap: clamp(38px, 5vw, 76px);
+  padding: clamp(42px, 5vw, 70px);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .13);
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(60, 211, 129, .19), transparent 25%),
+    linear-gradient(135deg, #052f2c 0%, #07523d 48%, #087b3f 100%);
+  box-shadow: 0 30px 75px rgba(7, 62, 45, .18);
+  isolation: isolate;
+}
+
+.patient-login-cta__surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: .14;
+  background-image: radial-gradient(rgba(255, 255, 255, .7) 1px, transparent 1px);
+  background-size: 24px 24px;
+  -webkit-mask-image: linear-gradient(115deg, #000 0%, rgba(0, 0, 0, .4) 45%, transparent 72%);
+  mask-image: linear-gradient(115deg, #000 0%, rgba(0, 0, 0, .4) 45%, transparent 72%);
+  pointer-events: none;
+}
+
+.patient-login-cta__glow {
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.patient-login-cta__glow--one {
+  top: -150px;
+  right: 29%;
+  width: 360px;
+  height: 360px;
+  border: 70px solid rgba(142, 232, 180, .08);
+}
+
+.patient-login-cta__glow--two {
+  right: -85px;
+  bottom: -100px;
+  width: 260px;
+  height: 260px;
+  background: rgba(112, 225, 158, .1);
+  filter: blur(2px);
+}
+
+.patient-login-cta__content {
+  position: relative;
+  z-index: 1;
+  align-self: center;
+}
+
+.patient-login-cta__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 18px;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, .17);
+  border-radius: 100px;
+  background: rgba(255, 255, 255, .09);
+  color: #a7efc3;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.patient-login-cta__eyebrow i {
+  color: #70e19e;
+}
+
+.patient-login-cta__content h2 {
+  max-width: 720px;
+  margin: 0;
+  color: #fff;
+  font-size: clamp(42px, 4vw, 60px);
+  line-height: 1.07;
+  letter-spacing: -.04em;
+}
+
+.patient-login-cta__content h2 span {
+  color: #8ee8b4;
+}
+
+.patient-login-cta__content > p {
+  max-width: 650px;
+  margin: 21px 0 0;
+  color: rgba(255, 255, 255, .72);
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.patient-login-cta__services {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 29px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.patient-login-cta__services li {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, .075);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.patient-login-cta__services li > span {
+  display: grid;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(142, 232, 180, .14);
+  color: #8ee8b4;
+  font-size: 15px;
+}
+
+.patient-login-cta__services div,
+.patient-login-cta__services strong,
+.patient-login-cta__services small {
+  display: block;
+  min-width: 0;
+}
+
+.patient-login-cta__services strong {
+  margin-bottom: 3px;
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.patient-login-cta__services small {
+  color: rgba(255, 255, 255, .53);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.patient-login-cta__action {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: clamp(28px, 3vw, 38px);
+  border: 1px solid rgba(255, 255, 255, .74);
+  border-radius: 25px;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 24px 60px rgba(3, 35, 29, .28);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+}
+
+.patient-login-cta__action-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 26px;
+}
+
+.patient-login-cta__action-icon {
+  display: grid;
+  flex: 0 0 54px;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border-radius: 17px;
+  background: linear-gradient(135deg, #e3f7eb, #d6f0e1);
+  color: #087b3f;
+  font-size: 21px;
+  box-shadow: inset 0 0 0 1px rgba(7, 148, 71, .08);
+}
+
+.patient-login-cta__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #5f756b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.patient-login-cta__status i {
+  color: #0caf5c;
+  font-size: 7px;
+  box-shadow: 0 0 0 4px rgba(12, 175, 92, .1);
+  border-radius: 50%;
+}
+
+.patient-login-cta__action-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #079447;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.patient-login-cta__action h3 {
+  margin: 0;
+  color: #092f32;
+  font-size: clamp(25px, 2.1vw, 32px);
+  line-height: 1.16;
+  letter-spacing: -.025em;
+}
+
+.patient-login-cta__action > p {
+  margin: 14px 0 0;
+  color: #6c7e75;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.patient-login-cta__button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 58px;
+  margin-top: 24px;
+  padding: 15px 18px 15px 21px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #087b3f 0%, #0caf5c 100%);
+  box-shadow: 0 14px 28px rgba(7, 148, 71, .24);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+}
+
+.patient-login-cta__button i {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .14);
+  font-size: 12px;
+  transition: transform .25s ease;
+}
+
+.patient-login-cta__button:hover,
+.patient-login-cta__button:focus-visible {
+  background: linear-gradient(135deg, #076f39 0%, #079447 100%);
+  box-shadow: 0 18px 34px rgba(7, 123, 63, .3);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.patient-login-cta__button:hover i,
+.patient-login-cta__button:focus-visible i {
+  transform: translateX(3px);
+}
+
+.patient-login-cta__button:focus-visible {
+  outline: 3px solid rgba(142, 232, 180, .55);
+  outline-offset: 3px;
+}
+
+.patient-login-cta__privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 17px;
+  color: #839087;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.patient-login-cta__privacy i {
+  margin-top: 2px;
+  color: #079447;
+}
+
+.patient-login-cta + .hospital-services {
+  padding-top: 88px;
+}
+
+@media only screen and (max-width: 1199px) {
+  .patient-login-cta__surface {
+    grid-template-columns: minmax(0, 1.15fr) minmax(330px, .85fr);
+    gap: 32px;
+    padding: 46px;
+  }
+
+  .patient-login-cta__services {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-login-cta__services li {
+    max-width: 410px;
+  }
+}
+
+@media only screen and (max-width: 991px) {
+  .patient-login-cta__surface {
+    grid-template-columns: 1fr;
+    padding: 48px;
+  }
+
+  .patient-login-cta__content {
+    text-align: center;
+  }
+
+  .patient-login-cta__content h2,
+  .patient-login-cta__content > p {
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .patient-login-cta__services {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .patient-login-cta__services li {
+    max-width: none;
+    text-align: left;
+  }
+
+  .patient-login-cta__action {
+    width: min(520px, 100%);
+    margin: 0 auto;
+  }
+}
+
+@media only screen and (max-width: 767px) {
+  .patient-login-cta__surface {
+    padding: 38px 28px;
+    border-radius: 27px;
+  }
+
+  .patient-login-cta__services {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-login-cta__services li {
+    width: 100%;
+    max-width: 360px;
+    margin: 0 auto;
+  }
+
+  .patient-login-cta__action {
+    padding: 30px;
+  }
+}
+
+@media only screen and (max-width: 575px) {
+  .patient-login-cta {
+    padding: 40px 0 14px;
+    scroll-margin-top: 96px;
+  }
+
+  .patient-login-cta__container {
+    --bs-gutter-x: 2rem;
+  }
+
+  .patient-login-cta__surface {
+    gap: 27px;
+    padding: 32px 20px 20px;
+    border-radius: 25px;
+  }
+
+  .patient-login-cta__eyebrow {
+    margin-bottom: 15px;
+    font-size: 10px;
+    letter-spacing: .07em;
+  }
+
+  .patient-login-cta__content h2 {
+    font-size: clamp(32px, 10vw, 38px);
+  }
+
+  .patient-login-cta__content > p {
+    margin-top: 17px;
+    font-size: 15px;
+  }
+
+  .patient-login-cta__services {
+    margin-top: 23px;
+  }
+
+  .patient-login-cta__action {
+    padding: 24px 20px;
+    border-radius: 20px;
+  }
+
+  .patient-login-cta__action-top {
+    margin-bottom: 22px;
+  }
+
+  .patient-login-cta__action h3 {
+    font-size: 26px;
+  }
+
+  .patient-login-cta__button {
+    min-height: 58px;
+  }
+
+  .patient-login-cta + .hospital-services {
+    padding-top: 72px;
+  }
+}
+
+@media only screen and (max-width: 359px) {
+  .patient-login-cta__surface {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .patient-login-cta__status {
+    max-width: 105px;
+    line-height: 1.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .patient-login-cta__button,
+  .patient-login-cta__button i {
+    transition: none;
+  }
+}
+
 /* Smartphone usability refinements */
 html {
   scroll-padding-top: 96px;
@@ -25797,6 +26259,92 @@ body.landing-menu-open {
   .landing-page .landing-contact-card:hover,
   .landing-page .landing-specialist-card:hover {
     transform: none;
+  }
+}
+
+/* Lightweight navbar and doctor carousel for mobile/PWA */
+@media only screen and (max-width: 767px) {
+  .premium-navbar.header--sticky,
+  .premium-navbar.header--sticky.sticky {
+    position: sticky !important;
+    top: 0;
+    width: 100%;
+    padding: max(10px, env(safe-area-inset-top)) 0 9px;
+    background: #f3faf6;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    transition: none;
+    backface-visibility: hidden;
+  }
+
+  .premium-navbar__surface,
+  .premium-navbar.sticky .premium-navbar__surface {
+    min-height: 72px;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(7, 38, 48, .08);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    transition: none;
+  }
+
+  .landing-specialists::before,
+  .landing-specialists__shape {
+    display: none;
+  }
+
+  .landing-specialists .team-swiper-container-h1 {
+    overflow: hidden;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: auto;
+  }
+
+  .landing-specialists .team-swiper-container-h1::-webkit-scrollbar,
+  .landing-specialists .swiper-pagination {
+    display: none !important;
+  }
+
+  .landing-specialists .swiper-wrapper {
+    will-change: transform;
+  }
+
+  .landing-specialists .swiper-slide,
+  .landing-specialist-card {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .landing-specialist-card {
+    box-shadow: 0 10px 24px rgba(30, 70, 48, .09);
+  }
+
+  .landing-specialist-card__status {
+    background: rgba(255, 255, 255, .96);
+    box-shadow: 0 4px 12px rgba(22, 62, 43, .08);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .landing-specialist-card__portrait::before {
+    box-shadow: 0 0 0 24px color-mix(in srgb, var(--doctor-tone) 4%, transparent);
+  }
+}
+
+@media only screen and (max-width: 575px) {
+  .premium-navbar.header--sticky,
+  .premium-navbar.header--sticky.sticky {
+    padding: max(8px, env(safe-area-inset-top)) 0 5px;
+  }
+
+  .premium-navbar__surface,
+  .premium-navbar.sticky .premium-navbar__surface {
+    min-height: 66px;
+  }
+
+  .landing-specialists__mobile-hint {
+    margin-top: 12px;
   }
 }
 

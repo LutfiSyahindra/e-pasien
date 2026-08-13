@@ -181,20 +181,22 @@
         $(".team-swiper-container-h1").each(function () {
           var slider = this;
           var section = slider.closest(".landing-specialists");
-
-          new Swiper(slider, {
+          var isMobileViewport = window.matchMedia("(max-width: 767px)").matches;
+          var specialistSwiperOptions = {
             spaceBetween: 18,
             slidesPerView: 4,
-            speed: 700,
-            grabCursor: true,
+            speed: isMobileViewport ? 320 : 700,
+            grabCursor: !isMobileViewport,
             watchOverflow: true,
+            passiveListeners: true,
+            touchStartPreventDefault: false,
+            threshold: isMobileViewport ? 2 : 5,
+            resistanceRatio: 0.7,
+            preventClicks: true,
+            preventClicksPropagation: true,
             navigation: {
               nextEl: section ? section.querySelector(".landing-specialists__next") : null,
               prevEl: section ? section.querySelector(".landing-specialists__prev") : null,
-            },
-            pagination: {
-              el: slider.querySelector(".swiper-pagination"),
-              clickable: true,
             },
             breakpoints: {
               1399: {
@@ -217,7 +219,16 @@
                 slidesPerView: 1,
               }
             },
-          });
+          };
+
+          if (!isMobileViewport) {
+            specialistSwiperOptions.pagination = {
+              el: slider.querySelector(".swiper-pagination"),
+              clickable: true,
+            };
+          }
+
+          new Swiper(slider, specialistSwiperOptions);
         });
       });
 
@@ -560,13 +571,39 @@
     },
 
     stickyHeader: function (e) {
-      $(window).scroll(function () {
-        if ($(this).scrollTop() > 150) {
-          $('.header--sticky').addClass('sticky')
-        } else {
-          $('.header--sticky').removeClass('sticky')
+      var headers = document.querySelectorAll('.header--sticky');
+      var framePending = false;
+      var stickyState = null;
+
+      if (!headers.length) {
+        return;
+      }
+
+      var updateStickyState = function () {
+        framePending = false;
+        var shouldStick = window.scrollY > 150;
+
+        if (shouldStick === stickyState) {
+          return;
         }
-      })
+
+        stickyState = shouldStick;
+        headers.forEach(function (header) {
+          header.classList.toggle('sticky', shouldStick);
+        });
+      };
+
+      var requestStickyUpdate = function () {
+        if (framePending) {
+          return;
+        }
+
+        framePending = true;
+        window.requestAnimationFrame(updateStickyState);
+      };
+
+      updateStickyState();
+      window.addEventListener('scroll', requestStickyUpdate, { passive: true });
     },
 
     backToTopInit: function () {
@@ -574,29 +611,55 @@
         "use strict";
 
         var progressPath = document.querySelector('.progress-wrap path');
+        var progressWrap = document.querySelector('.progress-wrap');
+
+        if (!progressPath || !progressWrap) {
+          return;
+        }
+
         var pathLength = progressPath.getTotalLength();
         progressPath.style.transition = progressPath.style.WebkitTransition = 'none';
         progressPath.style.strokeDasharray = pathLength + ' ' + pathLength;
         progressPath.style.strokeDashoffset = pathLength;
         progressPath.getBoundingClientRect();
         progressPath.style.transition = progressPath.style.WebkitTransition = 'stroke-dashoffset 10ms linear';
-        var updateProgress = function () {
-          var scroll = $(window).scrollTop();
-          var height = $(document).height() - $(window).height();
-          var progress = pathLength - (scroll * pathLength / height);
-          progressPath.style.strokeDashoffset = progress;
-        }
-        updateProgress();
-        $(window).scroll(updateProgress);
+        var progressFramePending = false;
+        var scrollableHeight = 1;
         var offset = 50;
-        var duration = 550;
-        jQuery(window).on('scroll', function () {
-          if (jQuery(this).scrollTop() > offset) {
-            jQuery('.progress-wrap').addClass('active-progress');
-          } else {
-            jQuery('.progress-wrap').removeClass('active-progress');
+
+        var measureScrollableHeight = function () {
+          scrollableHeight = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+        };
+
+        var updateProgress = function () {
+          progressFramePending = false;
+          var scroll = window.scrollY;
+          var progress = pathLength - (scroll * pathLength / scrollableHeight);
+          progressPath.style.strokeDashoffset = progress;
+          progressWrap.classList.toggle('active-progress', scroll > offset);
+        }
+
+        var requestProgressUpdate = function () {
+          if (progressFramePending) {
+            return;
           }
-        });
+
+          progressFramePending = true;
+          window.requestAnimationFrame(updateProgress);
+        };
+
+        measureScrollableHeight();
+        updateProgress();
+        window.addEventListener('scroll', requestProgressUpdate, { passive: true });
+        window.addEventListener('resize', function () {
+          measureScrollableHeight();
+          requestProgressUpdate();
+        }, { passive: true });
+        window.addEventListener('load', function () {
+          measureScrollableHeight();
+          requestProgressUpdate();
+        }, { once: true });
+        var duration = 550;
         jQuery('.progress-wrap').on('click', function (event) {
           event.preventDefault();
           jQuery('html, body').animate({ scrollTop: 0 }, duration);
@@ -929,7 +992,6 @@
 
   rtsJs.m();
 })(jQuery, window)
-
 
 
 
