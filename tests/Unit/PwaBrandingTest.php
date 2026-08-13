@@ -52,7 +52,6 @@ class PwaBrandingTest extends TestCase
     {
         $installer = file_get_contents(public_path('epasien/assets/js/pwa-install.js'));
         $installerStyles = file_get_contents(public_path('epasien/assets/css/pwa-install.css'));
-        $notificationCenter = file_get_contents(resource_path('js/notification-center.js'));
         $landingHead = file_get_contents(resource_path('views/template/landing/head.blade.php'));
 
         $this->assertStringContainsString("window.addEventListener('beforeinstallprompt'", $installer);
@@ -61,11 +60,27 @@ class PwaBrandingTest extends TestCase
         $this->assertStringContainsString("document.body.classList.add('pwa-toast-visible')", $installer);
         $this->assertStringContainsString('min-height: 44px', $installerStyles);
         $this->assertStringNotContainsString('Notification.requestPermission', $installer);
-        $this->assertStringContainsString(
-            "if ('Notification' in window && Notification.permission === 'granted')",
-            $notificationCenter,
-        );
         $this->assertStringContainsString('epasien/assets/js/pwa-install.js', $landingHead);
         $this->assertStringContainsString('manifest.webmanifest', $landingHead);
+    }
+
+    public function test_notification_activation_is_enforced_only_after_login(): void
+    {
+        $app = file_get_contents(resource_path('js/app.js'));
+        $notificationCenter = file_get_contents(resource_path('js/notification-center.js'));
+        $authenticatedHead = file_get_contents(resource_path('views/template/epasien/head.blade.php'));
+        $login = file_get_contents(resource_path('views/auth/login.blade.php'));
+
+        $this->assertStringContainsString('@auth', $authenticatedHead);
+        $this->assertStringContainsString('meta name="epasien-user-id"', $authenticatedHead);
+        $this->assertStringContainsString(
+            "if (document.querySelector('meta[name=\"epasien-user-id\"]'))",
+            $app,
+        );
+        $this->assertStringContainsString(
+            "window.addEventListener('epasien:patient-service-read', syncPatientServiceRead);\n    enforceRequiredNotifications();\n    subscribeToRealtime();",
+            $notificationCenter,
+        );
+        $this->assertStringNotContainsString('epasien-user-id', $login);
     }
 }

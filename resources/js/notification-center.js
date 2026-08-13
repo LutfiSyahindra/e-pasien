@@ -770,11 +770,7 @@ const initializeNotificationCenter = () => {
         loadNotifications();
     });
     window.addEventListener('epasien:patient-service-read', syncPatientServiceRead);
-    if ('Notification' in window && Notification.permission === 'granted') {
-        enforceRequiredNotifications();
-    } else {
-        updatePushButtons(false, 'Aktifkan kapan saja jika Anda ingin menerima notifikasi di perangkat ini.');
-    }
+    enforceRequiredNotifications();
     subscribeToRealtime();
     document.querySelectorAll('[data-push-toggle]').forEach((button) => button.addEventListener('click', togglePush));
     document.querySelectorAll('form[data-push-logout]').forEach((form) => {
