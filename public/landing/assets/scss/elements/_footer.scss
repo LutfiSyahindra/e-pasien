@@ -229,3 +229,115 @@
 .footer-three {
     background: #F8F8FF;
 }
+
+// RS ARSY landing footer
+.landing-footer {
+    position: relative;
+    overflow: hidden;
+    padding: 48px 0 0;
+    background: #071f2e;
+    color: rgba(255, 255, 255, .72);
+
+    &::before {
+        content: "";
+        position: absolute;
+        top: -180px;
+        right: -110px;
+        width: 380px;
+        height: 380px;
+        border-radius: 50%;
+        background: rgba(12, 175, 92, .12);
+        pointer-events: none;
+    }
+
+    &__container { position: relative; z-index: 1; }
+
+    &__main {
+        display: grid;
+        grid-template-columns: minmax(260px, .8fr) minmax(240px, 1fr) auto;
+        align-items: center;
+        gap: 40px;
+        padding-bottom: 38px;
+    }
+
+    &__brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        width: fit-content;
+        color: #fff;
+
+        &:hover { color: #fff; }
+        strong, small { display: block; }
+        strong { font-size: 20px; letter-spacing: .04em; }
+        small { margin-top: 2px; color: rgba(255, 255, 255, .6); font-size: 12px; }
+    }
+
+    &__logo {
+        display: grid;
+        flex: 0 0 58px;
+        width: 58px;
+        height: 58px;
+        place-items: center;
+        overflow: hidden;
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, .2);
+
+        img { width: 48px; height: 48px; object-fit: contain; }
+    }
+
+    &__summary { max-width: 470px; margin: 0; color: rgba(255, 255, 255, .7); line-height: 1.75; }
+
+    &__actions {
+        display: flex;
+        gap: 12px;
+
+        > a {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 12px 15px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, .06);
+            color: #fff;
+
+            &:hover { border-color: rgba(112, 225, 158, .5); background: rgba(12, 175, 92, .14); color: #fff; }
+            > i { color: #70e19e; font-size: 18px; }
+            small { display: block; margin-bottom: 2px; color: rgba(255, 255, 255, .5); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+            span { font-size: 13px; font-weight: 700; line-height: 1.25; }
+        }
+    }
+
+    &__bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 20px 0;
+        border-top: 1px solid rgba(255, 255, 255, .1);
+
+        p { margin: 0; color: rgba(255, 255, 255, .48); font-size: 13px; }
+        a { display: inline-flex; align-items: center; gap: 8px; color: rgba(255, 255, 255, .68); font-size: 13px; }
+        a:hover { color: #70e19e; }
+    }
+}
+
+@media only screen and (max-width: 1199px) {
+    .landing-footer__main { grid-template-columns: minmax(240px, .8fr) 1fr; }
+    .landing-footer__actions { grid-column: 1 / -1; }
+}
+
+@media only screen and (max-width: 767px) {
+    .landing-footer { padding-top: 38px; }
+    .landing-footer__main { grid-template-columns: 1fr; gap: 24px; padding-bottom: 30px; }
+    .landing-footer__actions { grid-column: auto; flex-direction: column; }
+    .landing-footer__actions > a { width: 100%; }
+    .landing-footer__bottom { align-items: flex-start; flex-direction: column; gap: 10px; }
+}
+
+// Comfortable mobile footer action
+.landing-footer__bottom a {
+    min-height: 44px;
+}

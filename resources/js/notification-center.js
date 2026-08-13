@@ -442,7 +442,7 @@ const ensurePushSubscription = async () => {
     }
 
     if (rememberedPushOwner() !== userId || !pushSessionBound) await persistPushSubscription(subscription);
-    updatePushButtons(true, 'Notifikasi dan suara wajib aktif untuk menggunakan E-Pasien.');
+    updatePushButtons(true, 'Notifikasi perangkat aktif. Informasi penting dapat diterima saat aplikasi ditutup.');
 
     return subscription;
 };
@@ -470,7 +470,7 @@ const createNotificationGate = () => {
     notificationGate.setAttribute('aria-labelledby', 'ep-notification-gate-title');
     notificationGate.innerHTML = `
         <section class="ep-notification-gate__panel">
-            <span class="ep-notification-gate__eyebrow">Wajib diaktifkan</span>
+            <span class="ep-notification-gate__eyebrow">Pilihan Anda</span>
             <span class="ep-notification-gate__icon" aria-hidden="true"><i class="bi bi-bell-fill"></i></span>
             <h2 id="ep-notification-gate-title" data-notification-gate-title>Aktifkan notifikasi &amp; suara</h2>
             <p data-notification-gate-message></p>
@@ -483,7 +483,7 @@ const createNotificationGate = () => {
                 <i class="bi bi-bell-check-fill" aria-hidden="true"></i>
                 <span data-notification-gate-label>Aktifkan Sekarang</span>
             </button>
-            <small>Izin notifikasi diperlukan agar informasi penting dari E-Pasien tidak terlewat.</small>
+            <small>Browser hanya akan meminta izin setelah Anda menekan tombol aktivasi.</small>
         </section>`;
     document.body.append(notificationGate);
 
@@ -536,7 +536,7 @@ const showNotificationPermissionRequired = () => {
         state: denied ? 'denied' : 'default',
         title: denied ? 'Izin notifikasi masih diblokir' : 'Aktifkan notifikasi & suara',
         message: denied
-            ? 'E-Pasien belum dapat dilanjutkan karena izin notifikasi ditolak atau diblokir.'
+            ? 'Notifikasi perangkat belum dapat diaktifkan karena izin ditolak atau diblokir.'
             : 'Satu kali klik akan mengaktifkan ringtone, meminta izin browser, dan mendaftarkan perangkat ini.',
         note: denied
             ? 'Buka ikon gembok/info pada browser, ubah Notifikasi menjadi Izinkan, lalu tekan Periksa Kembali.'
@@ -599,7 +599,7 @@ const activateRequiredNotifications = async () => {
         const [, permission] = await Promise.all([soundPreparation, permissionRequest]);
 
         if (permission !== 'granted') {
-            updatePushButtons(false, 'Izin notifikasi wajib diberikan untuk menggunakan E-Pasien.');
+            updatePushButtons(false, 'Izin diperlukan hanya untuk menyalakan notifikasi perangkat.');
             showNotificationPermissionRequired();
             return;
         }
@@ -637,13 +637,13 @@ const enforceRequiredNotifications = async () => {
     }
 
     if (Notification.permission !== 'granted') {
-        updatePushButtons(false, 'Izin notifikasi wajib diberikan untuk menggunakan E-Pasien.');
+        updatePushButtons(false, 'Aktifkan kapan saja jika Anda ingin menerima notifikasi di perangkat ini.');
         showNotificationPermissionRequired();
         return;
     }
 
     if (rememberedPushOwner() === userId && pushSessionBound) {
-        updatePushButtons(true, 'Notifikasi dan suara wajib aktif untuk menggunakan E-Pasien.');
+        updatePushButtons(true, 'Notifikasi perangkat aktif. Informasi penting dapat diterima saat aplikasi ditutup.');
         hideNotificationGate();
         return;
     }
@@ -656,7 +656,7 @@ const enforceRequiredNotifications = async () => {
         const subscription = await registration.pushManager.getSubscription();
         if (subscription) {
             if (rememberedPushOwner() !== userId || !pushSessionBound) await persistPushSubscription(subscription);
-            updatePushButtons(true, 'Notifikasi dan suara wajib aktif untuk menggunakan E-Pasien.');
+            updatePushButtons(true, 'Notifikasi perangkat aktif. Informasi penting dapat diterima saat aplikasi ditutup.');
             hideNotificationGate();
             return;
         }
@@ -687,8 +687,8 @@ const togglePush = () => activateRequiredNotifications();
 
 const recheckRequiredNotifications = () => {
     const gateVisible = notificationGate && !notificationGate.hidden;
-    const notificationUnavailable = !('Notification' in window) || Notification.permission !== 'granted';
-    if (gateVisible || notificationUnavailable) enforceRequiredNotifications();
+    const notificationAlreadyAllowed = 'Notification' in window && Notification.permission === 'granted';
+    if (gateVisible || notificationAlreadyAllowed) enforceRequiredNotifications();
 };
 
 const syncPatientServiceRead = (event) => {
@@ -770,7 +770,11 @@ const initializeNotificationCenter = () => {
         loadNotifications();
     });
     window.addEventListener('epasien:patient-service-read', syncPatientServiceRead);
-    enforceRequiredNotifications();
+    if ('Notification' in window && Notification.permission === 'granted') {
+        enforceRequiredNotifications();
+    } else {
+        updatePushButtons(false, 'Aktifkan kapan saja jika Anda ingin menerima notifikasi di perangkat ini.');
+    }
     subscribeToRealtime();
     document.querySelectorAll('[data-push-toggle]').forEach((button) => button.addEventListener('click', togglePush));
     document.querySelectorAll('form[data-push-logout]').forEach((form) => {

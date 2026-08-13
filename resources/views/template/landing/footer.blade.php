@@ -1,89 +1,40 @@
- <!-- header area start -->
- <!-- rts footer area start -->
- <div class="rts-footer-area footer-bg pt--105 pt_sm--50">
-     <div class="container">
-         <div class="row">
-             <div class="col-lg-12">
-                 <!-- subscribe area start -->
-                 <div class="subscribe-area-start pb--30">
-                     <a href="#" class="logo">
-                         <img src="{{ asset("landing/assets/images/logo/logo-2.svg") }}" alt="logo">
-                     </a>
-                     <!-- subscribe area start -->
-                     <div class="subscribe-area">
-                         <input type="text" placeholder="Enter your mail">
-                         <button class="rts-btn btn-primary">Subscribe</button>
-                     </div>
-                     <!-- subscribe area end -->
-                 </div>
-                 <!-- subscribe area end -->
-             </div>
-             <div class="col-lg-12">
-                 <div class="footer-wrapper-style-between">
-                     <div class="single-wized">
-                         <h6 class="title">Contact</h6>
-                         <div class="body">
-                             <p class="location">
-                                 Canada, 245 14h Street
-                                 Office 42 Calgary, de 52473
-                             </p>
-                             <a href="#">info@email.com</a>
-                             <a href="#">+1 554 558 748</a>
-                         </div>
-                     </div>
-                     <div class="single-wized">
-                         <h6 class="title">Company </h6>
-                         <div class="body">
-                             <ul class="nav-bottom">
-                                 <li><a href="about.html">Company</a></li>
-                                 <li><a href="about.html">About</a></li>
-                                 <li><a href="appoinment.html">Appointment </a></li>
-                                 <li><a href="contact.html">Contact</a></li>
-                             </ul>
-                         </div>
-                     </div>
-                     <div class="single-wized">
-                         <h6 class="title">Our Services</h6>
-                         <div class="body">
-                             <ul class="nav-bottom">
-                                 <li><a href="service-details.html">Orthopaedic</a></li>
-                                 <li><a href="service-details.html">Neurology</a></li>
-                                 <li><a href="service-details.html">Psychiatry </a></li>
-                                 <li><a href="service-details.html">Cardiology</a></li>
-                             </ul>
-                         </div>
-                     </div>
-                     <div class="single-wized">
-                         <h6 class="title">Working Time</h6>
-                         <div class="body">
-                             <p class="location">
-                                 Mon - Fri: 9.00am - 5.00pm
-                             </p>
-                             <p class="location">
-                                 Saturday: 10.00am - 6.00pm
-                             </p>
-                             <p class="location">
-                                 Sunday Closed
-                             </p>
+<footer class="landing-footer" aria-label="Informasi RS ARSY">
+    <div class="container landing-footer__container">
+        <div class="landing-footer__main">
+            <a href="{{ route('landingPage.index') }}" class="landing-footer__brand"
+                aria-label="Kembali ke beranda RS ARSY">
+                <span class="landing-footer__logo">
+                    <img src="{{ asset('landing/assets/imagesArsy/logoarsy.png') }}" alt="" width="58" height="58">
+                </span>
+                <span>
+                    <strong>RS ARSY</strong>
+                    <small>RS Abdurrahman Syamsuri</small>
+                </span>
+            </a>
 
-                         </div>
-                     </div>
-                 </div>
-             </div>
-         </div>
-     </div>
- </div>
- <div class="copyright-area">
-     <div class="container">
-         <div class="row">
-             <div class="col-lg-12">
-                 <div class="copyright-area-inner">
-                     <p>© 2025 Mediweb. All Rights Reserved by <a target="_blank"
-                             href="https://themeforest.net/user/themewant">ThemeWant</a></p>
-                 </div>
-             </div>
-         </div>
-     </div>
- </div>
- <!-- rts footer area end -->
- <!-- header area end -->
+            <p class="landing-footer__summary">
+                Pelayanan kesehatan yang Islami, bermanfaat, akurat, dan nyaman untuk Anda dan keluarga.
+            </p>
+
+            <div class="landing-footer__actions">
+                <a href="tel:+6281232870119" aria-label="Hubungi Call Centre di 081232870119">
+                    <i class="fa-solid fa-phone" aria-hidden="true"></i>
+                    <span><small>Call Centre</small>081232870119</span>
+                </a>
+                <a href="https://www.instagram.com/rsarsy_official/" target="_blank" rel="noopener noreferrer"
+                    aria-label="Kunjungi Instagram RS ARSY">
+                    <i class="fa-brands fa-instagram" aria-hidden="true"></i>
+                    <span><small>Instagram</small>@rsarsy_official</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="landing-footer__bottom">
+            <p>&copy; {{ now()->year }} RS Abdurrahman Syamsuri.</p>
+            <a href="{{ route('landingPage.index') }}#top">
+                Kembali ke atas
+                <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+            </a>
+        </div>
+    </div>
+</footer>

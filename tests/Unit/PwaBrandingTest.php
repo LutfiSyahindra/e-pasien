@@ -20,6 +20,10 @@ class PwaBrandingTest extends TestCase
             '/epasien/assets/images/pwa-icon-maskable-512.png' => '512x512',
         ];
 
+        $this->assertSame('/dashboard', $manifest['id']);
+        $this->assertSame('/dashboard', $manifest['start_url']);
+        $this->assertSame('/', $manifest['scope']);
+        $this->assertSame('id-ID', $manifest['lang']);
         $this->assertSame(array_keys($expectedIcons), array_column($manifest['icons'], 'src'));
 
         foreach ($manifest['icons'] as $icon) {
@@ -42,5 +46,26 @@ class PwaBrandingTest extends TestCase
         $this->assertStringContainsString('imagesArsy/epasien.png', $splash);
         $this->assertStringContainsString('@include("template.epasien.pwa-splash")', $appLayout);
         $this->assertStringContainsString('@include("template.epasien.pwa-splash")', $login);
+    }
+
+    public function test_install_experience_uses_a_user_gesture_without_requesting_notification_permission(): void
+    {
+        $installer = file_get_contents(public_path('epasien/assets/js/pwa-install.js'));
+        $installerStyles = file_get_contents(public_path('epasien/assets/css/pwa-install.css'));
+        $notificationCenter = file_get_contents(resource_path('js/notification-center.js'));
+        $landingHead = file_get_contents(resource_path('views/template/landing/head.blade.php'));
+
+        $this->assertStringContainsString("window.addEventListener('beforeinstallprompt'", $installer);
+        $this->assertStringContainsString("window.navigator.serviceWorker.register('/sw.js'", $installer);
+        $this->assertStringContainsString("event.target.closest('[data-pwa-install]')", $installer);
+        $this->assertStringContainsString("document.body.classList.add('pwa-toast-visible')", $installer);
+        $this->assertStringContainsString('min-height: 44px', $installerStyles);
+        $this->assertStringNotContainsString('Notification.requestPermission', $installer);
+        $this->assertStringContainsString(
+            "if ('Notification' in window && Notification.permission === 'granted')",
+            $notificationCenter,
+        );
+        $this->assertStringContainsString('epasien/assets/js/pwa-install.js', $landingHead);
+        $this->assertStringContainsString('manifest.webmanifest', $landingHead);
     }
 }

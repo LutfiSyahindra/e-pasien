@@ -98,3 +98,182 @@
 @import'elements/contact';
 @import'elements/procedure';
 @import'elements/preloader';
+
+/* Mobile-first landing interaction polish */
+.landing-page {
+    --landing-mobile-accent: #079447;
+    --landing-mobile-accent-dark: #087b3f;
+    min-width: 0;
+    -webkit-tap-highlight-color: rgba(7, 148, 71, .12);
+}
+
+.landing-page main,
+.landing-page section,
+.landing-page .container,
+.landing-page .container-full-header {
+    min-width: 0;
+}
+
+.landing-page :where(a, button, input, select, textarea) {
+    touch-action: manipulation;
+}
+
+.specialist-clinics__mobile-hint {
+    display: none;
+}
+
+.landing-page .progress-wrap {
+    z-index: 997;
+    border: 1px solid rgba(7, 148, 71, .16);
+    background: rgba(255, 255, 255, .94);
+    box-shadow: 0 10px 28px rgba(7, 62, 45, .18);
+    backdrop-filter: blur(10px);
+}
+
+.landing-page .progress-wrap::after,
+.landing-page .progress-wrap::before {
+    color: var(--landing-mobile-accent);
+}
+
+.landing-page .progress-wrap svg,
+.landing-page .progress-wrap svg.progress-circle path {
+    color: var(--landing-mobile-accent);
+    stroke: var(--landing-mobile-accent);
+}
+
+.landing-menu-open .progress-wrap,
+.pwa-toast-visible .progress-wrap {
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+}
+
+@media only screen and (max-width: 767px) {
+    .landing-doctor-schedule__days,
+    .landing-doctor-schedule__grid,
+    .specialist-clinics__filters,
+    .specialist-clinics__grid,
+    .landing-specialists .team-swiper-container-h1 {
+        scrollbar-width: none;
+    }
+
+    .landing-doctor-schedule__days::-webkit-scrollbar,
+    .landing-doctor-schedule__grid::-webkit-scrollbar,
+    .specialist-clinics__filters::-webkit-scrollbar,
+    .specialist-clinics__grid::-webkit-scrollbar,
+    .landing-specialists .team-swiper-container-h1::-webkit-scrollbar {
+        display: none;
+    }
+
+    .landing-footer__actions > a {
+        min-height: 56px;
+    }
+}
+
+@media only screen and (max-width: 575px) {
+    .landing-pwa,
+    .hospital-services,
+    .specialist-clinics,
+    .landing-doctor-schedule,
+    .landing-contact,
+    .landing-specialists {
+        scroll-margin-top: 96px;
+    }
+
+    .landing-pwa--integrated .landing-pwa__copy h2 {
+        font-size: clamp(32px, 10vw, 38px);
+    }
+
+    .specialist-clinics__search-clear {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+    }
+
+    .specialist-clinics__filter {
+        min-height: 44px;
+    }
+
+    .specialist-clinics__grid {
+        grid-template-columns: none;
+        grid-auto-flow: column;
+        grid-auto-columns: min(86vw, 320px);
+        gap: 12px;
+        margin-right: -16px;
+        padding: 2px 16px 12px 1px;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .specialist-clinic-card {
+        min-height: 292px;
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
+    }
+
+    .specialist-clinics__mobile-hint {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 7px 1px 0;
+        color: #7a8981;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    .landing-page .progress-wrap,
+    .landing-page .progress-wrap::after,
+    .landing-page .progress-wrap::before {
+        width: 44px;
+        height: 44px;
+        line-height: 44px;
+    }
+
+    .landing-page .progress-wrap {
+        right: max(12px, env(safe-area-inset-right));
+        bottom: max(14px, env(safe-area-inset-bottom));
+    }
+}
+
+@media only screen and (max-width: 359px) {
+    .landing-pwa--integrated .landing-pwa__copy h2 {
+        font-size: 32px;
+    }
+
+    .hospital-service-card__category,
+    .hospital-service-card__plus {
+        display: none;
+    }
+
+    .hospital-service-card h3 {
+        max-width: calc(100% - 74px);
+    }
+}
+
+@media only screen and (max-width: 767px) and (max-height: 600px) and (orientation: landscape) {
+    .premium-hero {
+        min-height: 560px;
+        padding-top: 88px;
+        padding-bottom: 34px;
+    }
+
+    .premium-hero__content .title {
+        font-size: clamp(40px, 7vw, 52px);
+    }
+
+    .premium-hero__facts {
+        margin-top: 18px;
+    }
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .landing-page .hospital-service-card:hover,
+    .landing-page .other-service-card:hover,
+    .landing-page .specialist-clinic-card:hover,
+    .landing-page .landing-contact-card:hover,
+    .landing-page .landing-specialist-card:hover {
+        transform: none;
+    }
+}

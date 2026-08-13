@@ -20,6 +20,9 @@
         <meta name="epasien-push-session-bound"
             content="{{ session()->has(\App\Http\Controllers\Epasien\PushSubscriptionController::SESSION_ENDPOINT_KEY) ? "1" : "0" }}">
         <meta name="epasien-notification-sound-url" content="{{ asset("landing/assets/sound/notif.mp3") }}">
+        @if (request()->routeIs("dashboard"))
+            <meta name="epasien-pwa-install-toast" content="1">
+        @endif
         @can("EPASIEN.MENU.PASIEN_SERVICE")
             <meta name="epasien-patient-service-navbar-url" content="{{ route("patientService.navbar") }}">
             <meta name="epasien-patient-service-delivery-url" content="{{ route("patientService.deliveries") }}">
@@ -47,7 +50,9 @@
 
     <link href="{{ versioned_asset("epasien/assets/css/navigation-loader.css") }}" rel="stylesheet" />
     <link href="{{ versioned_asset("epasien/assets/css/pwa-splash.css") }}" rel="stylesheet" />
+    <link href="{{ versioned_asset("epasien/assets/css/pwa-install.css") }}" rel="stylesheet" />
     <script src="{{ versioned_asset("epasien/assets/js/navigation-loader.js") }}" defer></script>
+    <script src="{{ versioned_asset("epasien/assets/js/pwa-install.js") }}" defer></script>
 
     @if ($usesAccessControl)
         <link href="{{ versioned_asset("epasien/assets/css/access-control.css") }}" rel="stylesheet" />

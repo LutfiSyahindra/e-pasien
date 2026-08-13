@@ -1,5 +1,5 @@
 .banner-area-one {
-    background-image: url(../images/banner/01.webp);
+    background-image: url(../imagesArsy/rs.jpeg);
     position: relative;
     height: 798px;
     display: flex;
@@ -95,6 +95,395 @@
     p.disc {
         max-width: 580px;
         color: #111032;
+    }
+}
+
+// Premium hospital landing hero
+.premium-hero {
+    background-position: center 54%;
+    border-radius: 0 0 36px 36px;
+    box-shadow: 0 28px 70px rgba(7, 29, 44, 0.18);
+    isolation: isolate;
+    overflow: hidden;
+
+    &::before,
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+
+    &::before {
+        z-index: 0;
+        background: linear-gradient(90deg,
+                rgba(5, 24, 38, 0.96) 0%,
+                rgba(7, 32, 47, 0.88) 34%,
+                rgba(7, 32, 47, 0.55) 55%,
+                rgba(7, 32, 47, 0.08) 100%);
+    }
+
+    &::after {
+        z-index: 1;
+        background:
+            radial-gradient(circle at 13% 18%, rgba(28, 190, 108, 0.18), transparent 25%),
+            linear-gradient(180deg, rgba(2, 13, 23, 0.02) 55%, rgba(2, 13, 23, 0.32) 100%);
+    }
+
+    &__content {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+        max-width: 790px;
+        padding-left: clamp(45px, 8vw, 140px);
+
+        .title {
+            max-width: 760px;
+            margin: 22px 0 20px;
+            color: #fff;
+            font-size: clamp(54px, 5vw, 82px);
+            line-height: 1.02;
+            letter-spacing: -0.045em;
+            text-shadow: 0 4px 30px rgba(0, 0, 0, 0.22);
+
+            span {
+                color: #8ee8b4;
+            }
+        }
+
+        p.disc {
+            max-width: 650px;
+            margin-bottom: 0;
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 19px;
+            line-height: 1.7;
+        }
+    }
+
+    &__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        width: auto;
+        padding: 7px 15px 7px 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 100px;
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+
+        > span:last-child {
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+        }
+    }
+
+    &__eyebrow-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #079447;
+        color: #fff;
+        font-size: 13px;
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 30px;
+    }
+
+    &__primary,
+    &__secondary {
+        min-height: 56px;
+        padding: 18px 28px;
+        font-weight: 700;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+    }
+
+    .premium-hero__primary {
+        gap: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: linear-gradient(135deg, #079447, #0caf5c);
+
+        &:hover {
+            background: linear-gradient(135deg, #087b3f, #079447);
+            box-shadow: 0 16px 34px rgba(4, 122, 58, 0.32);
+            transform: translateY(-2px);
+        }
+    }
+
+    &__secondary {
+        gap: 9px;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        backdrop-filter: blur(12px);
+
+        &:hover {
+            border-color: rgba(255, 255, 255, 0.55);
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+    }
+
+    &__facts {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0;
+        max-width: 650px;
+        margin-top: 34px;
+        padding: 17px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 18px;
+        background: rgba(5, 23, 36, 0.42);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(14px);
+    }
+
+    &__fact {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        min-width: 0;
+        padding: 0 18px;
+
+        + .premium-hero__fact {
+            border-left: 1px solid rgba(255, 255, 255, 0.14);
+        }
+
+        > i {
+            flex: 0 0 auto;
+            color: #8ee8b4;
+            font-size: 21px;
+        }
+
+        strong,
+        span {
+            display: block;
+        }
+
+        strong {
+            margin-bottom: 3px;
+            color: #fff;
+            font-size: 15px;
+            line-height: 1.15;
+        }
+
+        span {
+            color: rgba(255, 255, 255, 0.62);
+            font-size: 12px;
+            line-height: 1.25;
+        }
+    }
+
+    &__emergency {
+        position: absolute;
+        right: clamp(28px, 4vw, 68px);
+        bottom: 48px;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 13px 20px 13px 13px;
+        border: 1px solid rgba(255, 255, 255, 0.72);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 20px 50px rgba(4, 23, 35, 0.24);
+        backdrop-filter: blur(14px);
+
+        span,
+        strong {
+            display: block;
+        }
+
+        span {
+            margin-bottom: 3px;
+            color: #68727a;
+            font-size: 12px;
+        }
+
+        strong {
+            color: #09263a;
+            font-size: 18px;
+            line-height: 1.1;
+        }
+    }
+
+    &__emergency-icon {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        margin: 0 !important;
+        border-radius: 14px;
+        background: #e42424;
+        color: #fff !important;
+        font-size: 16px !important;
+        box-shadow: 0 8px 18px rgba(228, 36, 36, 0.28);
+    }
+}
+
+@media only screen and (min-width: 1200px) and (max-width: 1599px) {
+    .premium-hero {
+        height: 680px;
+
+        &__content {
+            padding-left: clamp(45px, 6vw, 90px);
+        }
+    }
+}
+
+@media only screen and (max-width: 1199px) {
+    .premium-hero {
+        height: 650px;
+
+        &__content {
+            max-width: 720px;
+            padding-left: 55px;
+        }
+
+        &__emergency {
+            right: 28px;
+            bottom: 30px;
+        }
+    }
+}
+
+@media only screen and (max-width: 991px) {
+    .premium-hero {
+        min-height: 690px;
+        height: auto;
+        padding: 100px 0 55px;
+        flex-direction: row;
+        align-items: center;
+        background-position: 64% center;
+
+        &::before {
+            background: linear-gradient(90deg,
+                    rgba(5, 24, 38, 0.95) 0%,
+                    rgba(5, 24, 38, 0.86) 62%,
+                    rgba(5, 24, 38, 0.56) 100%);
+        }
+
+        &__content {
+            max-width: 680px;
+            padding: 0 40px;
+
+            .title {
+                font-size: clamp(46px, 8vw, 64px);
+            }
+        }
+
+        &__emergency {
+            top: 24px;
+            right: 24px;
+            bottom: auto;
+        }
+    }
+}
+
+@media only screen and (max-width: 575px) {
+    .premium-hero {
+        min-height: 720px;
+        padding: 105px 0 42px;
+        border-radius: 0 0 24px 24px;
+        background-position: 62% center;
+
+        &::before {
+            background: linear-gradient(180deg,
+                    rgba(5, 24, 38, 0.66) 0%,
+                    rgba(5, 24, 38, 0.9) 34%,
+                    rgba(5, 24, 38, 0.98) 100%);
+        }
+
+        &__content {
+            padding: 0 20px;
+
+            .title {
+                margin: 18px 0 16px;
+                font-size: 39px;
+                line-height: 1.08;
+                letter-spacing: -0.035em;
+            }
+
+            p.disc {
+                font-size: 16px;
+                line-height: 1.6;
+            }
+        }
+
+        &__eyebrow {
+            > span:last-child {
+                font-size: 11px;
+                letter-spacing: 0.08em;
+            }
+        }
+
+        &__actions {
+            flex-direction: column;
+            margin-top: 24px;
+        }
+
+        &__primary,
+        &__secondary {
+            justify-content: center;
+            width: 100%;
+            max-width: none;
+        }
+
+        &__facts {
+            margin-top: 24px;
+            padding: 14px 5px;
+        }
+
+        &__fact {
+            justify-content: center;
+            padding: 0 8px;
+            text-align: center;
+
+            > i {
+                display: none;
+            }
+
+            strong {
+                font-size: 13px;
+            }
+
+            span {
+                font-size: 10px;
+            }
+        }
+
+        &__emergency {
+            top: 18px;
+            right: 18px;
+            padding: 9px 13px 9px 9px;
+            border-radius: 14px;
+
+            strong {
+                font-size: 15px;
+            }
+
+            span {
+                font-size: 10px;
+            }
+        }
+
+        &__emergency-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 11px;
+            font-size: 13px !important;
+        }
     }
 }
 
@@ -1340,5 +1729,47 @@ header {
                 font-size: 34px;
             }
         }
+    }
+}
+
+// Smartphone usability refinements
+@media only screen and (max-width: 575px) {
+    .premium-hero__content .title {
+        font-size: clamp(34px, 10vw, 39px);
+    }
+
+    .premium-hero__primary,
+    .premium-hero__secondary {
+        min-height: 54px;
+        touch-action: manipulation;
+    }
+}
+
+@media only screen and (max-width: 359px) {
+    .premium-hero {
+        min-height: 700px;
+    }
+
+    .premium-hero__content {
+        padding-right: 16px;
+        padding-left: 16px;
+    }
+
+    .premium-hero__content .title {
+        font-size: 34px;
+    }
+
+    .premium-hero__eyebrow {
+        padding-right: 11px;
+    }
+
+    .premium-hero__eyebrow > span:last-child {
+        font-size: 10px;
+        letter-spacing: .055em;
+    }
+
+    .premium-hero__emergency {
+        top: 12px;
+        right: 12px;
     }
 }
