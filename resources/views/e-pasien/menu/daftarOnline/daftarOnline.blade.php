@@ -35,6 +35,9 @@
         }
         $today = now()->toDateString();
         $hasPendingRegistration = ! empty($pendingRegistration);
+        $bpjsGuarantorAvailable = collect($penjaminOptions)->contains(
+            fn ($penjamin) => strtoupper(trim((string) ($penjamin["kd_pj"] ?? ""))) === "BPJ"
+        );
     @endphp
 
     @include("e-pasien.menu.daftarOnline.modalMain")
@@ -381,7 +384,9 @@
                                         <small>
                                             {{ $isRegistrationStaff
                                                 ? "BPJS Kesehatan diproses melalui alur MJKN."
-                                                : "BPJS Kesehatan tersedia, kecuali untuk poli IRM." }}
+                                                : ($bpjsGuarantorAvailable
+                                                    ? "BPJS Kesehatan tersedia, kecuali untuk poli IRM."
+                                                    : "Pilihan mengikuti kebijakan pendaftaran online rumah sakit.") }}
                                         </small>
                                     </div>
                                 </div>
@@ -426,7 +431,11 @@
                                 <div class="online-empty-state">
                                     <i class="bi bi-inbox"></i>
                                     <strong>Penjamin belum tersedia</strong>
-                                    <small>Data penjamin Khanza belum dapat dimuat.</small>
+                                    <small>
+                                        {{ $patientGuarantorRestrictionActive
+                                            ? "Belum ada penjamin yang diizinkan untuk pendaftaran pasien."
+                                            : "Data penjamin Khanza belum dapat dimuat." }}
+                                    </small>
                                 </div>
                             @else
                                 <div class="online-empty-state compact">

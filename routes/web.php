@@ -26,6 +26,7 @@ use App\Http\Controllers\Epasien\settings\auth\rolesController;
 use App\Http\Controllers\Epasien\settings\auth\usersController;
 use App\Http\Controllers\Epasien\settings\DoctorPhotoController;
 use App\Http\Controllers\Epasien\settings\DoctorScheduleController;
+use App\Http\Controllers\Epasien\settings\PatientGuarantorConfigurationController;
 use App\Http\Controllers\Epasien\settings\RoleConfigurationController;
 use App\Http\Controllers\LandingPage\LandingPageController;
 use App\Http\Controllers\ProfileController;
@@ -110,6 +111,12 @@ Route::middleware('auth')->group(function () {
             Route::put('/role-configurations', [RoleConfigurationController::class, 'update'])
                 ->middleware('role_or_permission:Super Admin|roles.update')
                 ->name('roleConfiguration.update');
+
+            // Penjamin yang dapat dipilih pasien saat pendaftaran online
+            Route::get('/pendaftaran-online/penjamin', [PatientGuarantorConfigurationController::class, 'index'])
+                ->name('patientGuarantorSettings.index');
+            Route::put('/pendaftaran-online/penjamin', [PatientGuarantorConfigurationController::class, 'update'])
+                ->name('patientGuarantorSettings.update');
 
             // Landing Page & Data
             Route::middleware('permission:EPASIEN.SETTINGS.JADWAL_DOKTER')->group(function () {

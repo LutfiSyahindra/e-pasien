@@ -13,6 +13,7 @@
             );
             $facilityMenuActive = request()->routeIs("kamar.*", "laboratorium.*", "poliklinik.*", "radiologi.*");
             $registrationMenuActive = request()->routeIs("daftarOnline.*");
+            $registrationSettingsActive = request()->routeIs("patientGuarantorSettings.*");
             $landingPageDataMenuActive = request()->routeIs(
                 "doctorScheduleSettings.*",
                 "doctorPhotoSettings.*",
@@ -87,6 +88,23 @@
                                         @if (request()->routeIs("roleConfiguration.*")) aria-current="page" @endif>
                                         <i class="bi bi-sliders"></i>
                                         Konfigurasi Peran
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="{{ $registrationSettingsActive ? "mm-active" : "" }}">
+                            <a href="javascript:;" class="has-arrow"
+                                aria-expanded="{{ $registrationSettingsActive ? "true" : "false" }}">
+                                <div class="parent-icon"><i class="bi bi-calendar2-plus"></i></div>
+                                <div class="menu-title">Pendaftaran Online</div>
+                            </a>
+                            <ul class="{{ $registrationSettingsActive ? "mm-show" : "" }}">
+                                <li>
+                                    <a href="{{ route("patientGuarantorSettings.index") }}"
+                                        class="{{ $registrationSettingsActive ? "mm-active" : "" }}"
+                                        @if ($registrationSettingsActive) aria-current="page" @endif>
+                                        <i class="bi bi-shield-check"></i>
+                                        Penjamin Pasien
                                     </a>
                                 </li>
                             </ul>

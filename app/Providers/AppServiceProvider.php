@@ -9,6 +9,7 @@ use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\PermissionRepository;
 use App\Repositories\Eloquent\RoleRepository;
 use App\Repositories\Eloquent\UserRepository;
+use App\Services\epasien\settings\PatientGuarantorConfigurationService;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
@@ -25,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(RoleRepositoryInterface::class, RoleRepository::class);
         $this->app->bind(PermissionRepositoryInterface::class, PermissionRepository::class);
+        $this->app->scoped(
+            PatientGuarantorConfigurationService::class,
+            fn (): PatientGuarantorConfigurationService => new PatientGuarantorConfigurationService
+        );
     }
 
     /**

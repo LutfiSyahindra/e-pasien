@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Epasien\menu;
 
 use App\Http\Controllers\Controller;
 use App\Services\epasien\menu\DaftarOnlineService;
+use App\Services\epasien\settings\PatientGuarantorConfigurationService;
 use App\Services\epasien\settings\RegistrationRoleConfigurationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,8 @@ class DaftarOnlineController extends Controller
 {
     public function __construct(
         private readonly DaftarOnlineService $daftarOnlineService,
-        private readonly RegistrationRoleConfigurationService $roleConfigurationService
+        private readonly RegistrationRoleConfigurationService $roleConfigurationService,
+        private readonly PatientGuarantorConfigurationService $guarantorConfigurationService,
     ) {}
 
     public function index(Request $request)
@@ -72,6 +74,11 @@ class DaftarOnlineController extends Controller
 
             if (! $pendingRegistration) {
                 $penjaminOptions = $this->daftarOnlineService->penjaminOptions(true);
+
+                if (! $isRegistrationStaff) {
+                    $penjaminOptions = $this->guarantorConfigurationService
+                        ->filterOptions($penjaminOptions);
+                }
             }
 
         } catch (Throwable $exception) {
@@ -94,6 +101,8 @@ class DaftarOnlineController extends Controller
             'patientSearchBirthDate' => $patientSearchBirthDate,
             'patientSearchPerformed' => $patientSearchPerformed,
             'patientSearchResults' => $patientSearchResults,
+            'patientGuarantorRestrictionActive' => ! $isRegistrationStaff
+                && $this->guarantorConfigurationService->isConfigured(),
         ]);
     }
 

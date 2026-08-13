@@ -40,7 +40,7 @@
                             <p>Role Anda telah diizinkan untuk memilih penjamin BPJS.</p>
                         </div>
                     </div>
-                @else
+                @elseif ($bpjsGuarantorAvailable)
                     <div class="online-notice-bpjs">
                         <span><i class="bi bi-shield-check"></i></span>
                         <div>

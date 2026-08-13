@@ -8,6 +8,7 @@ use App\Models\OnlineRegistrationAudit;
 use App\Models\User;
 use App\Repositories\epasien\bridging\AntrolRepository;
 use App\Repositories\epasien\menu\DaftarOnlineRepository;
+use App\Services\epasien\settings\PatientGuarantorConfigurationService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -41,7 +42,8 @@ class DaftarOnlineService
 
     public function __construct(
         private readonly DaftarOnlineRepository $daftarOnlineRepository,
-        private readonly ?AntrolRepository $antrolRepository = null
+        private readonly ?AntrolRepository $antrolRepository = null,
+        private readonly ?PatientGuarantorConfigurationService $guarantorConfigurationService = null,
     ) {}
 
     public function patientForUser(User $user): ?object
@@ -901,6 +903,16 @@ class DaftarOnlineService
         if ($configuredRegistrationRole && $isBpjsGuarantor) {
             throw ValidationException::withMessages([
                 'kd_pj' => 'Pendaftaran BPJ tidak disimpan pada tahap ini. Gunakan modal Proses Daftar MJKN untuk memilih dokumen BPJS dan meninjau payload Antrol.',
+            ]);
+        }
+
+        if (
+            ! $configuredRegistrationRole
+            && $this->guarantorConfigurationService
+            && ! $this->guarantorConfigurationService->allows($guarantorCode)
+        ) {
+            throw ValidationException::withMessages([
+                'kd_pj' => 'Penjamin ini tidak tersedia untuk pendaftaran online pasien.',
             ]);
         }
 

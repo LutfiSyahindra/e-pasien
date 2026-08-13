@@ -6,12 +6,51 @@ use App\Models\User;
 use App\Repositories\epasien\bridging\AntrolRepository;
 use App\Repositories\epasien\menu\DaftarOnlineRepository;
 use App\Services\epasien\menu\DaftarOnlineService;
+use App\Services\epasien\settings\PatientGuarantorConfigurationService;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
+use ReflectionProperty;
 use Tests\TestCase;
 
 class DaftarOnlineServiceTest extends TestCase
 {
+    public function test_container_injects_patient_guarantor_configuration_into_registration_service(): void
+    {
+        $service = app(DaftarOnlineService::class);
+        $property = new ReflectionProperty($service, 'guarantorConfigurationService');
+
+        $this->assertInstanceOf(
+            PatientGuarantorConfigurationService::class,
+            $property->getValue($service)
+        );
+    }
+
+    public function test_patient_cannot_submit_a_guarantor_blocked_by_configuration(): void
+    {
+        $repository = $this->createMock(DaftarOnlineRepository::class);
+        $repository->expects($this->never())->method('findPatient');
+        $repository->expects($this->never())->method('createRegistration');
+
+        $configuration = $this->createMock(PatientGuarantorConfigurationService::class);
+        $configuration
+            ->expects($this->once())
+            ->method('allows')
+            ->with('A01')
+            ->willReturn(false);
+
+        $service = new DaftarOnlineService($repository, null, $configuration);
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Penjamin ini tidak tersedia untuk pendaftaran online pasien.');
+
+        $service->register(new User(['username' => '000123']), [
+            'tgl_registrasi' => '2026-07-27',
+            'kd_dokter' => 'D001',
+            'kd_poli' => 'POL01',
+            'kd_pj' => 'A01',
+        ]);
+    }
+
     public function test_patient_for_user_uses_repository_with_trimmed_medical_record_number(): void
     {
         $patient = (object) [
