@@ -4,6 +4,9 @@
     var deferredInstallPrompt = null;
     var toastDismissedKey = 'epasien.pwa-install-toast-dismissed-until.v1';
     var toastDismissedFor = 7 * 24 * 60 * 60 * 1000;
+    var installedEvidenceKey = 'epasien.pwa-installed.v1';
+    var deviceUuidKey = 'epasien.device-uuid.v1';
+    var trackingInterval = 5 * 60 * 1000;
 
     var isInstalled = function () {
         return window.matchMedia('(display-mode: standalone)').matches
@@ -13,6 +16,90 @@
     var isIos = function () {
         return /iphone|ipad|ipod/i.test(window.navigator.userAgent)
             || (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
+    };
+
+    var rememberInstalled = function () {
+        try {
+            window.localStorage.setItem(installedEvidenceKey, String(Date.now()));
+        } catch (_) {}
+    };
+
+    var hasInstallEvidence = function () {
+        if (isInstalled()) return true;
+
+        try {
+            return Boolean(window.localStorage.getItem(installedEvidenceKey));
+        } catch (_) {
+            return false;
+        }
+    };
+
+    var createUuid = function () {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+            return window.crypto.randomUUID();
+        }
+
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (character) {
+            var random = Math.floor(Math.random() * 16);
+            var value = character === 'x' ? random : (random & 0x3) | 0x8;
+            return value.toString(16);
+        });
+    };
+
+    var deviceUuid = function () {
+        try {
+            var existing = window.localStorage.getItem(deviceUuidKey);
+            if (existing) return existing;
+
+            var generated = createUuid();
+            window.localStorage.setItem(deviceUuidKey, generated);
+            return generated;
+        } catch (_) {
+            return createUuid();
+        }
+    };
+
+    var reportUsage = function (force) {
+        var endpointMeta = document.querySelector('meta[name="epasien-access-tracking-url"]');
+        var userMeta = document.querySelector('meta[name="epasien-user-id"]');
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        var endpoint = endpointMeta ? endpointMeta.content : '';
+        var userId = userMeta ? userMeta.content : '';
+        var csrfToken = csrfMeta ? csrfMeta.content : '';
+        if (!endpoint || !userId || !csrfToken || typeof window.fetch !== 'function') return;
+
+        var mode = isInstalled() ? 'pwa' : 'web';
+        var reportKey = 'epasien.access-reported.' + userId + '.' + mode + '.v1';
+
+        if (!force) {
+            try {
+                var lastReportedAt = Number(window.localStorage.getItem(reportKey) || 0);
+                if (lastReportedAt > Date.now() - trackingInterval) return;
+            } catch (_) {}
+        }
+
+        window.fetch(endpoint, {
+            method: 'POST',
+            credentials: 'same-origin',
+            keepalive: true,
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                device_uuid: deviceUuid(),
+                mode: mode,
+                installed: hasInstallEvidence()
+            })
+        }).then(function (response) {
+            if (!response.ok) return;
+
+            try {
+                window.localStorage.setItem(reportKey, String(Date.now()));
+            } catch (_) {}
+        }).catch(function () {});
     };
 
     var installButtons = function () {
@@ -164,6 +251,7 @@
         }
 
         if (isInstalled()) {
+            rememberInstalled();
             updateButtons('installed');
             updateStatus('E-Pasien sudah terpasang di perangkat ini.');
         } else if (deferredInstallPrompt) {
@@ -192,6 +280,7 @@
 
         var toastDelay = window.matchMedia('(max-width: 575px)').matches ? 3500 : 1200;
         window.setTimeout(createToast, toastDelay);
+        reportUsage(false);
     };
 
     window.addEventListener('beforeinstallprompt', function (event) {
@@ -204,9 +293,11 @@
 
     window.addEventListener('appinstalled', function () {
         deferredInstallPrompt = null;
+        rememberInstalled();
         updateButtons('installed');
         updateStatus('E-Pasien berhasil dipasang di perangkat ini.');
         dismissToast(false);
+        reportUsage(true);
     });
 
     if (document.readyState === 'loading') {

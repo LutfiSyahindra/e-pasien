@@ -4,6 +4,7 @@
                 "roles.*",
                 "permissions.*",
                 "roleConfiguration.*",
+                "userAccessMonitoring.*",
             );
             $requestMenuActive = request()->routeIs(
                 "pemeriksaanLaborat.*",
@@ -90,6 +91,16 @@
                                         Konfigurasi Peran
                                     </a>
                                 </li>
+                                @can("EPASIEN.SETTINGS.USAGE_MONITORING")
+                                    <li>
+                                        <a href="{{ route("userAccessMonitoring.index") }}"
+                                            class="{{ request()->routeIs("userAccessMonitoring.*") ? "mm-active" : "" }}"
+                                            @if (request()->routeIs("userAccessMonitoring.*")) aria-current="page" @endif>
+                                            <i class="bi bi-bar-chart-line"></i>
+                                            Penggunaan Web &amp; PWA
+                                        </a>
+                                    </li>
+                                @endcan
                             </ul>
                         </li>
                         <li class="{{ $registrationSettingsActive ? "mm-active" : "" }}">

@@ -28,6 +28,8 @@ use App\Http\Controllers\Epasien\settings\DoctorPhotoController;
 use App\Http\Controllers\Epasien\settings\DoctorScheduleController;
 use App\Http\Controllers\Epasien\settings\PatientGuarantorConfigurationController;
 use App\Http\Controllers\Epasien\settings\RoleConfigurationController;
+use App\Http\Controllers\Epasien\settings\UserAccessMonitoringController;
+use App\Http\Controllers\Epasien\UserAccessController;
 use App\Http\Controllers\LandingPage\LandingPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -56,6 +58,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/e-pasien/push/config', [PushSubscriptionController::class, 'config'])->name('push.config');
     Route::post('/e-pasien/push/subscriptions', [PushSubscriptionController::class, 'store'])->name('push.store');
     Route::delete('/e-pasien/push/subscriptions', [PushSubscriptionController::class, 'destroy'])->name('push.destroy');
+    Route::post('/e-pasien/access-activity', [UserAccessController::class, 'store'])
+        ->middleware('throttle:30,1')
+        ->name('userAccess.store');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -111,6 +116,11 @@ Route::middleware('auth')->group(function () {
             Route::put('/role-configurations', [RoleConfigurationController::class, 'update'])
                 ->middleware('role_or_permission:Super Admin|roles.update')
                 ->name('roleConfiguration.update');
+
+            // Pemantauan penggunaan browser dan aplikasi PWA.
+            Route::get('/usage-monitoring', [UserAccessMonitoringController::class, 'index'])
+                ->middleware('permission:EPASIEN.SETTINGS.USAGE_MONITORING')
+                ->name('userAccessMonitoring.index');
 
             // Penjamin yang dapat dipilih pasien saat pendaftaran online
             Route::get('/pendaftaran-online/penjamin', [PatientGuarantorConfigurationController::class, 'index'])

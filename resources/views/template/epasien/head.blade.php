@@ -12,6 +12,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @auth
         <meta name="epasien-user-id" content="{{ auth()->id() }}">
+        <meta name="epasien-access-tracking-url" content="{{ route("userAccess.store") }}">
         <meta name="epasien-notifications-url" content="{{ route("notifications.index") }}">
         <meta name="epasien-notifications-read-url" content="{{ url("/e-pasien/notifications") }}">
         <meta name="epasien-notifications-read-all-url" content="{{ route("notifications.readAll") }}">

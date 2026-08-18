@@ -38,6 +38,16 @@ class User extends Authenticatable
         return $this->hasMany(PatientServiceMessage::class, 'sender_id');
     }
 
+    public function accessDevices(): HasMany
+    {
+        return $this->hasMany(UserAccessDevice::class);
+    }
+
+    public function dailyAccess(): HasMany
+    {
+        return $this->hasMany(UserAccessDaily::class);
+    }
+
     /**
      * The attributes that are mass assignable.
      *
