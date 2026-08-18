@@ -29,6 +29,12 @@ return [
 
     'super_admin_role' => 'Super Admin',
 
+    'admin_dashboard_roles' => [
+        'Super Admin',
+        'Administrator',
+        'Admin',
+    ],
+
     'patient_role' => 'Patient',
 
     'patient_role_aliases' => [

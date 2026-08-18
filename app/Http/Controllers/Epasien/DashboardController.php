@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Epasien;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Services\epasien\AdminDashboardService;
 use App\Services\epasien\menu\DaftarOnlineService;
 use App\Services\epasien\menu\DoctorQueueService;
 use App\Services\epasien\menu\JadwalDokterService;
@@ -19,6 +21,7 @@ class DashboardController extends Controller
     private const PATIENT_TIMEZONE = 'Asia/Jakarta';
 
     public function __construct(
+        private readonly AdminDashboardService $adminDashboardService,
         private readonly DaftarOnlineService $daftarOnlineService,
         private readonly DoctorQueueService $doctorQueueService,
         private readonly JadwalDokterService $jadwalDokterService,
@@ -29,6 +32,16 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $dashboardNow = now(self::PATIENT_TIMEZONE);
+
+        if ($user instanceof User && $this->usesAdminDashboard($user)) {
+            return view('e-pasien.admin-dashboard', [
+                ...$this->adminDashboardService->overview($dashboardNow),
+                'todayLabel' => ucfirst(
+                    $dashboardNow->locale('id')->translatedFormat('l, d F Y')
+                ),
+            ]);
+        }
+
         $promotions = new Collection;
         $upcomingRegistration = null;
         $doctorQueues = new Collection;
@@ -118,5 +131,12 @@ class DashboardController extends Controller
             'user_id' => $userId,
             'message' => $exception->getMessage(),
         ]);
+    }
+
+    private function usesAdminDashboard(User $user): bool
+    {
+        return $user->hasAnyRole(
+            config('access-control.admin_dashboard_roles', ['Super Admin', 'Administrator', 'Admin'])
+        );
     }
 }
