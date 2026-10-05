@@ -11,6 +11,7 @@ const notificationSoundUrl = meta('epasien-notification-sound-url') || '/landing
 const pushOwnerStorageKey = 'epasien.push-owner.v1';
 const notificationSoundStorageKey = 'epasien.notification-sound.v1';
 const notificationCacheKey = `epasien.notifications.v1.${userId}`;
+const notificationGateSkippedStorageKey = `epasien.notification-gate-skipped.v1.${userId}`;
 
 let notificationSound;
 let notificationSoundUnlocked = false;
@@ -410,6 +411,7 @@ const submitLogoutWithPushEndpoint = async (form) => {
     }
 
     rememberPushOwner(null);
+    try { window.sessionStorage.removeItem(notificationGateSkippedStorageKey); } catch (_) {}
     pushSessionBound = false;
     HTMLFormElement.prototype.submit.call(form);
 };
@@ -449,7 +451,13 @@ const ensurePushSubscription = async () => {
 
 let notificationGate;
 let notificationGateBlockedElements = [];
+let notificationGatePreviousFocus;
+let notificationGateSkipped = false;
 let notificationRequirementBusy = false;
+
+try {
+    notificationGateSkipped = window.sessionStorage.getItem(notificationGateSkippedStorageKey) === '1';
+} catch (_) {}
 
 const notificationGateElements = () => ({
     title: notificationGate?.querySelector('[data-notification-gate-title]'),
@@ -483,22 +491,35 @@ const createNotificationGate = () => {
                 <i class="bi bi-bell-check-fill" aria-hidden="true"></i>
                 <span data-notification-gate-label>Aktifkan Sekarang</span>
             </button>
-            <small>Browser hanya akan meminta izin setelah Anda menekan tombol aktivasi.</small>
+            <button type="button" class="ep-notification-gate__skip" data-notification-gate-skip>Lewati</button>
+            <small>Anda dapat mengaktifkan notifikasi kapan saja melalui menu notifikasi.</small>
         </section>`;
     document.body.append(notificationGate);
 
     notificationGate.querySelector('[data-notification-gate-button]')
         ?.addEventListener('click', activateRequiredNotifications);
+    notificationGate.querySelector('[data-notification-gate-skip]')
+        ?.addEventListener('click', skipRequiredNotifications);
     notificationGate.addEventListener('keydown', (event) => {
         if (event.key !== 'Tab') return;
-        event.preventDefault();
-        notificationGate.querySelector('[data-notification-gate-button]')?.focus();
+        const buttons = [...notificationGate.querySelectorAll('button:not(:disabled)')];
+        const first = buttons[0];
+        const last = buttons[buttons.length - 1];
+        if (!first) return;
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
     });
 
     return notificationGate;
 };
 
 const showNotificationGate = ({ state = 'default', title, message, note, label, busy = false }) => {
+    if (notificationGateSkipped) return;
     const gate = createNotificationGate();
     const elements = notificationGateElements();
     gate.dataset.state = state;
@@ -510,6 +531,7 @@ const showNotificationGate = ({ state = 'default', title, message, note, label, 
     elements.button.classList.toggle('is-loading', busy);
 
     if (gate.hidden) {
+        notificationGatePreviousFocus = document.activeElement;
         gate.hidden = false;
         document.body.classList.add('ep-notification-required');
         notificationGateBlockedElements = [...document.body.children].filter((element) => {
@@ -519,7 +541,13 @@ const showNotificationGate = ({ state = 'default', title, message, note, label, 
         });
     }
 
-    window.setTimeout(() => elements.button.focus(), 0);
+    window.setTimeout(() => {
+        if (gate.hidden) return;
+        const button = elements.button.disabled
+            ? gate.querySelector('[data-notification-gate-skip]')
+            : elements.button;
+        button?.focus();
+    }, 0);
 };
 
 const hideNotificationGate = () => {
@@ -528,6 +556,13 @@ const hideNotificationGate = () => {
     document.body.classList.remove('ep-notification-required');
     notificationGateBlockedElements.forEach((element) => { element.inert = false; });
     notificationGateBlockedElements = [];
+    notificationGatePreviousFocus?.focus();
+};
+
+const skipRequiredNotifications = () => {
+    notificationGateSkipped = true;
+    try { window.sessionStorage.setItem(notificationGateSkippedStorageKey, '1'); } catch (_) {}
+    hideNotificationGate();
 };
 
 const showNotificationPermissionRequired = () => {
@@ -540,7 +575,7 @@ const showNotificationPermissionRequired = () => {
             : 'Satu kali klik akan mengaktifkan ringtone, meminta izin browser, dan mendaftarkan perangkat ini.',
         note: denied
             ? 'Buka ikon gembok/info pada browser, ubah Notifikasi menjadi Izinkan, lalu tekan Periksa Kembali.'
-            : 'Saat browser bertanya, pilih Izinkan agar Anda dapat melanjutkan ke E-Pasien.',
+            : 'Pilih Izinkan untuk menerima notifikasi, atau Lewati untuk melanjutkan tanpa notifikasi perangkat.',
         label: denied ? 'Periksa Kembali' : 'Aktifkan Sekarang',
     });
 };
@@ -573,6 +608,9 @@ const showNotificationSetupError = (error) => {
 
 const activateRequiredNotifications = async () => {
     if (notificationRequirementBusy) return;
+
+    notificationGateSkipped = false;
+    try { window.sessionStorage.removeItem(notificationGateSkippedStorageKey); } catch (_) {}
 
     if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
         showNotificationSetupError(new Error('unsupported'));
@@ -628,7 +666,7 @@ const activateRequiredNotifications = async () => {
 };
 
 const enforceRequiredNotifications = async () => {
-    if (notificationRequirementBusy) return;
+    if (notificationRequirementBusy || notificationGateSkipped) return;
 
     if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
         showNotificationSetupError(new Error('unsupported'));
