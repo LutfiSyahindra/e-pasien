@@ -558,6 +558,7 @@
     <script>
         window.daftarOnlineConfig = {
             schedulesUrl: @json(route("daftarOnline.schedules")),
+            alternativeSchedulesUrl: @json(route("daftarOnline.schedules.alternatives")),
             controlLettersUrl: @json(route("daftarOnline.suratKontrol")),
             controlLetterDetailUrl: @json(route("daftarOnline.suratKontrol.show", ["controlLetterNumber" => "__NUMBER__"])),
             antrolPreviewUrl: @json(route("daftarOnline.antrol.preview")),

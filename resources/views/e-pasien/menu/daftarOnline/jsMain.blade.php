@@ -3,6 +3,9 @@
         const config = window.daftarOnlineConfig || {};
         const state = {
             schedules: [],
+            alternatives: [],
+            alternativeRequestId: 0,
+            scheduleRequestId: 0,
             selectedSchedule: null,
             selectedGuarantor: null,
             controlLetterDetails: {},
@@ -425,6 +428,21 @@
         }
 
         function showValidationErrors(errors) {
+            if (errors?.kuota && state.selectedSchedule) {
+                state.selectedSchedule.penuh = true;
+                state.selectedSchedule.terdaftar = Math.max(
+                    Number(state.selectedSchedule.terdaftar || 0), Number(state.selectedSchedule.kuota || 0)
+                );
+                state.selectedGuarantor = null;
+                clearSelect(elements.guarantorCode);
+                setSelectEnabled(elements.guarantorCode, false);
+                clearBpjsDocumentSelection();
+                hideBootstrapModal(elements.mjknModal);
+                renderSelectedSchedule(state.selectedSchedule);
+                updateSummary();
+                return true;
+            }
+
             Object.keys(errors || {}).forEach(function(key) {
                 const normalizedKey = key.split('.')[0];
                 const message = errors[key][0] || 'Data belum valid.';
@@ -455,6 +473,67 @@
             `);
         }
 
+        function isScheduleFull(schedule) {
+            return Boolean(schedule) && (schedule.penuh === true ||
+                Number(schedule.terdaftar || 0) >= Number(schedule.kuota || 0));
+        }
+
+        function invalidateAlternatives() {
+            state.alternativeRequestId++;
+            state.alternatives = [];
+        }
+
+        function loadAlternativeSchedules(schedule) {
+            const requestId = ++state.alternativeRequestId;
+            const date = elements.date.val();
+            state.alternatives = [];
+            elements.scheduleList.append(`
+                <div class="online-quota-alternatives" role="status" aria-live="polite">
+                    <strong>Kuota dokter sudah penuh</strong>
+                    <p>Pendaftaran pada tanggal ini tidak tersedia. Pilih dokter yang sama di hari lain.</p>
+                    <div id="alternativeScheduleList">Memuat jadwal hari lain...</div>
+                </div>
+            `);
+
+            $.ajax({
+                url: config.alternativeSchedulesUrl,
+                method: 'GET',
+                data: {tgl_registrasi: date, kd_dokter: schedule.kd_dokter, kd_poli: schedule.kd_poli},
+                success: function(response) {
+                    if (requestId !== state.alternativeRequestId || date !== elements.date.val()) return;
+                    state.alternatives = response.data?.schedules || [];
+                    if (!state.alternatives.length) {
+                        $('#alternativeScheduleList').text('Belum ada jadwal dokter ini dengan sisa kuota dalam 28 hari berikutnya. Silakan pilih tanggal lain atau dokter lain.');
+                        return;
+                    }
+                    $('#alternativeScheduleList').html(state.alternatives.map(function(item, index) {
+                        return `<button type="button" class="online-alternative-schedule" data-alternative-index="${index}">
+                            <strong>${escapeHtml(item.hari)}, ${escapeHtml(item.tanggal_label)}</strong>
+                            <span>${escapeHtml(item.nm_dokter)} · ${escapeHtml(scheduleTime(item))}</span>
+                            <small>Sisa kuota: ${escapeHtml(item.sisa_kuota)}</small>
+                        </button>`;
+                    }).join(''));
+                },
+                error: function() {
+                    if (requestId !== state.alternativeRequestId || date !== elements.date.val()) return;
+                    $('#alternativeScheduleList').html('<p>Jadwal hari lain belum dapat dimuat.</p><button type="button" class="online-alternative-retry">Coba lagi</button>');
+                }
+            });
+        }
+
+        elements.scheduleList.on('click', '[data-alternative-index]', function() {
+            if (state.submitting) return;
+            const schedule = state.alternatives[Number($(this).attr('data-alternative-index'))];
+            if (!schedule) return;
+            elements.date.val(schedule.tanggal);
+            clearBpjsDocumentSelection();
+            loadSchedules(schedule);
+        });
+
+        elements.scheduleList.on('click', '.online-alternative-retry', function() {
+            if (isScheduleFull(state.selectedSchedule)) renderSelectedSchedule(state.selectedSchedule);
+        });
+
         function quotaMeta(schedule) {
             const quota = Number(schedule.kuota || 0);
             const registered = Number(schedule.terdaftar || 0);
@@ -471,7 +550,7 @@
             const tone = percent >= 90 ? 'danger' : percent >= 70 ? 'warning' : 'safe';
 
             return {
-                label: `${registered}/${quota} terisi`,
+                label: isScheduleFull(schedule) ? `Kuota penuh (${registered}/${quota})` : `${registered}/${quota} terisi`,
                 percent,
                 tone
             };
@@ -524,7 +603,7 @@
                         doctors.set(schedule.kd_dokter, {
                             value: schedule.kd_dokter,
                             name: schedule.nm_dokter,
-                            label: `${schedule.nm_dokter} - ${scheduleTime(schedule)}`,
+                            label: `${schedule.nm_dokter} - ${scheduleTime(schedule)}${isScheduleFull(schedule) ? ' (Kuota penuh)' : ''}`,
                         });
                     }
                 });
@@ -545,6 +624,7 @@
         }
 
         function resetScheduleChoice() {
+            invalidateAlternatives();
             state.selectedSchedule = null;
             state.selectedGuarantor = null;
             rebuildSelect(elements.clinicCode, []);
@@ -562,20 +642,23 @@
             elements.scheduleList.html(`
                 <div class="online-selected-schedule">
                     <div>
-                        <span>Jadwal dipilih</span>
+                        <span>${isScheduleFull(schedule) ? 'Kuota penuh' : 'Jadwal dipilih'}</span>
                         <strong>${escapeHtml(clinicDisplayName(schedule))}</strong>
                         <small>${escapeHtml(schedule.nm_dokter)}</small>
                     </div>
                     <div class="online-selected-meta">
                         <span><i class="bi bi-clock"></i>${escapeHtml(scheduleTime(schedule))}</span>
                         <span><i class="bi bi-people"></i>${escapeHtml(quota.label)}</span>
-                        <span><i class="bi bi-ticket-perforated"></i>No. ${escapeHtml(schedule.estimasi_no_reg)}</span>
+                        ${isScheduleFull(schedule) ? '' : `<span><i class="bi bi-ticket-perforated"></i>No. ${escapeHtml(schedule.estimasi_no_reg)}</span>`}
                     </div>
                     <span class="online-quota-track">
                         <span class="online-quota-fill ${quota.tone}" style="width: ${quota.percent}%"></span>
                     </span>
                 </div>
             `);
+            if (isScheduleFull(schedule)) {
+                loadAlternativeSchedules(schedule);
+            }
         }
 
         function renderSchedules(payload) {
@@ -603,8 +686,10 @@
             updateSummary();
         }
 
-        function loadSchedules() {
+        function loadSchedules(preferredSchedule = null) {
             const date = elements.date.val();
+            const requestId = ++state.scheduleRequestId;
+            state.schedules = [];
 
             clearValidation();
             resetScheduleChoice();
@@ -627,11 +712,19 @@
                     tgl_registrasi: date
                 },
                 success: function(response) {
+                    if (requestId !== state.scheduleRequestId || date !== elements.date.val()) return;
                     renderSchedules(response.data || {});
+                    if (preferredSchedule && state.schedules.some(function(schedule) {
+                        return schedule.kd_poli === preferredSchedule.kd_poli && schedule.kd_dokter === preferredSchedule.kd_dokter;
+                    })) {
+                        elements.clinicCode.val(preferredSchedule.kd_poli).trigger('change');
+                        elements.doctorCode.val(preferredSchedule.kd_dokter).trigger('change');
+                    }
                 },
                 error: function(xhr) {
+                    if (requestId !== state.scheduleRequestId || date !== elements.date.val()) return;
                     if (xhr.status === 422) {
-                        showValidationErrors(xhr.responseJSON?.errors || {});
+                        if (showValidationErrors(xhr.responseJSON?.errors || {})) return;
                         elements.scheduleCount.text('Tanggal belum valid.');
                         emptySchedule('Tanggal belum valid', xhr.responseJSON?.message || 'Periksa tanggal kunjungan.', 'bi-exclamation-circle');
                         return;
@@ -693,6 +786,7 @@
             const ready = config.patientReady &&
                 Boolean(elements.date.val()) &&
                 Boolean(state.selectedSchedule) &&
+                !isScheduleFull(state.selectedSchedule) &&
                 Boolean(state.selectedGuarantor) &&
                 hasRequiredCardNumber() &&
                 !isBpjsIrmCombination() &&
@@ -714,9 +808,11 @@
             elements.summaryDoctor.text(schedule?.nm_dokter || '-');
             elements.summaryTime.text(schedule ? scheduleTime(schedule) : '-');
             elements.summaryGuarantor.text(guarantor?.name || '-');
-            elements.summaryQueue.text(schedule?.estimasi_no_reg ? `No. ${schedule.estimasi_no_reg}` : '-');
+            elements.summaryQueue.text(schedule?.estimasi_no_reg && !isScheduleFull(schedule) ? `No. ${schedule.estimasi_no_reg}` : '-');
 
-            if (schedule && guarantor && isBpjsIrmCombination()) {
+            if (isScheduleFull(schedule)) {
+                elements.summaryState.text('Kuota penuh. Pilih jadwal dokter di hari lain.');
+            } else if (schedule && guarantor && isBpjsIrmCombination()) {
                 elements.summaryState.text('Penjamin BPJ tidak tersedia untuk poli IRM.');
             } else if (schedule && guarantor && !hasRequiredCardNumber()) {
                 elements.summaryState.text('Lengkapi no. kartu BPJS.');
@@ -756,6 +852,7 @@
         });
 
         elements.clinicCode.on('change', function() {
+            invalidateAlternatives();
             const clinicCode = elements.clinicCode.val();
             const doctors = doctorOptions(clinicCode);
 
@@ -781,6 +878,7 @@
         });
 
         elements.doctorCode.on('change', function() {
+            invalidateAlternatives();
             const clinicCode = elements.clinicCode.val();
             const doctorCode = elements.doctorCode.val();
 
@@ -790,7 +888,7 @@
             clearBpjsDocumentSelection();
             state.selectedGuarantor = null;
             clearSelect(elements.guarantorCode);
-            setSelectEnabled(elements.guarantorCode, Boolean(state.selectedSchedule) && hasGuarantorOptions());
+            setSelectEnabled(elements.guarantorCode, Boolean(state.selectedSchedule) && !isScheduleFull(state.selectedSchedule) && hasGuarantorOptions());
             syncBpjsCardNumberField();
             clearValidation();
 
@@ -1705,7 +1803,7 @@
                 },
                 error: function(xhr) {
                     if (xhr.status === 422) {
-                        showValidationErrors(xhr.responseJSON?.errors || {});
+                        if (showValidationErrors(xhr.responseJSON?.errors || {})) return;
                     }
 
                     elements.searchJourney
@@ -1802,7 +1900,7 @@
                 },
                 error: function(xhr) {
                     if (xhr.status === 422) {
-                        showValidationErrors(xhr.responseJSON?.errors || {});
+                        if (showValidationErrors(xhr.responseJSON?.errors || {})) return;
                     }
 
                     alertAction({
@@ -1898,7 +1996,7 @@
                         const errors = xhr.responseJSON?.errors || {};
 
                         if (xhr.status === 422) {
-                            showValidationErrors(errors);
+                            if (showValidationErrors(errors)) return;
                             refreshFinalData = Boolean(errors.preview);
                         }
 
@@ -1972,6 +2070,11 @@
         elements.form.on('submit', function(event) {
             event.preventDefault();
             clearValidation();
+
+            if (isScheduleFull(state.selectedSchedule)) {
+                renderSelectedSchedule(state.selectedSchedule);
+                return;
+            }
 
             if (!state.selectedSchedule || !state.selectedGuarantor || !hasRequiredCardNumber()) {
                 if (isBpjsSelected() && !hasRequiredCardNumber()) {
@@ -2062,7 +2165,7 @@
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
-                            showValidationErrors(xhr.responseJSON?.errors || {});
+                            if (showValidationErrors(xhr.responseJSON?.errors || {})) return;
                             alertAction({
                                 icon: 'warning',
                                 title: 'Pendaftaran belum valid',

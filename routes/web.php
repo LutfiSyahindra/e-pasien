@@ -276,6 +276,8 @@ Route::middleware('auth')->group(function () {
                     ->name('daftarOnline.history');
                 Route::get('/daftar-online/jadwal', [DaftarOnlineController::class, 'schedules'])
                     ->name('daftarOnline.schedules');
+                Route::get('/daftar-online/jadwal-alternatif', [DaftarOnlineController::class, 'alternativeSchedules'])
+                    ->name('daftarOnline.schedules.alternatives');
                 Route::get('/daftar-online/surat-kontrol', [RencanaKontrolController::class, 'index'])
                     ->name('daftarOnline.suratKontrol');
                 Route::get('/daftar-online/surat-kontrol/{controlLetterNumber}', [RencanaKontrolController::class, 'show'])

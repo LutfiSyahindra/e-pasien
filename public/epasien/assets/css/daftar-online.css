@@ -4959,3 +4959,54 @@
         transition: none;
     }
 }
+
+.online-quota-alternatives {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 14px;
+    color: var(--online-ink);
+    margin-top: 14px;
+    padding: 16px;
+}
+
+.online-quota-alternatives > strong {
+    color: #9a3412;
+}
+
+.online-quota-alternatives p {
+    font-size: 13px;
+    margin: 8px 0 12px;
+}
+
+#alternativeScheduleList {
+    display: grid;
+    gap: 8px;
+}
+
+.online-alternative-schedule,
+.online-alternative-retry {
+    background: var(--online-surface);
+    border: 1px solid var(--online-border);
+    border-radius: 10px;
+    color: var(--online-ink);
+    cursor: pointer;
+    display: grid;
+    font-size: 13px;
+    gap: 4px;
+    padding: 12px;
+    text-align: left;
+    width: 100%;
+}
+
+.online-alternative-schedule:hover,
+.online-alternative-schedule:focus-visible,
+.online-alternative-retry:focus-visible {
+    border-color: var(--online-blue);
+    outline: 2px solid var(--online-blue);
+    outline-offset: 2px;
+}
+
+.online-alternative-schedule small {
+    color: var(--online-green);
+    font-weight: 700;
+}

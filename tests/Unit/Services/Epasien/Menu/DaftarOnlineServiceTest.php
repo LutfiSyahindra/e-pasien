@@ -7,6 +7,7 @@ use App\Repositories\epasien\bridging\AntrolRepository;
 use App\Repositories\epasien\menu\DaftarOnlineRepository;
 use App\Services\epasien\menu\DaftarOnlineService;
 use App\Services\epasien\settings\PatientGuarantorConfigurationService;
+use App\Support\Epasien\DoctorScheduleDay;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 use ReflectionProperty;
@@ -472,6 +473,7 @@ class DaftarOnlineServiceTest extends TestCase
         $schedule = (object) [
             'nm_dokter' => 'dr. Budi',
             'nm_poli' => 'Poli Umum',
+            'kuota' => 20,
         ];
         $penjamin = (object) [
             'kd_pj' => 'UMU',
@@ -912,6 +914,7 @@ class DaftarOnlineServiceTest extends TestCase
         $schedule = (object) [
             'nm_dokter' => 'dr. Budi',
             'nm_poli' => 'Poli Umum',
+            'kuota' => 20,
         ];
         $penjamin = (object) [
             'kd_pj' => 'BPJ',
@@ -979,6 +982,7 @@ class DaftarOnlineServiceTest extends TestCase
         $schedule = (object) [
             'nm_dokter' => 'dr. Budi',
             'nm_poli' => 'Poli Umum',
+            'kuota' => 20,
         ];
         $penjamin = (object) [
             'kd_pj' => 'BPJ',
@@ -1067,5 +1071,122 @@ class DaftarOnlineServiceTest extends TestCase
             'kd_poli' => 'POL01',
             'kd_pj' => 'UMU',
         ]);
+    }
+
+    public function test_full_schedule_is_reported_with_no_remaining_quota(): void
+    {
+        $repository = $this->createMock(DaftarOnlineRepository::class);
+        $repository->method('getSchedules')->willReturn(collect([(object) [
+            'kd_dokter' => 'D001', 'nm_dokter' => 'dr. Budi', 'kd_poli' => 'POL01', 'nm_poli' => 'Poli Anak',
+            'hari_kerja' => 'SENIN', 'jam_mulai' => '08:00:00', 'jam_selesai' => '10:00:00', 'kuota' => 2,
+        ]]));
+        $repository->method('countActiveRegistrations')->willReturn(3);
+        $repository->method('previewNextRegistrationNumber')->willReturn('004');
+
+        $result = (new DaftarOnlineService($repository))->availableSchedules('2026-07-27');
+
+        $this->assertTrue($result['schedules'][0]['penuh']);
+        $this->assertSame(0, $result['schedules'][0]['sisa_kuota']);
+    }
+
+    public function test_full_quota_blocks_regular_and_bpjs_patient_registration_before_saving(): void
+    {
+        foreach (['UMU', 'BPJ'] as $guarantorCode) {
+            $repository = $this->createMock(DaftarOnlineRepository::class);
+            $repository->method('findPatient')->willReturn((object) [
+                'no_rkm_medis' => '000123', 'tgl_lahir' => '1990-01-01',
+            ]);
+            $repository->method('findSchedule')->willReturn((object) ['kuota' => 2]);
+            $repository->method('countActiveRegistrations')->willReturn(2);
+            $repository->expects($this->never())->method('createRegistration');
+
+            try {
+                (new DaftarOnlineService($repository))->register(new User(['username' => '000123']), [
+                    'tgl_registrasi' => '2026-07-27', 'kd_dokter' => 'D001', 'kd_poli' => 'POL01',
+                    'kd_pj' => $guarantorCode, 'no_peserta' => '0001234567890',
+                ]);
+                $this->fail('A full doctor must reject registration.');
+            } catch (ValidationException $exception) {
+                $this->assertArrayHasKey('kuota', $exception->errors());
+            }
+        }
+    }
+
+    public function test_full_quota_blocks_mjkn_preview_and_submission(): void
+    {
+        $repository = $this->createMock(DaftarOnlineRepository::class);
+        $repository->method('findPatient')->willReturn((object) [
+            'no_rkm_medis' => '000123', 'no_ktp' => '3273012345678901', 'no_tlp' => '081234567890',
+        ]);
+        $repository->method('findSchedule')->willReturn((object) ['kuota' => 2]);
+        $repository->method('countActiveRegistrations')->willReturn(2);
+        $repository->expects($this->never())->method('previewNextRegistrationNumber');
+        $repository->expects($this->never())->method('createMjknRegistration');
+        $antrol = $this->createMock(AntrolRepository::class);
+        $antrol->expects($this->never())->method('addQueue');
+        $service = new DaftarOnlineService($repository, $antrol);
+        $data = [
+            'tgl_registrasi' => '2026-07-27', 'kd_dokter' => 'D001', 'kd_poli' => 'POL01', 'kd_pj' => 'BPJ',
+            'no_peserta' => '0001234567890', 'bpjs_document_type' => 'rujukan',
+            'bpjs_document_source' => 'rujukan_pcare', 'bpjs_document_number' => 'REF001',
+        ];
+
+        foreach (['previewAntrolPayload', 'registerMjkn'] as $method) {
+            try {
+                $method === 'registerMjkn'
+                    ? $service->registerMjkn(new User(['username' => '000123']), $data, str_repeat('a', 64))
+                    : $service->previewAntrolPayload(new User(['username' => '000123']), $data);
+                $this->fail('A full doctor must reject the MJKN flow.');
+            } catch (ValidationException $exception) {
+                $this->assertArrayHasKey('kuota', $exception->errors());
+            }
+        }
+    }
+
+    public function test_alternative_schedules_skip_full_days_and_include_sunday_aliases(): void
+    {
+        $base = [
+            'kd_dokter' => 'D001', 'nm_dokter' => 'dr. Budi', 'kd_poli' => 'POL01', 'nm_poli' => 'Poli Anak',
+            'jam_mulai' => '08:00:00', 'jam_selesai' => '10:00:00', 'kuota' => 2,
+        ];
+        $repository = $this->createMock(DaftarOnlineRepository::class);
+        $repository->expects($this->once())->method('getSchedules')
+            ->with(DoctorScheduleDay::ACCEPTED_DAYS, 'D001', 'POL01')
+            ->willReturn(collect([
+                (object) array_merge($base, ['hari_kerja' => 'SENIN']),
+                (object) array_merge($base, ['hari_kerja' => 'SELASA', 'kuota' => 0]),
+                (object) array_merge($base, ['hari_kerja' => 'AKHAD']),
+            ]));
+        $repository->method('countActiveRegistrations')->willReturnCallback(function (string $date, string $doctor, string $clinic): int {
+            $this->assertSame('D001', $doctor);
+            $this->assertSame('POL01', $clinic);
+            $this->assertGreaterThan('2026-07-27', $date);
+
+            return $date === '2026-08-02' ? 2 : 1;
+        });
+        $repository->method('previewNextRegistrationNumber')->willReturn('002');
+
+        $result = (new DaftarOnlineService($repository))->alternativeSchedules('2026-07-27', ' D001 ', ' POL01 ');
+
+        $this->assertSame(['2026-08-03', '2026-08-09', '2026-08-10', '2026-08-16', '2026-08-17'], array_column($result['schedules'], 'tanggal'));
+        foreach ($result['schedules'] as $schedule) {
+            $this->assertFalse($schedule['penuh']);
+            $this->assertSame(1, $schedule['sisa_kuota']);
+        }
+    }
+
+    public function test_alternative_schedule_search_stops_after_28_days_when_all_are_full(): void
+    {
+        $repository = $this->createMock(DaftarOnlineRepository::class);
+        $repository->method('getSchedules')->willReturn(collect([(object) [
+            'hari_kerja' => 'SENIN', 'kuota' => 1,
+        ]]));
+        $repository->expects($this->exactly(4))->method('countActiveRegistrations')->willReturn(1);
+        $repository->expects($this->never())->method('previewNextRegistrationNumber');
+
+        $result = (new DaftarOnlineService($repository))->alternativeSchedules('2026-07-27', 'D001', 'POL01');
+
+        $this->assertSame([], $result['schedules']);
+        $this->assertSame(28, $result['rentang_hari']);
     }
 }

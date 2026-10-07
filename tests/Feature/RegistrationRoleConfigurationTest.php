@@ -255,6 +255,7 @@ class RegistrationRoleConfigurationTest extends TestCase
         $schedule = (object) [
             'nm_dokter' => 'dr. Budi',
             'nm_poli' => 'Poli Umum',
+            'kuota' => 20,
         ];
         $penjamin = (object) [
             'kd_pj' => 'UMU',

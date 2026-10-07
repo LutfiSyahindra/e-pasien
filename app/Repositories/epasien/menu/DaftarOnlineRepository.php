@@ -4,12 +4,14 @@ namespace App\Repositories\epasien\menu;
 
 use App\Exceptions\RegistrationLockException;
 use App\Exceptions\RegistrationPreviewChangedException;
+use App\Support\Epasien\DoctorScheduleDay;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class DaftarOnlineRepository
 {
@@ -106,8 +108,11 @@ class DaftarOnlineRepository
             ->get();
     }
 
-    public function getSchedules(array $workdayAliases): Collection
-    {
+    public function getSchedules(
+        array $workdayAliases,
+        ?string $doctorCode = null,
+        ?string $clinicCode = null
+    ): Collection {
         return $this->connection()
             ->table('jadwal')
             ->join('dokter', 'dokter.kd_dokter', '=', 'jadwal.kd_dokter')
@@ -139,6 +144,8 @@ class DaftarOnlineRepository
                 'poli_bpjs.nm_poli_bpjs'
             )
             ->whereIn(DB::raw('UPPER(jadwal.hari_kerja)'), $workdayAliases)
+            ->when($doctorCode !== null, fn (Builder $query) => $query->where('jadwal.kd_dokter', $doctorCode))
+            ->when($clinicCode !== null, fn (Builder $query) => $query->where('jadwal.kd_poli', $clinicCode))
             ->orderBy('poli_bpjs.nm_poli_bpjs')
             ->orderBy('dokter.nm_dokter')
             ->orderBy('jadwal.jam_mulai')
@@ -440,6 +447,8 @@ class DaftarOnlineRepository
                     return null;
                 }
 
+                $this->ensureQuotaAvailable($connection, $registrationDate, $doctorCode, $clinicCode);
+
                 if ($patientCardNumber !== null) {
                     $connection
                         ->table('pasien')
@@ -512,6 +521,8 @@ class DaftarOnlineRepository
                     return null;
                 }
 
+                $this->ensureQuotaAvailable($connection, $registrationDate, $doctorCode, $clinicCode);
+
                 $registrationNumber = $this->nextRegistrationNumber(
                     $connection,
                     $registrationDate,
@@ -558,6 +569,40 @@ class DaftarOnlineRepository
             ->table('referensi_mobilejkn_bpjs')
             ->where('nobooking', $bookingCode)
             ->update(['statuskirim' => 'Sudah']) === 1;
+    }
+
+    private function ensureQuotaAvailable(
+        Connection $connection,
+        string $date,
+        string $doctorCode,
+        string $clinicCode
+    ): void {
+        $day = DoctorScheduleDay::EPASIEN_DAYS[Carbon::parse($date)->isoWeekday() - 1];
+        $aliases = $day === 'MINGGU' ? ['MINGGU', 'AKHAD', 'AHAD'] : [$day];
+        $schedule = $connection->table('jadwal')
+            ->where('kd_dokter', $doctorCode)
+            ->where('kd_poli', $clinicCode)
+            ->whereIn(DB::raw('UPPER(hari_kerja)'), $aliases)
+            ->orderBy('jam_mulai')
+            ->lockForUpdate()
+            ->first();
+        $quota = max(0, (int) ($schedule->kuota ?? 0));
+
+        // A locking read sees the latest registrations before allocating the last slot.
+        $registered = $connection->table('reg_periksa')
+            ->where('tgl_registrasi', $date)
+            ->where('kd_dokter', $doctorCode)
+            ->where('kd_poli', $clinicCode)
+            ->where('stts', '<>', 'Batal')
+            ->lockForUpdate()
+            ->get(['no_rawat'])
+            ->count();
+
+        if ($quota <= $registered) {
+            throw ValidationException::withMessages([
+                'kuota' => 'Kuota dokter pada tanggal ini sudah penuh. Silakan pilih jadwal dokter yang sama di hari lain.',
+            ]);
+        }
     }
 
     private function connection(): Connection

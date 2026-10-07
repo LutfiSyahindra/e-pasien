@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Repositories\epasien\bridging\AntrolRepository;
 use App\Repositories\epasien\menu\DaftarOnlineRepository;
 use App\Services\epasien\settings\PatientGuarantorConfigurationService;
+use App\Support\Epasien\DoctorScheduleDay;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -109,44 +110,89 @@ class DaftarOnlineService
                 ->filter(
                     fn (object $schedule): bool => (int) ($schedule->kuota ?? 0) > 0
                 )
-                ->map(function (object $schedule) use ($registrationDateString): array {
-                    $doctorCode = trim((string) $schedule->kd_dokter);
-                    $clinicCode = trim((string) $schedule->kd_poli);
-
-                    return [
-                        'id' => md5(implode('|', [
-                            $schedule->kd_poli,
-                            $schedule->kd_dokter,
-                            $schedule->jam_mulai,
-                            $schedule->jam_selesai,
-                        ])),
-                        'kd_dokter' => $doctorCode,
-                        'nm_dokter' => trim((string) $schedule->nm_dokter),
-                        'kd_poli' => $clinicCode,
-                        'nm_poli' => trim((string) $schedule->nm_poli),
-                        'kd_poli_bpjs' => trim((string) ($schedule->kd_poli_bpjs ?? '')),
-                        'nm_poli_bpjs' => trim((string) ($schedule->nm_poli_bpjs ?? '')),
-                        'hari_kerja' => trim((string) $schedule->hari_kerja),
-                        'jam_mulai' => $this->timeValue($schedule->jam_mulai),
-                        'jam_selesai' => $this->timeValue($schedule->jam_selesai),
-                        'kd_dokter_bpjs' => trim((string) ($schedule->kd_dokter_bpjs ?? '')),
-                        'nm_dokter_bpjs' => trim((string) ($schedule->nm_dokter_bpjs ?? '')),
-                        'kuota' => (int) ($schedule->kuota ?? 0),
-                        'terdaftar' => $this->daftarOnlineRepository->countActiveRegistrations(
-                            $registrationDateString,
-                            $doctorCode,
-                            $clinicCode
-                        ),
-                        'estimasi_no_reg' => $this->daftarOnlineRepository->previewNextRegistrationNumber(
-                            $registrationDateString,
-                            $doctorCode,
-                            $clinicCode
-                        ),
-                    ];
-                })
+                ->map(fn (object $schedule): array => $this->formatSchedule($schedule, $registrationDateString))
                 ->values()
                 ->all(),
         ];
+    }
+
+    public function alternativeSchedules(string $date, string $doctorCode, string $clinicCode): array
+    {
+        $selectedDate = Carbon::createFromFormat('Y-m-d', $date)->startOfDay();
+        $schedules = $this->daftarOnlineRepository
+            ->getSchedules(DoctorScheduleDay::ACCEPTED_DAYS, trim($doctorCode), trim($clinicCode))
+            ->groupBy(fn (object $schedule): string => DoctorScheduleDay::toEpasien($schedule->hari_kerja));
+        $alternatives = [];
+
+        for ($offset = 1; $offset <= 28 && count($alternatives) < 5; $offset++) {
+            $candidateDate = $selectedDate->copy()->addDays($offset);
+            $day = DoctorScheduleDay::EPASIEN_DAYS[$candidateDate->isoWeekday() - 1];
+            $schedule = $schedules->get($day)?->first();
+
+            if (! $schedule || (int) ($schedule->kuota ?? 0) <= 0) {
+                continue;
+            }
+
+            $registered = $this->daftarOnlineRepository->countActiveRegistrations(
+                $candidateDate->toDateString(), trim($doctorCode), trim($clinicCode)
+            );
+
+            if ($registered >= (int) $schedule->kuota) {
+                continue;
+            }
+
+            $alternatives[] = array_merge(
+                $this->formatSchedule($schedule, $candidateDate->toDateString(), $registered),
+                [
+                    'tanggal' => $candidateDate->toDateString(),
+                    'tanggal_label' => $this->dateLabel($candidateDate),
+                    'hari' => $this->dayLabel($candidateDate),
+                ]
+            );
+        }
+
+        return ['schedules' => $alternatives, 'rentang_hari' => 28];
+    }
+
+    private function formatSchedule(object $schedule, string $date, ?int $registered = null): array
+    {
+        $doctorCode = trim((string) $schedule->kd_dokter);
+        $clinicCode = trim((string) $schedule->kd_poli);
+        $quota = max(0, (int) ($schedule->kuota ?? 0));
+        $registered ??= $this->daftarOnlineRepository->countActiveRegistrations($date, $doctorCode, $clinicCode);
+
+        return [
+            'id' => md5(implode('|', [$schedule->kd_poli, $schedule->kd_dokter, $schedule->jam_mulai, $schedule->jam_selesai])),
+            'kd_dokter' => $doctorCode,
+            'nm_dokter' => trim((string) $schedule->nm_dokter),
+            'kd_poli' => $clinicCode,
+            'nm_poli' => trim((string) $schedule->nm_poli),
+            'kd_poli_bpjs' => trim((string) ($schedule->kd_poli_bpjs ?? '')),
+            'nm_poli_bpjs' => trim((string) ($schedule->nm_poli_bpjs ?? '')),
+            'hari_kerja' => trim((string) $schedule->hari_kerja),
+            'jam_mulai' => $this->timeValue($schedule->jam_mulai),
+            'jam_selesai' => $this->timeValue($schedule->jam_selesai),
+            'kd_dokter_bpjs' => trim((string) ($schedule->kd_dokter_bpjs ?? '')),
+            'nm_dokter_bpjs' => trim((string) ($schedule->nm_dokter_bpjs ?? '')),
+            'kuota' => $quota,
+            'terdaftar' => $registered,
+            'sisa_kuota' => max(0, $quota - $registered),
+            'penuh' => $registered >= $quota,
+            'estimasi_no_reg' => $this->daftarOnlineRepository->previewNextRegistrationNumber($date, $doctorCode, $clinicCode),
+        ];
+    }
+
+    private function ensureScheduleQuotaAvailable(object $schedule, string $date, string $doctorCode, string $clinicCode): int
+    {
+        $registered = $this->daftarOnlineRepository->countActiveRegistrations($date, $doctorCode, $clinicCode);
+
+        if ($registered >= max(0, (int) ($schedule->kuota ?? 0))) {
+            throw ValidationException::withMessages([
+                'kuota' => 'Kuota dokter pada tanggal ini sudah penuh. Silakan pilih jadwal dokter yang sama di hari lain.',
+            ]);
+        }
+
+        return $registered;
     }
 
     public function pendingRegistration(User $user): ?array
@@ -484,6 +530,8 @@ class DaftarOnlineService
             ]);
         }
 
+        $registeredCount = $this->ensureScheduleQuotaAvailable($schedule, $registrationDate, $doctorCode, $clinicCode);
+
         $mappedBpjsDoctorCode = trim((string) ($schedule->kd_dokter_bpjs ?? ''));
         $mappedBpjsClinicCode = trim((string) ($schedule->kd_poli_bpjs ?? ''));
         $documentDoctorCode = trim((string) ($data['bpjs_document_doctor_code'] ?? ''));
@@ -537,8 +585,6 @@ class DaftarOnlineService
         $nextRegistrationNumber = $this->daftarOnlineRepository
             ->previewNextRegistrationNumber($registrationDate, $doctorCode, $clinicCode);
         $queueNumber = max(1, (int) $nextRegistrationNumber);
-        $registeredCount = $this->daftarOnlineRepository
-            ->countActiveRegistrations($registrationDate, $doctorCode, $clinicCode);
         $quota = max(0, (int) ($schedule->kuota ?? 0));
         $remainingQuota = max(0, $quota - $registeredCount - 1);
         $nextTreatmentNumber = $this->daftarOnlineRepository
@@ -947,6 +993,8 @@ class DaftarOnlineService
                 'jadwal' => 'Jadwal dokter dan poli tidak tersedia pada tanggal yang dipilih.',
             ]);
         }
+
+        $this->ensureScheduleQuotaAvailable($schedule, $registrationDate, $doctorCode, $clinicCode);
 
         $penjamin = $this->daftarOnlineRepository->findEligiblePenjamin(
             $guarantorCode,

@@ -188,6 +188,30 @@ class DaftarOnlineController extends Controller
         }
     }
 
+    public function alternativeSchedules(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'tgl_registrasi' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
+            'kd_dokter' => ['required', 'string', 'max:20'],
+            'kd_poli' => ['required', 'string', 'max:15'],
+        ]);
+
+        try {
+            return response()->json([
+                'status' => 'success',
+                'data' => $this->daftarOnlineService->alternativeSchedules(
+                    $validated['tgl_registrasi'], $validated['kd_dokter'], $validated['kd_poli']
+                ),
+            ]);
+        } catch (Throwable $exception) {
+            Log::warning('Gagal memuat jadwal alternatif pendaftaran online.', [
+                'message' => $exception->getMessage(),
+            ]);
+
+            return $this->khanzaErrorResponse('Jadwal hari lain belum dapat dimuat. Silakan coba kembali.');
+        }
+    }
+
     public function previewAntrol(Request $request): JsonResponse
     {
         if (! $this->roleConfigurationService->isConfigured($request->user())) {

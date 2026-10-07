@@ -7,6 +7,7 @@ use App\Services\epasien\bridging\RencanaKontrolService;
 use App\Services\epasien\menu\DaftarOnlineService;
 use App\Services\epasien\settings\RegistrationRoleConfigurationService;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Validation\ValidationException;
 use Mockery\MockInterface;
 use Tests\Concerns\AuthorizesEpasienMenuRoutes;
 use Tests\TestCase;
@@ -1130,5 +1131,58 @@ class DaftarOnlinePageTest extends TestCase
                 'message',
                 'Anda tidak memiliki akses untuk mencari surat kontrol BPJS.'
             );
+    }
+
+    public function test_alternative_schedule_endpoint_returns_same_doctor_on_another_day(): void
+    {
+        $date = now()->toDateString();
+        $nextDate = now()->addDay()->toDateString();
+        $this->mock(DaftarOnlineService::class, function (MockInterface $mock) use ($date, $nextDate): void {
+            $mock->shouldReceive('alternativeSchedules')->once()->with($date, 'D001', 'POL01')->andReturn([
+                'schedules' => [[
+                    'tanggal' => $nextDate, 'kd_dokter' => 'D001', 'kd_poli' => 'POL01', 'sisa_kuota' => 3,
+                ]],
+                'rentang_hari' => 28,
+            ]);
+        });
+        $user = new User(['username' => '000123', 'name' => 'Budi', 'status' => true]);
+        $user->setRelation('roles', collect());
+
+        $this->actingAs($user)->getJson(route('daftarOnline.schedules.alternatives', [
+            'tgl_registrasi' => $date, 'kd_dokter' => 'D001', 'kd_poli' => 'POL01',
+        ]))->assertOk()->assertJsonPath('data.schedules.0.tanggal', $nextDate)
+            ->assertJsonPath('data.schedules.0.kd_dokter', 'D001')
+            ->assertJsonPath('data.schedules.0.sisa_kuota', 3);
+    }
+
+    public function test_alternative_schedule_endpoint_rejects_past_date_and_missing_doctor(): void
+    {
+        $this->mock(DaftarOnlineService::class, function (MockInterface $mock): void {
+            $mock->shouldNotReceive('alternativeSchedules');
+        });
+        $user = new User(['username' => '000123', 'name' => 'Budi', 'status' => true]);
+        $user->setRelation('roles', collect());
+
+        $this->actingAs($user)->getJson(route('daftarOnline.schedules.alternatives', [
+            'tgl_registrasi' => now()->subDay()->toDateString(),
+        ]))->assertUnprocessable()->assertJsonValidationErrors(['tgl_registrasi', 'kd_dokter', 'kd_poli']);
+    }
+
+    public function test_full_quota_registration_returns_validation_error_to_patient(): void
+    {
+        $this->mock(RegistrationRoleConfigurationService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('isConfigured')->once()->andReturnFalse();
+        });
+        $this->mock(DaftarOnlineService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('register')->once()->andThrow(ValidationException::withMessages([
+                'kuota' => 'Kuota dokter pada tanggal ini sudah penuh.',
+            ]));
+        });
+        $user = new User(['username' => '000123', 'name' => 'Budi', 'status' => true]);
+        $user->setRelation('roles', collect());
+
+        $this->actingAs($user)->postJson(route('daftarOnline.store'), [
+            'tgl_registrasi' => now()->toDateString(), 'kd_dokter' => 'D001', 'kd_poli' => 'POL01', 'kd_pj' => 'UMU',
+        ])->assertUnprocessable()->assertJsonValidationErrors('kuota');
     }
 }
