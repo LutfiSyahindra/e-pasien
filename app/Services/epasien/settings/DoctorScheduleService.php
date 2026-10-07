@@ -2,7 +2,9 @@
 
 namespace App\Services\epasien\settings;
 
+use App\Repositories\epasien\settings\DoctorScheduleLeaveRepository;
 use App\Repositories\epasien\settings\DoctorScheduleRepository;
+use App\Support\Epasien\DoctorScheduleCache;
 use App\Support\Epasien\DoctorScheduleDay;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -43,9 +45,9 @@ class DoctorScheduleService
         );
 
         $schedules->setCollection(
-            $schedules->getCollection()->map(
+            app(DoctorScheduleLeaveRepository::class)->annotate($schedules->getCollection()->map(
                 fn (object $schedule): array => $this->formatSchedule($schedule)
-            )
+            ))
         );
 
         $summary = $this->doctorScheduleRepository->summary();
@@ -53,6 +55,8 @@ class DoctorScheduleService
         return [
             ...$filters,
             'days' => self::DAYS,
+            'availableDoctors' => $this->doctorScheduleRepository->availableDoctors(),
+            'availableClinics' => $this->doctorScheduleRepository->activeClinics(),
             'schedules' => $schedules,
             'clinics' => $this->doctorScheduleRepository->clinics()
                 ->map(fn (object $clinic): array => [
@@ -77,6 +81,8 @@ class DoctorScheduleService
         return [
             ...$this->filters($search, $day, $clinicCode),
             'days' => self::DAYS,
+            'availableDoctors' => collect(),
+            'availableClinics' => collect(),
             'schedules' => new LengthAwarePaginator(
                 [],
                 0,
@@ -103,6 +109,28 @@ class DoctorScheduleService
         $changes['day'] = DoctorScheduleDay::toDatabase($changes['day']);
 
         $this->doctorScheduleRepository->update($original, $changes);
+        DoctorScheduleCache::invalidate();
+    }
+
+    public function create(array $schedule): void
+    {
+        $schedule['day'] = DoctorScheduleDay::toDatabase($schedule['day']);
+        $this->doctorScheduleRepository->create($schedule);
+        DoctorScheduleCache::invalidate();
+    }
+
+    public function delete(array $original): void
+    {
+        $original['day'] = DoctorScheduleDay::toDatabase($original['day']);
+        $this->doctorScheduleRepository->delete($original);
+        DoctorScheduleCache::invalidate();
+    }
+
+    public function setOnLeave(array $original, bool $isOnLeave): void
+    {
+        $original['day'] = DoctorScheduleDay::toDatabase($original['day']);
+
+        $this->doctorScheduleRepository->setOnLeave($original, $isOnLeave);
     }
 
     /**

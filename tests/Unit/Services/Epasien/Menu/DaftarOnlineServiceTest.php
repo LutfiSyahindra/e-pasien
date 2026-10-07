@@ -5,9 +5,11 @@ namespace Tests\Unit\Services\Epasien\Menu;
 use App\Models\User;
 use App\Repositories\epasien\bridging\AntrolRepository;
 use App\Repositories\epasien\menu\DaftarOnlineRepository;
+use App\Repositories\epasien\settings\DoctorScheduleLeaveRepository;
 use App\Services\epasien\menu\DaftarOnlineService;
 use App\Services\epasien\settings\PatientGuarantorConfigurationService;
 use App\Support\Epasien\DoctorScheduleDay;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 use ReflectionProperty;
@@ -15,6 +17,8 @@ use Tests\TestCase;
 
 class DaftarOnlineServiceTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_container_injects_patient_guarantor_configuration_into_registration_service(): void
     {
         $service = app(DaftarOnlineService::class);
@@ -1087,6 +1091,28 @@ class DaftarOnlineServiceTest extends TestCase
 
         $this->assertTrue($result['schedules'][0]['penuh']);
         $this->assertSame(0, $result['schedules'][0]['sisa_kuota']);
+    }
+
+    public function test_leave_is_excluded_from_available_and_alternative_schedules(): void
+    {
+        $schedule = (object) [
+            'kd_dokter' => 'D001', 'nm_dokter' => 'dr. Budi', 'kd_poli' => 'POL01', 'nm_poli' => 'Poli Anak',
+            'hari_kerja' => 'SENIN', 'jam_mulai' => '08:00:00', 'jam_selesai' => '10:00:00', 'kuota' => 35,
+        ];
+        $repository = $this->createMock(DaftarOnlineRepository::class);
+        $repository->method('getSchedules')->willReturn(collect([$schedule]));
+        $repository->method('countActiveRegistrations')->willReturn(0);
+        $repository->method('previewNextRegistrationNumber')->willReturn('001');
+        $service = new DaftarOnlineService($repository);
+        $leaves = app(DoctorScheduleLeaveRepository::class);
+        $leaves->setOnLeave($schedule, true);
+
+        $this->assertSame([], $service->availableSchedules('2026-07-27')['schedules']);
+        $this->assertSame([], $service->alternativeSchedules('2026-07-27', 'D001', 'POL01')['schedules']);
+
+        $leaves->setOnLeave($schedule, false);
+        $this->assertCount(1, $service->availableSchedules('2026-07-27')['schedules']);
+        $this->assertNotEmpty($service->alternativeSchedules('2026-07-27', 'D001', 'POL01')['schedules']);
     }
 
     public function test_full_quota_blocks_regular_and_bpjs_patient_registration_before_saving(): void

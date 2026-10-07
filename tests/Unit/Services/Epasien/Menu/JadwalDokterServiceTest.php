@@ -5,6 +5,7 @@ namespace Tests\Unit\Services\Epasien\Menu;
 use App\Repositories\epasien\menu\JadwalDokterRepository;
 use App\Repositories\epasien\settings\DoctorPhotoRepository;
 use App\Services\epasien\menu\JadwalDokterService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -13,6 +14,8 @@ use Tests\TestCase;
 
 class JadwalDokterServiceTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();

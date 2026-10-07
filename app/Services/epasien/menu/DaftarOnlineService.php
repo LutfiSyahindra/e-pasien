@@ -8,6 +8,7 @@ use App\Models\OnlineRegistrationAudit;
 use App\Models\User;
 use App\Repositories\epasien\bridging\AntrolRepository;
 use App\Repositories\epasien\menu\DaftarOnlineRepository;
+use App\Repositories\epasien\settings\DoctorScheduleLeaveRepository;
 use App\Services\epasien\settings\PatientGuarantorConfigurationService;
 use App\Support\Epasien\DoctorScheduleDay;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -98,9 +99,9 @@ class DaftarOnlineService
     {
         $registrationDate = Carbon::createFromFormat('Y-m-d', $date)->startOfDay();
         $registrationDateString = $registrationDate->toDateString();
-        $schedules = $this->daftarOnlineRepository->getSchedules(
+        $schedules = app(DoctorScheduleLeaveRepository::class)->available($this->daftarOnlineRepository->getSchedules(
             $this->workdayAliases($registrationDate)
-        );
+        ));
 
         return [
             'tanggal' => $registrationDateString,
@@ -119,8 +120,8 @@ class DaftarOnlineService
     public function alternativeSchedules(string $date, string $doctorCode, string $clinicCode): array
     {
         $selectedDate = Carbon::createFromFormat('Y-m-d', $date)->startOfDay();
-        $schedules = $this->daftarOnlineRepository
-            ->getSchedules(DoctorScheduleDay::ACCEPTED_DAYS, trim($doctorCode), trim($clinicCode))
+        $schedules = app(DoctorScheduleLeaveRepository::class)->available($this->daftarOnlineRepository
+            ->getSchedules(DoctorScheduleDay::ACCEPTED_DAYS, trim($doctorCode), trim($clinicCode)))
             ->groupBy(fn (object $schedule): string => DoctorScheduleDay::toEpasien($schedule->hari_kerja));
         $alternatives = [];
 
@@ -184,6 +185,8 @@ class DaftarOnlineService
 
     private function ensureScheduleQuotaAvailable(object $schedule, string $date, string $doctorCode, string $clinicCode): int
     {
+        app(DoctorScheduleLeaveRepository::class)->ensureAvailable($schedule);
+
         $registered = $this->daftarOnlineRepository->countActiveRegistrations($date, $doctorCode, $clinicCode);
 
         if ($registered >= max(0, (int) ($schedule->kuota ?? 0))) {

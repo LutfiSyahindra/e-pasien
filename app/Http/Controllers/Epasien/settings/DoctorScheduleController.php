@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Epasien\settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Epasien\Settings\DestroyDoctorScheduleRequest;
+use App\Http\Requests\Epasien\Settings\StoreDoctorScheduleRequest;
+use App\Http\Requests\Epasien\Settings\UpdateDoctorScheduleLeaveRequest;
 use App\Http\Requests\Epasien\Settings\UpdateDoctorScheduleRequest;
 use App\Services\epasien\settings\DoctorScheduleService;
 use App\Support\Epasien\DoctorScheduleDay;
@@ -103,5 +106,112 @@ class DoctorScheduleController extends Controller
                 'page' => $validated['filter_page'] ?? null,
             ], fn (mixed $value): bool => $value !== null && $value !== ''))
             ->with('status', 'Jadwal dokter berhasil diperbarui dan langsung tersinkron ke menu Jadwal Dokter.');
+    }
+
+    public function store(StoreDoctorScheduleRequest $request)
+    {
+        $schedule = $request->validated();
+        $schedule['quota'] = (int) $schedule['quota'];
+
+        try {
+            $this->doctorScheduleService->create($schedule);
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            Log::error('Gagal menambahkan jadwal dokter.', [
+                'user_id' => $request->user()?->id,
+                'doctor_code' => $schedule['doctor_code'],
+                'message' => $exception->getMessage(),
+            ]);
+
+            return back()->withErrors([
+                'schedule' => 'Jadwal belum dapat ditambahkan. Silakan coba kembali.',
+            ])->withInput();
+        }
+
+        Log::info('Jadwal dokter ditambahkan melalui E-Pasien.', [
+            'user_id' => $request->user()?->id,
+            'schedule' => $schedule,
+        ]);
+
+        return redirect()->route('doctorScheduleSettings.index', ['q' => $schedule['doctor_code']])
+            ->with('status', 'Jadwal dokter berhasil ditambahkan dan langsung tampil pada menu Jadwal Dokter.');
+    }
+
+    public function destroy(DestroyDoctorScheduleRequest $request)
+    {
+        $validated = $request->validated();
+        $original = [
+            'doctor_code' => $validated['original_doctor_code'],
+            'clinic_code' => $validated['original_clinic_code'],
+            'day' => $validated['original_day'],
+            'start_time' => $validated['original_start_time'],
+        ];
+
+        try {
+            $this->doctorScheduleService->delete($original);
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            Log::error('Gagal menghapus jadwal dokter.', [
+                'user_id' => $request->user()?->id,
+                ...$original,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return back()->withErrors(['schedule' => 'Jadwal belum dapat dihapus. Silakan coba kembali.']);
+        }
+
+        Log::info('Jadwal dokter dihapus melalui E-Pasien.', ['user_id' => $request->user()?->id, ...$original]);
+
+        return redirect()->route('doctorScheduleSettings.index', array_filter([
+            'q' => $validated['filter_q'] ?? null,
+            'hari' => $validated['filter_day'] ?? null,
+            'poli' => $validated['filter_clinic'] ?? null,
+        ], fn (mixed $value): bool => $value !== null && $value !== ''))
+            ->with('status', 'Jadwal dokter berhasil dihapus.');
+    }
+
+    public function updateLeave(UpdateDoctorScheduleLeaveRequest $request)
+    {
+        $validated = $request->validated();
+        $original = [
+            'doctor_code' => $validated['original_doctor_code'],
+            'day' => $validated['original_day'],
+            'start_time' => $validated['original_start_time'],
+        ];
+        $isOnLeave = $request->boolean('is_on_leave');
+
+        try {
+            $this->doctorScheduleService->setOnLeave($original, $isOnLeave);
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            Log::error('Gagal memperbarui status libur jadwal dokter.', [
+                'user_id' => $request->user()?->id,
+                'doctor_code' => $original['doctor_code'],
+                'message' => $exception->getMessage(),
+            ]);
+
+            return back()->withErrors([
+                'schedule' => 'Status libur belum dapat disimpan. Silakan coba kembali.',
+            ]);
+        }
+
+        Log::info('Status libur jadwal dokter diperbarui melalui E-Pasien.', [
+            'user_id' => $request->user()?->id,
+            ...$original,
+            'is_on_leave' => $isOnLeave,
+        ]);
+
+        return redirect()->route('doctorScheduleSettings.index', array_filter([
+            'q' => $validated['filter_q'] ?? null,
+            'hari' => $validated['filter_day'] ?? null,
+            'poli' => $validated['filter_clinic'] ?? null,
+            'page' => $validated['filter_page'] ?? null,
+        ], fn (mixed $value): bool => $value !== null && $value !== ''))
+            ->with('status', $isOnLeave
+                ? 'Dokter diliburkan pada jadwal yang dipilih. Matikan toggle Libur untuk mengaktifkannya kembali.'
+                : 'Jadwal dokter kembali aktif. Hari, jam, dan kuota tetap tersimpan.');
     }
 }

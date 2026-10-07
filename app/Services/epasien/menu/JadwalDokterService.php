@@ -4,6 +4,8 @@ namespace App\Services\epasien\menu;
 
 use App\Repositories\epasien\menu\JadwalDokterRepository;
 use App\Repositories\epasien\settings\DoctorPhotoRepository;
+use App\Repositories\epasien\settings\DoctorScheduleLeaveRepository;
+use App\Support\Epasien\DoctorScheduleCache;
 use App\Support\Epasien\DoctorScheduleDay;
 use Carbon\CarbonInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -81,7 +83,7 @@ class JadwalDokterService
         $this->attachDoctorPhotos($schedules);
 
         $summary = Cache::flexible(
-            'epasien:khanza:doctor-schedules:summary:v1',
+            DoctorScheduleCache::key('epasien:khanza:doctor-schedules:summary:v1'),
             [
                 self::REFERENCE_CACHE_FRESH_SECONDS,
                 self::REFERENCE_CACHE_STALE_SECONDS,
@@ -89,7 +91,7 @@ class JadwalDokterService
             fn (): ?object => $this->jadwalDokterRepository->summary()
         );
         $clinics = Cache::flexible(
-            'epasien:khanza:doctor-schedules:clinics:v1',
+            DoctorScheduleCache::key('epasien:khanza:doctor-schedules:clinics:v1'),
             [
                 self::REFERENCE_CACHE_FRESH_SECONDS,
                 self::REFERENCE_CACHE_STALE_SECONDS,
@@ -130,7 +132,7 @@ class JadwalDokterService
             'page' => LengthAwarePaginator::resolveCurrentPage(),
         ], JSON_THROW_ON_ERROR);
 
-        return 'epasien:khanza:doctor-schedules:list:v3:'.hash('sha256', $filters);
+        return DoctorScheduleCache::key('epasien:khanza:doctor-schedules:list:v4:'.hash('sha256', $filters));
     }
 
     /**
@@ -179,7 +181,7 @@ class JadwalDokterService
         $day = $this->currentDay();
         $databaseDay = DoctorScheduleDay::toDatabase($day);
         $schedules = Cache::flexible(
-            'epasien:khanza:doctor-schedules:today:v1:'.$databaseDay.':'.$limit,
+            DoctorScheduleCache::key('epasien:khanza:doctor-schedules:today:v2:'.$databaseDay.':'.$limit),
             [
                 self::LIST_CACHE_FRESH_SECONDS,
                 self::LIST_CACHE_STALE_SECONDS,
@@ -256,6 +258,7 @@ class JadwalDokterService
             'day' => $day,
             'day_label' => self::DAYS[$day]['label'] ?? ucfirst(strtolower($day)),
             'time_start' => $this->formatTime($schedule->jam_mulai ?? null),
+            'start_time' => substr(trim((string) ($schedule->jam_mulai ?? '')), 0, 5),
             'time_end' => $this->formatTime($schedule->jam_selesai ?? null),
             'time_label' => $this->timeLabel(
                 $schedule->jam_mulai ?? null,
@@ -329,7 +332,7 @@ class JadwalDokterService
             $schedules->pluck('doctor_code')->all()
         );
 
-        return $schedules->map(function (array $schedule) use ($photoUrls): array {
+        return app(DoctorScheduleLeaveRepository::class)->annotate($schedules)->map(function (array $schedule) use ($photoUrls): array {
             $schedule['doctor_photo_url'] = $photoUrls[$schedule['doctor_code']] ?? null;
 
             return $schedule;

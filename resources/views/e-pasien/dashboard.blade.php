@@ -282,7 +282,7 @@
                             <div class="patient-dashboard-doctor-card__body">
                                 <span class="patient-dashboard-doctor-clinic">{{ $schedule["clinic_name"] }}</span>
                                 <h3>{{ $schedule["doctor_name"] }}</h3>
-                                <div class="patient-dashboard-doctor-time"><i class="bi bi-clock-fill"></i>{{ $schedule["time_label"] }}</div>
+                                <div class="patient-dashboard-doctor-time"><i class="bi bi-clock-fill"></i>{{ ($schedule["is_on_leave"] ?? false) ? "Dokter libur" : $schedule["time_label"] }}</div>
                                 <div class="patient-dashboard-doctor-quota"><i class="bi bi-people"></i>Kuota {{ $schedule["quota_label"] }}</div>
                             </div>
                         </article>

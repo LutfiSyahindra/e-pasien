@@ -64,6 +64,9 @@ class DoctorScheduleSettingsPageTest extends TestCase
             ->assertSeeText('Poliklinik Anak')
             ->assertSeeText('12.00 – 13.00 WIB')
             ->assertSee('data-doctor-code="dryunus"', false)
+            ->assertSee('role="switch"', false)
+            ->assertSee('aria-checked="false"', false)
+            ->assertSee(route('doctorScheduleSettings.updateLeave'), false)
             ->assertSee('doctor-schedule-settings.css');
     }
 

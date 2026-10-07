@@ -237,7 +237,7 @@
                                     @endif
                                 </span>
                                 <span class="doctor-schedule-code">
-                                    {{ $schedule["clinic_code"] }}
+                                    {{ ($schedule["is_on_leave"] ?? false) ? "Dokter libur" : $schedule["clinic_code"] }}
                                 </span>
                             </div>
 
@@ -290,6 +290,12 @@
                                 </div>
                             </div>
 
+                            @if ($schedule["is_on_leave"] ?? false)
+                                <div class="doctor-schedule-register is-on-leave" role="status">
+                                    <span><small>Jadwal sementara diliburkan</small>Silakan pilih jadwal lain</span>
+                                    <i class="bi bi-calendar2-x"></i>
+                                </div>
+                            @else
                             <a href="{{ route("daftarOnline.index") }}"
                                 class="doctor-schedule-register">
                                 <span>
@@ -298,6 +304,7 @@
                                 </span>
                                 <i class="bi bi-arrow-right"></i>
                             </a>
+                            @endif
                         </article>
                     @endforeach
                 </div>

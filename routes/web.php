@@ -132,8 +132,14 @@ Route::middleware('auth')->group(function () {
             Route::middleware('permission:EPASIEN.SETTINGS.JADWAL_DOKTER')->group(function () {
                 Route::get('/jadwal-dokter', [DoctorScheduleController::class, 'index'])
                     ->name('doctorScheduleSettings.index');
+                Route::post('/jadwal-dokter', [DoctorScheduleController::class, 'store'])
+                    ->name('doctorScheduleSettings.store');
+                Route::delete('/jadwal-dokter', [DoctorScheduleController::class, 'destroy'])
+                    ->name('doctorScheduleSettings.destroy');
                 Route::put('/jadwal-dokter', [DoctorScheduleController::class, 'update'])
                     ->name('doctorScheduleSettings.update');
+                Route::patch('/jadwal-dokter/libur', [DoctorScheduleController::class, 'updateLeave'])
+                    ->name('doctorScheduleSettings.updateLeave');
                 Route::get('/landing-page-data/foto-dokter', [DoctorPhotoController::class, 'index'])
                     ->name('doctorPhotoSettings.index');
                 Route::post('/landing-page-data/foto-dokter', [DoctorPhotoController::class, 'update'])

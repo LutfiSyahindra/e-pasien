@@ -13,6 +13,93 @@ class DoctorScheduleRepository
 {
     private const ACTIVE_STATUS = '1';
 
+    public function availableDoctors(): Collection
+    {
+        return $this->connection()->table('dokter')
+            ->select('dokter.kd_dokter', 'dokter.nm_dokter')
+            ->where('dokter.status', self::ACTIVE_STATUS)
+            ->whereNotNull('dokter.nm_dokter')
+            ->where('dokter.nm_dokter', '<>', '')
+            ->whereNotExists(function (Builder $query): void {
+                $query->selectRaw('1')->from('jadwal_spesialis')
+                    ->whereColumn('jadwal_spesialis.kd_dokter', 'dokter.kd_dokter');
+            })
+            ->orderBy('dokter.nm_dokter')->get();
+    }
+
+    public function activeClinics(): Collection
+    {
+        return $this->connection()->table('poliklinik')
+            ->select('kd_poli', 'nm_poli')
+            ->where('status', self::ACTIVE_STATUS)
+            ->whereNotNull('nm_poli')->where('nm_poli', '<>', '')
+            ->orderBy('nm_poli')->get();
+    }
+
+    public function create(array $schedule): void
+    {
+        $this->connection()->transaction(function () use ($schedule): void {
+            // Lock the master row so concurrent additions for this doctor serialize.
+            $doctor = $this->connection()->table('dokter')
+                ->where('kd_dokter', $schedule['doctor_code'])->lockForUpdate()->first();
+
+            if (! $doctor || (string) $doctor->status !== self::ACTIVE_STATUS || trim((string) $doctor->nm_dokter) === '') {
+                throw ValidationException::withMessages([
+                    'doctor_code' => 'Dokter tidak ditemukan atau sudah tidak aktif.',
+                ]);
+            }
+
+            if ($this->connection()->table('jadwal_spesialis')->where('kd_dokter', $doctor->kd_dokter)->exists()) {
+                throw ValidationException::withMessages([
+                    'doctor_code' => 'Dokter sudah ada dalam daftar jadwal. Pilih dokter lain.',
+                ]);
+            }
+
+            $clinic = $this->connection()->table('poliklinik')
+                ->where('kd_poli', $schedule['clinic_code'])
+                ->where('status', self::ACTIVE_STATUS)
+                ->whereNotNull('nm_poli')->where('nm_poli', '<>', '')->first();
+
+            if (! $clinic) {
+                throw ValidationException::withMessages([
+                    'clinic_code' => 'Poliklinik tidak ditemukan atau sudah tidak aktif.',
+                ]);
+            }
+
+            $this->connection()->table('jadwal_spesialis')->insert([
+                'kd_dokter' => $doctor->kd_dokter,
+                'kd_poli' => $clinic->kd_poli,
+                'hari_kerja' => $schedule['day'],
+                'jam_mulai' => $schedule['start_time'],
+                'jam_selesai' => $schedule['end_time'],
+                'kuota' => $schedule['quota'],
+            ]);
+        });
+    }
+
+    public function delete(array $original): void
+    {
+        DB::transaction(function () use ($original): void {
+            $this->connection()->transaction(function () use ($original): void {
+                $query = $this->connection()->table('jadwal_spesialis')
+                    ->where('kd_dokter', $original['doctor_code'])
+                    ->where('kd_poli', $original['clinic_code'])
+                    ->where('hari_kerja', $original['day'])
+                    ->whereTime('jam_mulai', substr($original['start_time'], 0, 5).':00');
+                $schedule = (clone $query)->lockForUpdate()->first();
+
+                if (! $schedule) {
+                    throw ValidationException::withMessages([
+                        'schedule' => 'Jadwal tidak ditemukan atau baru saja diubah oleh petugas lain.',
+                    ]);
+                }
+
+                app(DoctorScheduleLeaveRepository::class)->remove($schedule);
+                $query->delete();
+            });
+        });
+    }
+
     public function paginate(
         ?string $search,
         ?string $day,
@@ -127,6 +214,27 @@ class DoctorScheduleRepository
                 'jam_selesai' => $changes['end_time'],
                 'kuota' => $changes['quota'],
             ]);
+
+            app(DoctorScheduleLeaveRepository::class)->move($original, $changes);
+        });
+    }
+
+    public function setOnLeave(array $original, bool $isOnLeave): void
+    {
+        $this->connection()->transaction(function () use ($original, $isOnLeave): void {
+            $schedule = $this->connection()->table('jadwal_spesialis')
+                ->where('kd_dokter', $original['doctor_code'])
+                ->where('hari_kerja', $original['day'])
+                ->where('jam_mulai', $original['start_time'])
+                ->lockForUpdate()->first();
+
+            if ($schedule === null) {
+                throw ValidationException::withMessages([
+                    'schedule' => 'Jadwal tidak ditemukan atau baru saja diubah oleh petugas lain.',
+                ]);
+            }
+
+            app(DoctorScheduleLeaveRepository::class)->setOnLeave($schedule, $isOnLeave);
         });
     }
 

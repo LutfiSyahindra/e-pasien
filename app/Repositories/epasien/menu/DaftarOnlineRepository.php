@@ -4,6 +4,7 @@ namespace App\Repositories\epasien\menu;
 
 use App\Exceptions\RegistrationLockException;
 use App\Exceptions\RegistrationPreviewChangedException;
+use App\Repositories\epasien\settings\DoctorScheduleLeaveRepository;
 use App\Support\Epasien\DoctorScheduleDay;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Query\Builder;
@@ -363,7 +364,7 @@ class DaftarOnlineRepository
         string $clinicCode,
         array $workdayAliases
     ): ?object {
-        return $this->connection()
+        $schedules = $this->connection()
             ->table('jadwal')
             ->join('dokter', 'dokter.kd_dokter', '=', 'jadwal.kd_dokter')
             ->join('poliklinik', 'poliklinik.kd_poli', '=', 'jadwal.kd_poli')
@@ -397,7 +398,10 @@ class DaftarOnlineRepository
             ->where('jadwal.kd_poli', $clinicCode)
             ->whereIn(DB::raw('UPPER(jadwal.hari_kerja)'), $workdayAliases)
             ->orderBy('jadwal.jam_mulai')
-            ->first();
+            ->get();
+
+        return app(DoctorScheduleLeaveRepository::class)->available($schedules)->first()
+            ?? $schedules->first();
     }
 
     public function findEligiblePenjamin(string $guarantorCode, bool $includeBpjs = false): ?object
@@ -579,14 +583,20 @@ class DaftarOnlineRepository
     ): void {
         $day = DoctorScheduleDay::EPASIEN_DAYS[Carbon::parse($date)->isoWeekday() - 1];
         $aliases = $day === 'MINGGU' ? ['MINGGU', 'AKHAD', 'AHAD'] : [$day];
-        $schedule = $connection->table('jadwal')
+        $schedules = $connection->table('jadwal')
             ->where('kd_dokter', $doctorCode)
             ->where('kd_poli', $clinicCode)
             ->whereIn(DB::raw('UPPER(hari_kerja)'), $aliases)
             ->orderBy('jam_mulai')
             ->lockForUpdate()
-            ->first();
+            ->get();
+        $schedule = app(DoctorScheduleLeaveRepository::class)->available($schedules)->first()
+            ?? $schedules->first();
         $quota = max(0, (int) ($schedule->kuota ?? 0));
+
+        if ($schedule !== null) {
+            app(DoctorScheduleLeaveRepository::class)->ensureAvailable($schedule);
+        }
 
         // A locking read sees the latest registrations before allocating the last slot.
         $registered = $connection->table('reg_periksa')

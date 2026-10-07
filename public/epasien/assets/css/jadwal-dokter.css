@@ -1392,3 +1392,7 @@
         transition: none;
     }
 }
+.doctor-schedule-register.is-on-leave {
+    background: #fff7ed;
+    color: #9a3412;
+}

@@ -97,6 +97,24 @@ class JadwalDokterPageTest extends TestCase
             ->assertSessionHasErrors('hari');
     }
 
+    public function test_patient_sees_leave_status_instead_of_registration_link(): void
+    {
+        $page = $this->pageData(new LengthAwarePaginator([[
+            'doctor_code' => 'D001', 'doctor_name' => 'dr. Budi', 'doctor_initials' => 'B',
+            'clinic_code' => 'ANA', 'clinic_name' => 'Poliklinik Anak', 'day' => 'SELASA',
+            'day_label' => 'Selasa', 'time_label' => '08.00 – 10.00 WIB', 'quota_label' => '35 pasien',
+            'is_today' => false, 'is_on_leave' => true,
+        ]], 1, 12));
+        $this->mock(JadwalDokterService::class, function (MockInterface $mock) use ($page): void {
+            $mock->shouldReceive('emptyPage')->once()->andReturn($page);
+            $mock->shouldReceive('page')->once()->andReturn($page);
+        });
+
+        $this->actingAs($this->patientUser())->get(route('jadwalDokter.index'))
+            ->assertOk()->assertSeeText('Dokter libur')
+            ->assertSeeText('Silakan pilih jadwal lain')->assertDontSeeText('Daftar secara online');
+    }
+
     public function test_patient_can_filter_sunday_using_minggu_code(): void
     {
         $page = $this->pageData(new LengthAwarePaginator([], 0, 12));

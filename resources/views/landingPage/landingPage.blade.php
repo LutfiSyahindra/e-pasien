@@ -906,7 +906,7 @@
                                 <span aria-hidden="true"><i class="fa-regular fa-clock"></i></span>
                                 <div>
                                     <small>Jam praktik</small>
-                                    <strong>{{ $featuredSchedule["time_label"] }}</strong>
+                                    <strong>{{ ($featuredSchedule["is_on_leave"] ?? false) ? "Dokter libur" : $featuredSchedule["time_label"] }}</strong>
                                 </div>
                             </div>
                             <div>
@@ -964,7 +964,7 @@
                                     <div class="landing-schedule-mini__meta">
                                         <div>
                                             <i class="fa-regular fa-clock" aria-hidden="true"></i>
-                                            <span><small>Jam praktik</small>{{ $schedule["time_label"] }}</span>
+                                            <span><small>Jam praktik</small>{{ ($schedule["is_on_leave"] ?? false) ? "Dokter libur" : $schedule["time_label"] }}</span>
                                         </div>
                                         <div>
                                             <i class="fa-regular fa-users" aria-hidden="true"></i>

@@ -4,12 +4,15 @@ namespace Tests\Unit\Services\Epasien\Settings;
 
 use App\Repositories\epasien\settings\DoctorScheduleRepository;
 use App\Services\epasien\settings\DoctorScheduleService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 class DoctorScheduleServiceTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_sunday_uses_minggu_in_epasien_and_akhad_in_database(): void
     {
         $repository = $this->createMock(DoctorScheduleRepository::class);

@@ -10,7 +10,7 @@
 @section("content")
     @php
         $hasFilters = $search !== "" || $day !== "SEMUA" || $clinic_code !== "";
-        $reopenEditor = $errors->any() && old("original_doctor_code");
+        $reopenEditor = $errors->any() && old("_method") !== "DELETE" && old("original_doctor_code") && old("day");
     @endphp
 
     <main class="schedule-admin-page">
@@ -32,7 +32,7 @@
                 <div>
                     <span class="schedule-admin-eyebrow">Operasional layanan</span>
                     <h1>Pengaturan Jadwal Dokter</h1>
-                    <p>Atur hari praktik, jam layanan, dan kuota dokter pada data jadwal rumah sakit.</p>
+                    <p>Tambah, hapus, dan atur hari praktik, jam layanan, kuota, serta status libur dokter.</p>
                 </div>
             </div>
             <div class="schedule-admin-live">
@@ -71,21 +71,21 @@
             </div>
         @endif
 
-        @error("schedule")
+        @if ($errors->any())
             <div class="schedule-admin-alert danger" role="alert">
                 <span><i class="bi bi-exclamation-triangle"></i></span>
                 <div>
                     <strong>Jadwal tidak dapat disimpan</strong>
-                    <p>{{ $message }}</p>
+                    <p>{{ $errors->first() }}</p>
                 </div>
             </div>
-        @enderror
+        @endif
 
-        <section class="schedule-admin-stats" aria-label="Ringkasan jadwal aktif">
+        <section class="schedule-admin-stats" aria-label="Ringkasan jadwal tersimpan">
             <article>
                 <span class="purple"><i class="bi bi-calendar2-week"></i></span>
                 <div>
-                    <small>Jadwal aktif</small>
+                    <small>Jadwal tersimpan</small>
                     <strong>{{ number_format($summary["schedules"], 0, ",", ".") }}</strong>
                     <em>baris jadwal</em>
                 </div>
@@ -113,11 +113,20 @@
                 <div>
                     <span><i class="bi bi-sliders"></i> Data jadwal spesialis</span>
                     <h2>Daftar Jadwal Dokter</h2>
-                    <p>Cari jadwal, lalu gunakan tombol edit untuk memperbarui layanan.</p>
+                    <p>Aktifkan toggle Libur untuk meliburkan jadwal yang dipilih sampai diaktifkan kembali.</p>
                 </div>
-                <span class="schedule-admin-result-count">
-                    {{ number_format($schedules->total(), 0, ",", ".") }} jadwal ditemukan
-                </span>
+                <div class="schedule-admin-panel-actions">
+                    <span class="schedule-admin-result-count">
+                        {{ number_format($schedules->total(), 0, ",", ".") }} jadwal ditemukan
+                    </span>
+                    <button type="button" class="schedule-admin-add" data-bs-toggle="modal" data-bs-target="#scheduleCreateModal"
+                        @disabled($connectionError || ($availableDoctors ?? collect())->isEmpty() || ($availableClinics ?? collect())->isEmpty())>
+                        <i class="bi bi-plus-lg"></i> Tambah Dokter
+                    </button>
+                    @if (! $connectionError && ($availableDoctors ?? collect())->isEmpty())
+                        <small>Semua dokter aktif sudah memiliki jadwal.</small>
+                    @endif
+                </div>
             </div>
 
             <form action="{{ route("doctorScheduleSettings.index") }}" method="GET"
@@ -199,6 +208,7 @@
                                 <th>Hari</th>
                                 <th>Jam praktik</th>
                                 <th>Kuota</th>
+                                <th>Status libur</th>
                                 <th><span class="visually-hidden">Aksi</span></th>
                             </tr>
                         </thead>
@@ -234,6 +244,10 @@
                                         </span>
                                     </td>
                                     <td>
+                                        @include("e-pasien.settings.doctorSchedules.leaveToggle")
+                                    </td>
+                                    <td>
+                                        <div class="schedule-admin-row-actions">
                                         <button type="button" class="schedule-admin-edit js-edit-schedule"
                                             data-doctor-code="{{ $schedule["doctor_code"] }}"
                                             data-doctor-name="{{ $schedule["doctor_name"] }}"
@@ -247,6 +261,8 @@
                                             <i class="bi bi-pencil-square"></i>
                                             <span>Edit</span>
                                         </button>
+                                        @include("e-pasien.settings.doctorSchedules.deleteForm")
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -278,6 +294,7 @@
                                     <strong>{{ $schedule["quota_label"] }}</strong>
                                 </span>
                             </div>
+                            @include("e-pasien.settings.doctorSchedules.leaveToggle")
                             <button type="button" class="schedule-admin-edit js-edit-schedule"
                                 data-doctor-code="{{ $schedule["doctor_code"] }}"
                                 data-doctor-name="{{ $schedule["doctor_name"] }}"
@@ -290,6 +307,7 @@
                                 <i class="bi bi-pencil-square"></i>
                                 <span>Ubah jadwal</span>
                             </button>
+                            @include("e-pasien.settings.doctorSchedules.deleteForm")
                         </article>
                     @endforeach
                 </div>
@@ -305,12 +323,14 @@
         <aside class="schedule-admin-note">
             <i class="bi bi-info-circle-fill"></i>
             <p>
-                <strong>Sumber data bersama</strong>
-                Menu ini dan menu Jadwal Dokter pasien memakai tabel
-                <code>jadwal_spesialis</code> yang sama. Tidak diperlukan proses sinkronisasi manual.
+                <strong>Libur per jadwal</strong>
+                Toggle Libur berlaku untuk dokter pada hari, jam, dan poliklinik yang dipilih.
+                Hari, jam, dan kuota tetap tersimpan saat dokter diliburkan.
             </p>
         </aside>
     </main>
+
+    @include("e-pasien.settings.doctorSchedules.createModal")
 
     <div class="modal fade schedule-editor-modal" id="scheduleEditorModal" tabindex="-1"
         aria-labelledby="scheduleEditorTitle" aria-hidden="true">
@@ -454,6 +474,41 @@
 @push("script")
     <script>
         (() => {
+            document.querySelectorAll(".schedule-delete-form").forEach((deleteForm) => {
+                deleteForm.addEventListener("submit", (event) => {
+                    if (deleteForm.dataset.submitting === "true" || !window.confirm(deleteForm.dataset.confirmMessage)) {
+                        event.preventDefault();
+                        return;
+                    }
+                    deleteForm.dataset.submitting = "true";
+                    deleteForm.querySelector("button").disabled = true;
+                });
+            });
+
+            const createForm = document.getElementById("scheduleCreateForm");
+            if (createForm && typeof bootstrap !== "undefined") {
+                if (createForm.dataset.reopen === "true") {
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById("scheduleCreateModal")).show();
+                }
+                createForm.addEventListener("submit", () => {
+                    const button = createForm.querySelector("button[type='submit']");
+                    button.disabled = true;
+                    button.querySelector("span").textContent = "Menyimpan...";
+                });
+            }
+
+            document.querySelectorAll(".schedule-leave-form").forEach((leaveForm) => {
+                leaveForm.addEventListener("submit", (event) => {
+                    if (leaveForm.dataset.submitting === "true") {
+                        event.preventDefault();
+                        return;
+                    }
+                    leaveForm.dataset.submitting = "true";
+                    leaveForm.querySelector("button").disabled = true;
+                    leaveForm.querySelector(".schedule-leave-status").textContent = "Menyimpan...";
+                });
+            });
+
             const form = document.getElementById("scheduleEditorForm");
             const modalElement = document.getElementById("scheduleEditorModal");
 

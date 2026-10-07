@@ -3,8 +3,10 @@
 namespace Tests\Unit\Repositories\Epasien\Menu;
 
 use App\Repositories\epasien\menu\DaftarOnlineRepository;
+use App\Repositories\epasien\settings\DoctorScheduleLeaveRepository;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -12,6 +14,8 @@ use Tests\TestCase;
 
 class DaftarOnlineQuotaTest extends TestCase
 {
+    use RefreshDatabase;
+
     private Connection $connection;
 
     private array $locks = [];
@@ -149,6 +153,40 @@ class DaftarOnlineQuotaTest extends TestCase
             'tgl_registrasi' => '2026-07-27', 'kd_dokter' => 'D001', 'kd_poli' => 'POL01',
             'no_rkm_medis' => $medicalRecord, 'stts' => 'Belum',
         ];
+    }
+
+    public function test_leave_blocks_regular_and_mjkn_registration_even_when_quota_is_available(): void
+    {
+        app(DoctorScheduleLeaveRepository::class)->setOnLeave(
+            $this->connection->table('jadwal')->first(), true
+        );
+
+        foreach ([false, true] as $mjkn) {
+            try {
+                $this->save($mjkn);
+                $this->fail('A schedule on leave must reject registration.');
+            } catch (ValidationException $exception) {
+                $this->assertArrayHasKey('jadwal', $exception->errors());
+            }
+        }
+
+        $this->assertSame(0, $this->connection->table('reg_periksa')->count());
+        $this->assertSame('OLD', $this->connection->table('pasien')->value('no_peserta'));
+        $this->assertSame(0, $this->connection->table('referensi_mobilejkn_bpjs')->count());
+    }
+
+    public function test_another_session_of_the_same_doctor_remains_open(): void
+    {
+        app(DoctorScheduleLeaveRepository::class)->setOnLeave(
+            $this->connection->table('jadwal')->first(), true
+        );
+        $this->connection->table('jadwal')->insert([
+            'kd_dokter' => 'D001', 'kd_poli' => 'POL01', 'hari_kerja' => 'SENIN',
+            'jam_mulai' => '13:00:00', 'kuota' => 1,
+        ]);
+
+        $this->assertNotNull($this->save(false));
+        $this->assertSame(1, $this->connection->table('reg_periksa')->count());
     }
 
     private function save(bool $mjkn, string $medicalRecord = '000123'): ?array
