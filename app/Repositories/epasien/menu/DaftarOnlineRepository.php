@@ -114,8 +114,20 @@ class DaftarOnlineRepository
         ?string $doctorCode = null,
         ?string $clinicCode = null
     ): Collection {
+        return $this->scheduleQuery()
+            ->whereIn(DB::raw('UPPER(jadwal.hari_kerja)'), $workdayAliases)
+            ->when($doctorCode !== null, fn (Builder $query) => $query->where('jadwal.kd_dokter', $doctorCode))
+            ->when($clinicCode !== null, fn (Builder $query) => $query->where('jadwal.kd_poli', $clinicCode))
+            ->orderBy('poliklinik.nm_poli')
+            ->orderBy('dokter.nm_dokter')
+            ->orderBy('jadwal.jam_mulai')
+            ->get();
+    }
+
+    private function scheduleQuery(): Builder
+    {
         return $this->connection()
-            ->table('jadwal')
+            ->table('jadwal_spesialis as jadwal')
             ->join('dokter', 'dokter.kd_dokter', '=', 'jadwal.kd_dokter')
             ->join('poliklinik', 'poliklinik.kd_poli', '=', 'jadwal.kd_poli')
             ->leftJoin(
@@ -124,7 +136,7 @@ class DaftarOnlineRepository
                 '=',
                 'jadwal.kd_dokter'
             )
-            ->join(
+            ->leftJoin(
                 'maping_poli_bpjs as poli_bpjs',
                 'poli_bpjs.kd_poli_rs',
                 '=',
@@ -144,13 +156,12 @@ class DaftarOnlineRepository
                 'poli_bpjs.kd_poli_bpjs',
                 'poli_bpjs.nm_poli_bpjs'
             )
-            ->whereIn(DB::raw('UPPER(jadwal.hari_kerja)'), $workdayAliases)
-            ->when($doctorCode !== null, fn (Builder $query) => $query->where('jadwal.kd_dokter', $doctorCode))
-            ->when($clinicCode !== null, fn (Builder $query) => $query->where('jadwal.kd_poli', $clinicCode))
-            ->orderBy('poli_bpjs.nm_poli_bpjs')
-            ->orderBy('dokter.nm_dokter')
-            ->orderBy('jadwal.jam_mulai')
-            ->get();
+            ->where('dokter.status', '1')
+            ->where('poliklinik.status', '1')
+            ->whereNotNull('dokter.nm_dokter')
+            ->whereNotNull('poliklinik.nm_poli')
+            ->where('dokter.nm_dokter', '<>', '')
+            ->where('poliklinik.nm_poli', '<>', '');
     }
 
     public function countActiveRegistrations(
@@ -364,36 +375,7 @@ class DaftarOnlineRepository
         string $clinicCode,
         array $workdayAliases
     ): ?object {
-        $schedules = $this->connection()
-            ->table('jadwal')
-            ->join('dokter', 'dokter.kd_dokter', '=', 'jadwal.kd_dokter')
-            ->join('poliklinik', 'poliklinik.kd_poli', '=', 'jadwal.kd_poli')
-            ->leftJoin(
-                'maping_dokter_dpjpvclaim as dokter_bpjs',
-                'dokter_bpjs.kd_dokter',
-                '=',
-                'jadwal.kd_dokter'
-            )
-            ->leftJoin(
-                'maping_poli_bpjs as poli_bpjs',
-                'poli_bpjs.kd_poli_rs',
-                '=',
-                'jadwal.kd_poli'
-            )
-            ->select(
-                'jadwal.kd_dokter',
-                'dokter.nm_dokter',
-                'jadwal.kd_poli',
-                'poliklinik.nm_poli',
-                'jadwal.hari_kerja',
-                'jadwal.jam_mulai',
-                'jadwal.jam_selesai',
-                'jadwal.kuota',
-                'dokter_bpjs.kd_dokter_bpjs',
-                'dokter_bpjs.nm_dokter_bpjs',
-                'poli_bpjs.kd_poli_bpjs',
-                'poli_bpjs.nm_poli_bpjs'
-            )
+        $schedules = $this->scheduleQuery()
             ->where('jadwal.kd_dokter', $doctorCode)
             ->where('jadwal.kd_poli', $clinicCode)
             ->whereIn(DB::raw('UPPER(jadwal.hari_kerja)'), $workdayAliases)
@@ -583,7 +565,7 @@ class DaftarOnlineRepository
     ): void {
         $day = DoctorScheduleDay::EPASIEN_DAYS[Carbon::parse($date)->isoWeekday() - 1];
         $aliases = $day === 'MINGGU' ? ['MINGGU', 'AKHAD', 'AHAD'] : [$day];
-        $schedules = $connection->table('jadwal')
+        $schedules = $connection->table('jadwal_spesialis')
             ->where('kd_dokter', $doctorCode)
             ->where('kd_poli', $clinicCode)
             ->whereIn(DB::raw('UPPER(hari_kerja)'), $aliases)

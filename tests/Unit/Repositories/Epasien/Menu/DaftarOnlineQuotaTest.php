@@ -43,7 +43,7 @@ class DaftarOnlineQuotaTest extends TestCase
         }, 1);
         $pdo->sqliteCreateFunction('SUBSTRING_INDEX', fn (string $value, string $delimiter, int $count): string => implode($delimiter, array_slice(explode($delimiter, $value), $count)), 3);
         $schema = $this->connection->getSchemaBuilder();
-        $schema->create('jadwal', function (Blueprint $table): void {
+        $schema->create('jadwal_spesialis', function (Blueprint $table): void {
             $table->string('kd_dokter');
             $table->string('kd_poli');
             $table->string('hari_kerja');
@@ -64,7 +64,7 @@ class DaftarOnlineQuotaTest extends TestCase
             $table->string('no_rawat');
         });
         $this->connection->table('pasien')->insert(['no_rkm_medis' => '000123', 'no_peserta' => 'OLD']);
-        $this->connection->table('jadwal')->insert([
+        $this->connection->table('jadwal_spesialis')->insert([
             'kd_dokter' => 'D001', 'kd_poli' => 'POL01', 'hari_kerja' => 'SENIN',
             'jam_mulai' => '08:00:00', 'kuota' => 1,
         ]);
@@ -85,7 +85,7 @@ class DaftarOnlineQuotaTest extends TestCase
     #[DataProvider('fullQuotas')]
     public function test_full_quota_rejects_insert_and_card_update(bool $mjkn, int $quota, int $registered): void
     {
-        $this->connection->table('jadwal')->update(['kuota' => $quota]);
+        $this->connection->table('jadwal_spesialis')->update(['kuota' => $quota]);
         for ($number = 1; $number <= $registered; $number++) {
             $this->connection->table('reg_periksa')->insert(array_merge($this->registration(), [
                 'no_rkm_medis' => 'OTHER'.$number, 'no_reg' => (string) $number,
@@ -147,6 +147,19 @@ class DaftarOnlineQuotaTest extends TestCase
         $this->assertSame(1, (new DaftarOnlineRepository)->countActiveRegistrations('2026-07-27', 'D001', 'POL01'));
     }
 
+    #[DataProvider('registrationFlows')]
+    public function test_registration_uses_managed_quota_even_when_legacy_schedule_is_closed(bool $mjkn): void
+    {
+        $this->connection->statement('CREATE TABLE jadwal AS SELECT * FROM jadwal_spesialis');
+        $this->connection->table('jadwal')->update(['kuota' => 0]);
+        $this->connection->table('reg_periksa')->insert(array_merge($this->registration(), [
+            'no_reg' => '001', 'no_rawat' => '2026/07/27/000001', 'stts' => 'Batal',
+        ]));
+
+        $this->assertNotNull($this->save($mjkn));
+        $this->assertSame(1, (new DaftarOnlineRepository)->countActiveRegistrations('2026-07-27', 'D001', 'POL01'));
+    }
+
     private function registration(string $medicalRecord = '000123'): array
     {
         return [
@@ -158,7 +171,7 @@ class DaftarOnlineQuotaTest extends TestCase
     public function test_leave_blocks_regular_and_mjkn_registration_even_when_quota_is_available(): void
     {
         app(DoctorScheduleLeaveRepository::class)->setOnLeave(
-            $this->connection->table('jadwal')->first(), true
+            $this->connection->table('jadwal_spesialis')->first(), true
         );
 
         foreach ([false, true] as $mjkn) {
@@ -178,9 +191,9 @@ class DaftarOnlineQuotaTest extends TestCase
     public function test_another_session_of_the_same_doctor_remains_open(): void
     {
         app(DoctorScheduleLeaveRepository::class)->setOnLeave(
-            $this->connection->table('jadwal')->first(), true
+            $this->connection->table('jadwal_spesialis')->first(), true
         );
-        $this->connection->table('jadwal')->insert([
+        $this->connection->table('jadwal_spesialis')->insert([
             'kd_dokter' => 'D001', 'kd_poli' => 'POL01', 'hari_kerja' => 'SENIN',
             'jam_mulai' => '13:00:00', 'kuota' => 1,
         ]);

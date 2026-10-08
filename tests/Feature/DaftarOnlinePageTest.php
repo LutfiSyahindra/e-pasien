@@ -63,8 +63,8 @@ class DaftarOnlinePageTest extends TestCase
             ->assertSee('id="kd_dokter"', false)
             ->assertSee('id="kd_pj"', false)
             ->assertSeeText('Pilih poliklinik sebelum memilih dokter.')
-            ->assertSee('const mappedName = String(schedule?.nm_poli_bpjs || \'\')', false)
-            ->assertSee('label: `${displayName} (${bpjsCode})`', false)
+            ->assertSee('return String(schedule?.nm_poli || \'\').trim();', false)
+            ->assertSee('label: `${displayName} (${clinicCode})`', false)
             ->assertSee('dropdownParent: field', false)
             ->assertSee('showBootstrapModal(elements.noticeModal);', false)
             ->assertDontSee('id="mjknRegistrationWizardModal"', false);

@@ -561,11 +561,7 @@
         }
 
         function clinicDisplayName(schedule) {
-            const mappedName = String(schedule?.nm_poli_bpjs || '')
-                .trim()
-                .replace(/^poliklinik\s+/i, '');
-
-            return mappedName ? `Poliklinik ${mappedName}` : '';
+            return String(schedule?.nm_poli || '').trim();
         }
 
         function clinicOptions() {
@@ -573,9 +569,9 @@
 
             state.schedules.forEach(function(schedule) {
                 const displayName = clinicDisplayName(schedule);
-                const bpjsCode = String(schedule.kd_poli_bpjs || '').trim();
+                const clinicCode = String(schedule.kd_poli || '').trim();
 
-                if (!displayName || !bpjsCode) {
+                if (!displayName || !clinicCode) {
                     return;
                 }
 
@@ -583,7 +579,7 @@
                     clinics.set(schedule.kd_poli, {
                         value: schedule.kd_poli,
                         name: displayName,
-                        label: `${displayName} (${bpjsCode})`,
+                        label: `${displayName} (${clinicCode})`,
                     });
                 }
             });

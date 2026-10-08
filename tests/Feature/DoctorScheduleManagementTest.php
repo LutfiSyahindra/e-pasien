@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\DoctorPhoto;
 use App\Models\User;
+use App\Repositories\epasien\menu\DaftarOnlineRepository;
 use App\Repositories\epasien\settings\DoctorScheduleRepository;
 use App\Services\epasien\menu\JadwalDokterService;
 use Illuminate\Database\Schema\Blueprint;
@@ -246,6 +247,121 @@ class DoctorScheduleManagementTest extends TestCase
         $this->assertSame(1, $afterDelete['summary']['doctors']);
         $this->assertCount(1, $afterDelete['clinics']);
         $this->assertCount(0, $service->today());
+    }
+
+    public function test_online_registration_uses_managed_schedules_with_optional_bpjs_mapping(): void
+    {
+        $this->prepareOnlineRegistrationTables();
+        $this->travelTo(now('Asia/Jakarta')->setDate(2026, 10, 5)->setTime(8, 0));
+        $this->actingAs($this->staff());
+        $connection = DB::connection('mysql_khanza');
+        $connection->statement('CREATE TABLE jadwal AS SELECT * FROM jadwal_spesialis WHERE 1 = 0');
+        $connection->table('jadwal')->insert([
+            'kd_dokter' => 'D002', 'kd_poli' => 'INT', 'hari_kerja' => 'AKHAD',
+            'jam_mulai' => '06:00:00', 'jam_selesai' => '07:00:00', 'kuota' => 99,
+        ]);
+
+        $url = route('daftarOnline.schedules', ['tgl_registrasi' => '2026-10-11']);
+        $this->getJson($url)->assertOk()->assertJsonCount(1, 'data.schedules')
+            ->assertJsonPath('data.schedules.0.kd_dokter', 'D001')
+            ->assertJsonPath('data.schedules.0.nm_dokter', 'dr. Sudah Terjadwal')
+            ->assertJsonPath('data.schedules.0.kd_poli', 'ANA')
+            ->assertJsonPath('data.schedules.0.nm_poli', 'Poliklinik Anak')
+            ->assertJsonPath('data.schedules.0.kuota', 25)
+            ->assertJsonPath('data.schedules.0.kd_poli_bpjs', '');
+
+        $connection->table('maping_poli_bpjs')->insert([
+            'kd_poli_rs' => 'ANA', 'kd_poli_bpjs' => 'ANAK', 'nm_poli_bpjs' => 'Anak BPJS',
+        ]);
+        $connection->table('maping_dokter_dpjpvclaim')->insert([
+            'kd_dokter' => 'D001', 'kd_dokter_bpjs' => '12345', 'nm_dokter_bpjs' => 'Dokter BPJS',
+        ]);
+        $this->getJson($url)->assertOk()
+            ->assertJsonPath('data.schedules.0.nm_poli', 'Poliklinik Anak')
+            ->assertJsonPath('data.schedules.0.kd_poli_bpjs', 'ANAK')
+            ->assertJsonPath('data.schedules.0.kd_dokter_bpjs', '12345');
+
+        $repository = app(DaftarOnlineRepository::class);
+        $this->assertSame(25, $repository->findSchedule('D001', 'ANA', ['AKHAD'])->kuota);
+        $this->assertNull($repository->findSchedule('D002', 'INT', ['AKHAD']));
+        $this->assertNull($repository->findSchedule('D004', 'OLD', ['SENIN']));
+
+        $connection->table('dokter')->where('kd_dokter', 'D001')->update(['status' => '0']);
+        $this->getJson($url)->assertOk()->assertJsonCount(0, 'data.schedules');
+        $this->assertNull($repository->findSchedule('D001', 'ANA', ['AKHAD']));
+    }
+
+    public function test_online_registration_immediately_tracks_schedule_changes_and_leave(): void
+    {
+        $this->prepareOnlineRegistrationTables();
+        $this->travelTo(now('Asia/Jakarta')->setDate(2026, 10, 5)->setTime(8, 0));
+        $this->actingAs($this->staff());
+        $mondayUrl = route('daftarOnline.schedules', ['tgl_registrasi' => '2026-10-12']);
+        $tuesdayUrl = route('daftarOnline.schedules', ['tgl_registrasi' => '2026-10-13']);
+        $this->getJson($mondayUrl)->assertOk()->assertJsonCount(0, 'data.schedules');
+
+        $this->post(route('doctorScheduleSettings.store'), [
+            ...$this->newSchedule(), 'day' => 'SENIN',
+        ])->assertSessionHasNoErrors();
+        $this->getJson($mondayUrl)->assertOk()->assertJsonCount(1, 'data.schedules')
+            ->assertJsonPath('data.schedules.0.kd_dokter', 'D002')
+            ->assertJsonPath('data.schedules.0.kd_poli', 'INT')
+            ->assertJsonPath('data.schedules.0.kuota', 30);
+
+        $this->put(route('doctorScheduleSettings.update'), [
+            'original_doctor_code' => 'D002', 'original_day' => 'SENIN', 'original_start_time' => '13:00',
+            'day' => 'SELASA', 'start_time' => '14:00', 'end_time' => '16:00', 'quota' => 12,
+        ])->assertSessionHasNoErrors();
+        $this->getJson($mondayUrl)->assertOk()->assertJsonCount(0, 'data.schedules');
+        $this->getJson($tuesdayUrl)->assertOk()->assertJsonCount(1, 'data.schedules')
+            ->assertJsonPath('data.schedules.0.jam_mulai', '14:00')
+            ->assertJsonPath('data.schedules.0.jam_selesai', '16:00')
+            ->assertJsonPath('data.schedules.0.kuota', 12);
+
+        $alternativeUrl = route('daftarOnline.schedules.alternatives', [
+            'tgl_registrasi' => '2026-10-12', 'kd_dokter' => 'D002', 'kd_poli' => 'INT',
+        ]);
+        $this->getJson($alternativeUrl)->assertOk()
+            ->assertJsonPath('data.schedules.0.tanggal', '2026-10-13')
+            ->assertJsonPath('data.schedules.0.kuota', 12);
+
+        $selection = [
+            'original_doctor_code' => 'D002', 'original_clinic_code' => 'INT',
+            'original_day' => 'SELASA', 'original_start_time' => '14:00',
+        ];
+        $this->patch(route('doctorScheduleSettings.updateLeave'), [
+            ...$selection, 'is_on_leave' => 1,
+        ])->assertSessionHasNoErrors();
+        $this->getJson($tuesdayUrl)->assertOk()->assertJsonCount(0, 'data.schedules');
+        $this->getJson($alternativeUrl)->assertOk()->assertJsonCount(0, 'data.schedules');
+
+        $this->patch(route('doctorScheduleSettings.updateLeave'), [
+            ...$selection, 'is_on_leave' => 0,
+        ])->assertSessionHasNoErrors();
+        $this->getJson($tuesdayUrl)->assertOk()->assertJsonCount(1, 'data.schedules');
+        $this->delete(route('doctorScheduleSettings.destroy'), $selection)->assertSessionHasNoErrors();
+        $this->getJson($tuesdayUrl)->assertOk()->assertJsonCount(0, 'data.schedules');
+        $this->assertNull(app(DaftarOnlineRepository::class)->findSchedule('D002', 'INT', ['SELASA']));
+    }
+
+    private function prepareOnlineRegistrationTables(): void
+    {
+        $schema = DB::connection('mysql_khanza')->getSchemaBuilder();
+        $schema->create('maping_dokter_dpjpvclaim', function (Blueprint $table): void {
+            $table->string('kd_dokter');
+            $table->string('kd_dokter_bpjs');
+            $table->string('nm_dokter_bpjs');
+        });
+        $schema->create('maping_poli_bpjs', function (Blueprint $table): void {
+            $table->string('kd_poli_rs');
+            $table->string('kd_poli_bpjs');
+            $table->string('nm_poli_bpjs');
+        });
+        $schema->create('reg_periksa', function (Blueprint $table): void {
+            foreach (['no_reg', 'no_rawat', 'tgl_registrasi', 'kd_dokter', 'kd_poli', 'stts'] as $column) {
+                $table->string($column);
+            }
+        });
     }
 
     private function newSchedule(): array
