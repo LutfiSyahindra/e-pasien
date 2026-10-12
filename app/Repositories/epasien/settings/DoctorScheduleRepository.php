@@ -36,6 +36,25 @@ class DoctorScheduleRepository
             ->orderBy('nm_poli')->get();
     }
 
+    public function leaveSchedules(): Collection
+    {
+        return $this->activeScheduleQuery()
+            ->select(
+                'jadwal_spesialis.kd_dokter',
+                'dokter.nm_dokter',
+                'jadwal_spesialis.kd_poli',
+                'poliklinik.nm_poli',
+                'jadwal_spesialis.hari_kerja',
+                'jadwal_spesialis.jam_mulai',
+                'jadwal_spesialis.jam_selesai',
+                'jadwal_spesialis.kuota'
+            )
+            ->orderBy('dokter.nm_dokter')
+            ->orderBy('jadwal_spesialis.hari_kerja')
+            ->orderBy('jadwal_spesialis.jam_mulai')
+            ->get();
+    }
+
     public function create(array $schedule): void
     {
         $this->connection()->transaction(function () use ($schedule): void {
@@ -219,13 +238,13 @@ class DoctorScheduleRepository
         });
     }
 
-    public function setOnLeave(array $original, bool $isOnLeave): void
+    public function setOnLeave(array $original, bool $isOnLeave, string $date, ?string $originalDate = null): void
     {
-        $this->connection()->transaction(function () use ($original, $isOnLeave): void {
+        $this->connection()->transaction(function () use ($original, $isOnLeave, $date, $originalDate): void {
             $schedule = $this->connection()->table('jadwal_spesialis')
                 ->where('kd_dokter', $original['doctor_code'])
                 ->where('hari_kerja', $original['day'])
-                ->where('jam_mulai', $original['start_time'])
+                ->whereTime('jam_mulai', substr($original['start_time'], 0, 5).':00')
                 ->lockForUpdate()->first();
 
             if ($schedule === null) {
@@ -234,7 +253,7 @@ class DoctorScheduleRepository
                 ]);
             }
 
-            app(DoctorScheduleLeaveRepository::class)->setOnLeave($schedule, $isOnLeave);
+            app(DoctorScheduleLeaveRepository::class)->setOnLeave($schedule, $isOnLeave, $date, $originalDate);
         });
     }
 

@@ -2,7 +2,7 @@
  <script src="{{ versioned_asset("epasien/assets/js/bootstrap.bundle.min.js") }}"></script>
  <!--plugins-->
  <script src="{{ versioned_asset("epasien/assets/js/jquery.min.js") }}"></script>
- @if (request()->routeIs("users.*", "roles.*", "roleConfiguration.*", "daftarOnline.index"))
+ @if (request()->routeIs("users.*", "roles.*", "roleConfiguration.*", "daftarOnline.index", "doctorScheduleSettings.index"))
      <script src="{{ versioned_asset("epasien/assets/plugins/select2/js/select2.min.js") }}"></script>
  @endif
  @if (request()->routeIs("profile.*", "users.*", "roles.*", "permissions.*", "daftarOnline.*"))

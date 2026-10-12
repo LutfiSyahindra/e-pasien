@@ -1,10 +1,14 @@
-.schedule-admin-page {
+.schedule-admin-page,
+.schedule-editor-modal {
     --schedule-ink: #17223b;
     --schedule-muted: #697386;
     --schedule-line: #e8ebf3;
     --schedule-purple: #6457e5;
     --schedule-purple-dark: #4c3fd0;
     --schedule-soft: #f7f8fc;
+}
+
+.schedule-admin-page {
     color: var(--schedule-ink);
     margin: 0 auto;
     max-width: 1480px;
@@ -1061,61 +1065,8 @@
         flex: 1;
     }
 }
-.schedule-leave-form {
+.schedule-leave-setting {
     min-width: 110px;
-}
-
-.schedule-leave-toggle {
-    align-items: center;
-    background: transparent;
-    border: 0;
-    border-radius: 6px;
-    color: #5e6678;
-    cursor: pointer;
-    display: inline-flex;
-    font: inherit;
-    font-size: 0.76rem;
-    font-weight: 750;
-    gap: 8px;
-    padding: 4px 0;
-}
-
-.schedule-leave-toggle:focus-visible {
-    outline: 3px solid #8c82ed;
-    outline-offset: 4px;
-}
-
-.schedule-leave-track {
-    background: #cbd2df;
-    border-radius: 999px;
-    display: inline-flex;
-    padding: 3px;
-    width: 40px;
-}
-
-.schedule-leave-track > span {
-    background: #fff;
-    border-radius: 50%;
-    height: 18px;
-    transition: transform 0.18s ease;
-    width: 18px;
-}
-
-.schedule-leave-toggle[aria-checked="true"] {
-    color: #b45309;
-}
-
-.schedule-leave-toggle[aria-checked="true"] .schedule-leave-track {
-    background: #d97706;
-}
-
-.schedule-leave-toggle[aria-checked="true"] .schedule-leave-track > span {
-    transform: translateX(16px);
-}
-
-.schedule-leave-toggle:disabled {
-    cursor: wait;
-    opacity: 0.6;
 }
 
 .schedule-leave-status {
@@ -1124,14 +1075,222 @@
     font-size: 0.65rem;
 }
 
-.schedule-admin-mobile-list .schedule-leave-form {
+.schedule-admin-mobile-list .schedule-leave-setting {
     margin-bottom: 12px;
+}
+
+.schedule-leave-save {
+    min-height: 44px;
+    min-width: 170px;
+}
+
+#scheduleLeaveModal .modal-footer {
+    flex-shrink: 0;
+}
+
+#scheduleLeaveModal .schedule-leave-save:disabled {
+    background: #d9d5ff;
+    border-color: #c8c1fa;
+    color: #5145a5;
+    opacity: 1;
+}
+
+.schedule-leave-list {
+    margin-top: 20px;
+}
+
+.schedule-leave-list-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0 22px 22px;
+}
+
+.schedule-leave-doctor-card {
+    border: 1px solid var(--schedule-line);
+    border-radius: 14px;
+    min-width: 0;
+    padding: 15px;
+}
+
+.schedule-leave-doctor-card > .schedule-admin-doctor {
+    margin-bottom: 14px;
+}
+
+.schedule-leave-row-actions {
+    align-items: center;
+    display: flex;
+    flex-shrink: 0;
+    gap: 7px;
+}
+
+.schedule-leave-row-actions form {
+    margin: 0;
+}
+
+.schedule-leave-date-state {
+    color: #697386;
+    font-size: .65rem;
+    font-style: normal;
+    font-weight: 400;
+    margin-left: 5px;
+}
+
+.schedule-leave-edit {
+    background: #fff;
+    border: 1px solid #cfc9fa;
+    border-radius: 7px;
+    color: var(--schedule-purple);
+    font-size: .7rem;
+    padding: 6px 8px;
+}
+
+.schedule-leave-list .schedule-admin-empty {
+    padding: 25px;
+}
+
+@media (max-width: 991.98px) {
+    .schedule-leave-list-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .schedule-leave-list-grid {
+        padding: 0 14px 14px;
+    }
+
+    .schedule-leave-doctor-card .schedule-leave-date-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    #scheduleLeaveModal .schedule-editor-change-state {
+        flex-basis: 100%;
+    }
+}
+
+.schedule-leave-dates {
+    border-top: 1px solid var(--schedule-line);
+    margin-top: 20px;
+    padding-top: 16px;
+}
+
+.schedule-leave-dates h3 {
+    color: #373f54;
+    font-size: .85rem;
+    font-weight: 750;
+    margin-bottom: 12px;
+}
+
+.schedule-leave-date-row {
+    align-items: center;
+    background: #f6f5ff;
+    border-radius: 9px;
+    display: flex;
+    font-size: .8rem;
+    gap: 10px;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 10px 12px;
+}
+
+.schedule-leave-date-row > span {
+    color: #373f54;
+    min-width: 0;
+}
+
+.schedule-leave-date-row small {
+    color: #697386;
+    display: block;
+    font-size: .7rem;
+    margin-top: 3px;
+}
+
+#scheduleLeaveForm .schedule-editor-field {
+    display: block;
+    margin-bottom: 14px;
+}
+
+#scheduleLeaveForm .schedule-editor-field[hidden] {
+    display: none;
+}
+
+.schedule-leave-doctor-control .select2-container {
+    flex: 1;
+    min-width: 0;
+}
+
+.schedule-leave-doctor-control:has(.select2-container) > .bi-chevron-down {
+    display: none;
+}
+
+.schedule-leave-doctor-control .select2-selection--single {
+    background: transparent;
+    border: 0;
+    height: 42px;
+}
+
+.schedule-leave-doctor-control .select2-selection__rendered {
+    color: var(--schedule-ink);
+    font-size: .76rem;
+    line-height: 42px !important;
+    padding-left: 0;
+    padding-right: 30px;
+}
+
+.schedule-leave-doctor-control .select2-selection__arrow {
+    height: 42px;
+    top: 0 !important;
+}
+
+#scheduleLeaveModal .select2-container--open {
+    z-index: 1080;
+}
+
+#scheduleLeaveModal .select2-dropdown {
+    border-color: #dfe3ec;
+    border-radius: 10px;
+    box-shadow: 0 12px 30px rgba(28, 33, 62, .15);
+    overflow: hidden;
+}
+
+#scheduleLeaveModal .select2-search__field {
+    border: 1px solid #dfe3ec;
+    border-radius: 7px;
+    font-size: .8rem;
+    padding: 8px;
+}
+
+#scheduleLeaveModal .select2-results__option {
+    font-size: .8rem;
+}
+
+.schedule-leave-cancel {
+    background: #fff5f5;
+    border: 1px solid #fecaca;
+    border-radius: 7px;
+    color: #a62626;
+    font-size: .7rem;
+    flex-shrink: 0;
+    padding: 6px 8px;
+}
+
+.schedule-leave-form button:disabled {
+    cursor: wait;
+    opacity: .6;
 }
 
 .schedule-admin-panel-actions {
     align-items: flex-end;
     display: flex;
     flex-direction: column;
+    gap: 8px;
+}
+
+.schedule-admin-action-buttons {
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
 }
 
@@ -1142,6 +1301,7 @@
 }
 
 .schedule-admin-add,
+.schedule-admin-leave,
 .schedule-admin-delete {
     align-items: center;
     border: 1px solid;
@@ -1167,7 +1327,14 @@
     color: #a62626;
 }
 
+.schedule-admin-leave {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #9a3412;
+}
+
 .schedule-admin-add:disabled,
+.schedule-admin-leave:disabled,
 .schedule-admin-delete:disabled {
     cursor: not-allowed;
     opacity: .5;
@@ -1192,7 +1359,9 @@
         width: 100%;
     }
 
-    .schedule-admin-add {
+    .schedule-admin-action-buttons,
+    .schedule-admin-add,
+    .schedule-admin-leave {
         min-height: 41px;
         width: 100%;
     }

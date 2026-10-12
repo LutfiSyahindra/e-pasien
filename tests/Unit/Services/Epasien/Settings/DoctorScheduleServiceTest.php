@@ -16,22 +16,24 @@ class DoctorScheduleServiceTest extends TestCase
     public function test_sunday_uses_minggu_in_epasien_and_akhad_in_database(): void
     {
         $repository = $this->createMock(DoctorScheduleRepository::class);
+        $rows = collect([
+            (object) [
+                'kd_dokter' => 'drminggu',
+                'nm_dokter' => 'dr. Dokter Minggu',
+                'kd_poli' => 'INT',
+                'nm_poli' => 'Poliklinik Penyakit Dalam',
+                'hari_kerja' => 'Akhad',
+                'jam_mulai' => '08:00:00',
+                'jam_selesai' => '10:00:00',
+                'kuota' => 20,
+            ],
+        ]);
         $repository
             ->expects($this->once())
             ->method('paginate')
             ->with(null, 'AKHAD', null, 15)
-            ->willReturn(new LengthAwarePaginator([
-                (object) [
-                    'kd_dokter' => 'drminggu',
-                    'nm_dokter' => 'dr. Dokter Minggu',
-                    'kd_poli' => 'INT',
-                    'nm_poli' => 'Poliklinik Penyakit Dalam',
-                    'hari_kerja' => 'Akhad',
-                    'jam_mulai' => '08:00:00',
-                    'jam_selesai' => '10:00:00',
-                    'kuota' => 20,
-                ],
-            ], 1, 15));
+            ->willReturn(new LengthAwarePaginator($rows, 1, 15));
+        $repository->expects($this->once())->method('leaveSchedules')->willReturn($rows);
         $repository
             ->expects($this->once())
             ->method('summary')
@@ -53,6 +55,8 @@ class DoctorScheduleServiceTest extends TestCase
         $this->assertArrayNotHasKey('AKHAD', $page['days']);
         $this->assertSame('MINGGU', $schedule['day']);
         $this->assertSame('Minggu', $schedule['day_label']);
+        $this->assertSame('MINGGU', $page['leaveSchedules'][0]['day']);
+        $this->assertSame('08:00', $page['leaveSchedules'][0]['start_time']);
     }
 
     public function test_update_translates_minggu_to_akhad_for_database(): void

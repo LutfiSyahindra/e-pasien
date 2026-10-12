@@ -84,12 +84,83 @@ class DoctorScheduleManagementTest extends TestCase
             'q' => 'Tidak Cocok', 'hari' => 'SELASA', 'poli' => 'INT',
         ]))->assertOk()->assertSeeText('Tambah Dokter')
             ->assertSee('<option value="D002"', false)
-            ->assertDontSee('<option value="D001"', false)
+            ->assertSee('<option value="D001"', false)
             ->assertDontSee('<option value="D003"', false)
             ->assertDontSee('<option value="D004"', false);
 
         $this->assertSame(['D002'], $response->viewData('availableDoctors')->pluck('kd_dokter')->all());
         $this->assertSame(['ANA', 'INT'], $response->viewData('availableClinics')->pluck('kd_poli')->all());
+        $this->assertSame(['D001'], $response->viewData('leaveSchedules')->pluck('doctor_code')->unique()->all());
+    }
+
+    public function test_leave_doctor_options_include_schedules_on_other_pages(): void
+    {
+        $connection = DB::connection('mysql_khanza');
+        for ($number = 5; $number <= 20; $number++) {
+            $code = 'D'.str_pad((string) $number, 3, '0', STR_PAD_LEFT);
+            $connection->table('dokter')->insert([
+                'kd_dokter' => $code, 'nm_dokter' => 'dr. Terjadwal '.$code, 'jk' => 'L', 'status' => '1',
+            ]);
+            $connection->table('jadwal_spesialis')->insert([
+                'kd_dokter' => $code, 'kd_poli' => 'ANA', 'hari_kerja' => 'SENIN',
+                'jam_mulai' => '09:00:00', 'jam_selesai' => '11:00:00', 'kuota' => 20,
+            ]);
+        }
+
+        $response = $this->actingAs($this->staff())->get(route('doctorScheduleSettings.index'))->assertOk();
+        $this->assertCount(15, $response->viewData('schedules'));
+        $leaveSchedules = $response->viewData('leaveSchedules');
+        $this->assertCount(17, $leaveSchedules);
+        $missingDoctors = $leaveSchedules->pluck('doctor_code')
+            ->diff($response->viewData('schedules')->pluck('doctor_code'));
+        $this->assertCount(2, $missingDoctors);
+        foreach ($missingDoctors as $doctorCode) {
+            $response->assertSee('<option value="'.$doctorCode.'"', false);
+        }
+    }
+
+    public function test_saved_leave_list_shows_all_doctors_dates_and_actions_even_when_the_schedule_filter_is_empty(): void
+    {
+        $this->travelTo(now('Asia/Jakarta')->setDate(2026, 10, 11)->setTime(8, 0));
+        DB::table('doctor_schedule_leaves')->insert([
+            ['doctor_code' => 'D001', 'clinic_code' => 'ANA', 'day' => 'MINGGU', 'start_time' => '08:00', 'leave_date' => '2026-10-04'],
+            ['doctor_code' => 'D001', 'clinic_code' => 'ANA', 'day' => 'MINGGU', 'start_time' => '08:00', 'leave_date' => '2026-10-18'],
+        ]);
+
+        $response = $this->actingAs($this->staff())->get(route('doctorScheduleSettings.index', [
+            'q' => 'Tidak Cocok', 'hari' => 'SELASA', 'poli' => 'INT',
+        ]))->assertOk()->assertSeeText('Daftar Dokter Libur')->assertSeeText('dr. Sudah Terjadwal')
+            ->assertSeeText('04/10/2026')->assertSeeText('18/10/2026')->assertSeeText('Selesai')
+            ->assertSee('data-leave-date="2026-10-18"', false)->assertSeeText('Edit')->assertSeeText('Batalkan');
+        $this->assertCount(0, $response->viewData('schedules'));
+        $this->assertSame(['2026-10-04', '2026-10-18'], $response->viewData('leaveSchedules')[0]['leave_dates']);
+    }
+
+    public function test_leave_picker_preserves_selected_clinic_and_time_for_doctors_with_multiple_schedules(): void
+    {
+        $this->travelTo(now('Asia/Jakarta')->setDate(2026, 10, 11)->setTime(8, 0));
+        DB::connection('mysql_khanza')->table('jadwal_spesialis')->insert([
+            ['kd_dokter' => 'D001', 'kd_poli' => 'ANA', 'hari_kerja' => 'AKHAD', 'jam_mulai' => '13:00:00', 'jam_selesai' => '15:00:00', 'kuota' => 20],
+            ['kd_dokter' => 'D001', 'kd_poli' => 'INT', 'hari_kerja' => 'AKHAD', 'jam_mulai' => '09:00:00', 'jam_selesai' => '11:00:00', 'kuota' => 20],
+        ]);
+        $this->actingAs($this->staff());
+        $response = $this->get(route('doctorScheduleSettings.index'))->assertOk()
+            ->assertSee('id="leaveDoctorCode"', false)->assertSee('id="leaveScheduleSelection"', false);
+        $this->assertCount(3, $response->viewData('leaveSchedules')->where('doctor_code', 'D001'));
+
+        $this->patch(route('doctorScheduleSettings.updateLeave'), [
+            '_method' => 'PATCH', 'original_doctor_code' => 'D001', 'original_day' => 'MINGGU',
+            'original_start_time' => '13:00', 'is_on_leave' => 1, 'leave_date' => '2026-10-18',
+        ])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('doctor_schedule_leaves', [
+            'doctor_code' => 'D001', 'clinic_code' => 'ANA', 'start_time' => '13:00', 'leave_date' => '2026-10-18',
+        ]);
+        $this->assertDatabaseCount('doctor_schedule_leaves', 1);
+
+        $response = $this->get(route('doctorScheduleSettings.index'))->assertOk()->assertSee('value="2026-10-18"', false);
+        $leaveSchedules = $response->viewData('leaveSchedules');
+        $this->assertSame([], $leaveSchedules->firstWhere('start_time', '08:00')['leave_dates']);
+        $this->assertSame([], $leaveSchedules->firstWhere('clinic_code', 'INT')['leave_dates']);
     }
 
     public function test_staff_can_add_a_missing_doctor_with_clinic_day_times_and_quota(): void
@@ -330,13 +401,14 @@ class DoctorScheduleManagementTest extends TestCase
             'original_day' => 'SELASA', 'original_start_time' => '14:00',
         ];
         $this->patch(route('doctorScheduleSettings.updateLeave'), [
-            ...$selection, 'is_on_leave' => 1,
+            ...$selection, 'leave_date' => '2026-10-13', 'is_on_leave' => 1,
         ])->assertSessionHasNoErrors();
         $this->getJson($tuesdayUrl)->assertOk()->assertJsonCount(0, 'data.schedules');
-        $this->getJson($alternativeUrl)->assertOk()->assertJsonCount(0, 'data.schedules');
+        $this->getJson($alternativeUrl)->assertOk()
+            ->assertJsonPath('data.schedules.0.tanggal', '2026-10-20');
 
         $this->patch(route('doctorScheduleSettings.updateLeave'), [
-            ...$selection, 'is_on_leave' => 0,
+            ...$selection, 'leave_date' => '2026-10-13', 'is_on_leave' => 0,
         ])->assertSessionHasNoErrors();
         $this->getJson($tuesdayUrl)->assertOk()->assertJsonCount(1, 'data.schedules');
         $this->delete(route('doctorScheduleSettings.destroy'), $selection)->assertSessionHasNoErrors();

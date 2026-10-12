@@ -171,7 +171,7 @@ class DaftarOnlineQuotaTest extends TestCase
     public function test_leave_blocks_regular_and_mjkn_registration_even_when_quota_is_available(): void
     {
         app(DoctorScheduleLeaveRepository::class)->setOnLeave(
-            $this->connection->table('jadwal_spesialis')->first(), true
+            $this->connection->table('jadwal_spesialis')->first(), true, '2026-07-27'
         );
 
         foreach ([false, true] as $mjkn) {
@@ -191,7 +191,7 @@ class DaftarOnlineQuotaTest extends TestCase
     public function test_another_session_of_the_same_doctor_remains_open(): void
     {
         app(DoctorScheduleLeaveRepository::class)->setOnLeave(
-            $this->connection->table('jadwal_spesialis')->first(), true
+            $this->connection->table('jadwal_spesialis')->first(), true, '2026-07-27'
         );
         $this->connection->table('jadwal_spesialis')->insert([
             'kd_dokter' => 'D001', 'kd_poli' => 'POL01', 'hari_kerja' => 'SENIN',
@@ -200,6 +200,20 @@ class DaftarOnlineQuotaTest extends TestCase
 
         $this->assertNotNull($this->save(false));
         $this->assertSame(1, $this->connection->table('reg_periksa')->count());
+    }
+
+    #[DataProvider('registrationFlows')]
+    public function test_leave_on_another_date_does_not_block_registration(bool $mjkn): void
+    {
+        app(DoctorScheduleLeaveRepository::class)->setOnLeave(
+            $this->connection->table('jadwal_spesialis')->first(), true, '2026-08-03'
+        );
+        $this->connection->table('reg_periksa')->insert(array_merge($this->registration(), [
+            'no_reg' => '001', 'no_rawat' => '2026/07/27/000001', 'stts' => 'Batal',
+        ]));
+
+        $this->assertNotNull($this->save($mjkn));
+        $this->assertSame(1, (new DaftarOnlineRepository)->countActiveRegistrations('2026-07-27', 'D001', 'POL01'));
     }
 
     private function save(bool $mjkn, string $medicalRecord = '000123'): ?array

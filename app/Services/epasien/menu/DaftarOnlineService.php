@@ -101,7 +101,7 @@ class DaftarOnlineService
         $registrationDateString = $registrationDate->toDateString();
         $schedules = app(DoctorScheduleLeaveRepository::class)->available($this->daftarOnlineRepository->getSchedules(
             $this->workdayAliases($registrationDate)
-        ));
+        ), $registrationDateString);
 
         return [
             'tanggal' => $registrationDateString,
@@ -120,15 +120,17 @@ class DaftarOnlineService
     public function alternativeSchedules(string $date, string $doctorCode, string $clinicCode): array
     {
         $selectedDate = Carbon::createFromFormat('Y-m-d', $date)->startOfDay();
-        $schedules = app(DoctorScheduleLeaveRepository::class)->available($this->daftarOnlineRepository
-            ->getSchedules(DoctorScheduleDay::ACCEPTED_DAYS, trim($doctorCode), trim($clinicCode)))
+        $schedules = $this->daftarOnlineRepository
+            ->getSchedules(DoctorScheduleDay::ACCEPTED_DAYS, trim($doctorCode), trim($clinicCode))
             ->groupBy(fn (object $schedule): string => DoctorScheduleDay::toEpasien($schedule->hari_kerja));
         $alternatives = [];
 
         for ($offset = 1; $offset <= 28 && count($alternatives) < 5; $offset++) {
             $candidateDate = $selectedDate->copy()->addDays($offset);
             $day = DoctorScheduleDay::EPASIEN_DAYS[$candidateDate->isoWeekday() - 1];
-            $schedule = $schedules->get($day)?->first();
+            $schedule = app(DoctorScheduleLeaveRepository::class)->available(
+                $schedules->get($day, collect()), $candidateDate->toDateString()
+            )->first();
 
             if (! $schedule || (int) ($schedule->kuota ?? 0) <= 0) {
                 continue;
@@ -185,7 +187,7 @@ class DaftarOnlineService
 
     private function ensureScheduleQuotaAvailable(object $schedule, string $date, string $doctorCode, string $clinicCode): int
     {
-        app(DoctorScheduleLeaveRepository::class)->ensureAvailable($schedule);
+        app(DoctorScheduleLeaveRepository::class)->ensureAvailable($schedule, $date);
 
         $registered = $this->daftarOnlineRepository->countActiveRegistrations($date, $doctorCode, $clinicCode);
 
@@ -1307,7 +1309,8 @@ class DaftarOnlineService
         return $this->daftarOnlineRepository->findSchedule(
             $doctorCode,
             $clinicCode,
-            $this->workdayAliases($registrationDate)
+            $this->workdayAliases($registrationDate),
+            $date
         );
     }
 

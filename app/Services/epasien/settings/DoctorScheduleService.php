@@ -57,6 +57,11 @@ class DoctorScheduleService
             'days' => self::DAYS,
             'availableDoctors' => $this->doctorScheduleRepository->availableDoctors(),
             'availableClinics' => $this->doctorScheduleRepository->activeClinics(),
+            'leaveSchedules' => app(DoctorScheduleLeaveRepository::class)->annotate(
+                $this->doctorScheduleRepository->leaveSchedules()->map(
+                    fn (object $schedule): array => $this->formatSchedule($schedule)
+                ), true
+            ),
             'schedules' => $schedules,
             'clinics' => $this->doctorScheduleRepository->clinics()
                 ->map(fn (object $clinic): array => [
@@ -83,6 +88,7 @@ class DoctorScheduleService
             'days' => self::DAYS,
             'availableDoctors' => collect(),
             'availableClinics' => collect(),
+            'leaveSchedules' => collect(),
             'schedules' => new LengthAwarePaginator(
                 [],
                 0,
@@ -126,11 +132,11 @@ class DoctorScheduleService
         DoctorScheduleCache::invalidate();
     }
 
-    public function setOnLeave(array $original, bool $isOnLeave): void
+    public function setOnLeave(array $original, bool $isOnLeave, string $date, ?string $originalDate = null): void
     {
         $original['day'] = DoctorScheduleDay::toDatabase($original['day']);
 
-        $this->doctorScheduleRepository->setOnLeave($original, $isOnLeave);
+        $this->doctorScheduleRepository->setOnLeave($original, $isOnLeave, $date, $originalDate);
     }
 
     /**

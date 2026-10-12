@@ -113,16 +113,23 @@
                 <div>
                     <span><i class="bi bi-sliders"></i> Data jadwal spesialis</span>
                     <h2>Daftar Jadwal Dokter</h2>
-                    <p>Aktifkan toggle Libur untuk meliburkan jadwal yang dipilih sampai diaktifkan kembali.</p>
+                    <p>Gunakan tombol Libur Dokter untuk memilih dokter dan menentukan tanggal liburnya.</p>
                 </div>
                 <div class="schedule-admin-panel-actions">
                     <span class="schedule-admin-result-count">
                         {{ number_format($schedules->total(), 0, ",", ".") }} jadwal ditemukan
                     </span>
-                    <button type="button" class="schedule-admin-add" data-bs-toggle="modal" data-bs-target="#scheduleCreateModal"
-                        @disabled($connectionError || ($availableDoctors ?? collect())->isEmpty() || ($availableClinics ?? collect())->isEmpty())>
-                        <i class="bi bi-plus-lg"></i> Tambah Dokter
-                    </button>
+                    <div class="schedule-admin-action-buttons">
+                        <button type="button" class="schedule-admin-leave" id="openDoctorLeave"
+                            data-bs-toggle="modal" data-bs-target="#scheduleLeaveModal"
+                            @disabled($connectionError || ($leaveSchedules ?? collect())->isEmpty())>
+                            <i class="bi bi-calendar2-x"></i> Libur Dokter
+                        </button>
+                        <button type="button" class="schedule-admin-add" data-bs-toggle="modal" data-bs-target="#scheduleCreateModal"
+                            @disabled($connectionError || ($availableDoctors ?? collect())->isEmpty() || ($availableClinics ?? collect())->isEmpty())>
+                            <i class="bi bi-plus-lg"></i> Tambah Dokter
+                        </button>
+                    </div>
                     @if (! $connectionError && ($availableDoctors ?? collect())->isEmpty())
                         <small>Semua dokter aktif sudah memiliki jadwal.</small>
                     @endif
@@ -320,17 +327,22 @@
             @endif
         </section>
 
+        @if (! $connectionError)
+            @include("e-pasien.settings.doctorSchedules.savedLeaveDates")
+        @endif
+
         <aside class="schedule-admin-note">
             <i class="bi bi-info-circle-fill"></i>
             <p>
-                <strong>Libur per jadwal</strong>
-                Toggle Libur berlaku untuk dokter pada hari, jam, dan poliklinik yang dipilih.
-                Hari, jam, dan kuota tetap tersimpan saat dokter diliburkan.
+                <strong>Libur berdasarkan tanggal</strong>
+                Libur hanya berlaku pada tanggal, jam, dan poliklinik yang dipilih.
+                Jadwal lainnya tetap aktif. Tambahkan libur melalui tombol Libur Dokter, lalu gunakan daftar di atas untuk mengedit atau membatalkannya.
             </p>
         </aside>
     </main>
 
     @include("e-pasien.settings.doctorSchedules.createModal")
+    @include("e-pasien.settings.doctorSchedules.leaveModal")
 
     <div class="modal fade schedule-editor-modal" id="scheduleEditorModal" tabindex="-1"
         aria-labelledby="scheduleEditorTitle" aria-hidden="true">
@@ -497,17 +509,201 @@
                 });
             }
 
-            document.querySelectorAll(".schedule-leave-form").forEach((leaveForm) => {
-                leaveForm.addEventListener("submit", (event) => {
+            document.addEventListener("submit", (event) => {
+                const leaveForm = event.target;
+                if (leaveForm.matches(".schedule-leave-form")) {
                     if (leaveForm.dataset.submitting === "true") {
                         event.preventDefault();
                         return;
                     }
                     leaveForm.dataset.submitting = "true";
-                    leaveForm.querySelector("button").disabled = true;
-                    leaveForm.querySelector(".schedule-leave-status").textContent = "Menyimpan...";
-                });
+                    const button = leaveForm.id === "scheduleLeaveForm"
+                        ? document.getElementById("leaveSaveButton") : leaveForm.querySelector("button[type='submit']");
+                    button.disabled = true;
+                    button.querySelector("span").textContent = "Menyimpan...";
+                }
             });
+
+            const leaveForm = document.getElementById("scheduleLeaveForm");
+            const leaveModalElement = document.getElementById("scheduleLeaveModal");
+            if (leaveForm && leaveModalElement && typeof bootstrap !== "undefined") {
+                const leaveModal = bootstrap.Modal.getOrCreateInstance(leaveModalElement);
+                const choices = JSON.parse(document.getElementById("doctorLeaveSchedulesData").textContent);
+                const doctor = document.getElementById("leaveDoctorCode");
+                const originalDoctor = leaveForm.elements.original_doctor_code;
+                const originalDate = leaveForm.elements.original_leave_date;
+                const date = leaveForm.elements.leave_date;
+                const originalDay = leaveForm.elements.original_day;
+                const originalStart = leaveForm.elements.original_start_time;
+                const scheduleSelect = document.getElementById("leaveScheduleSelection");
+                const scheduleFields = document.getElementById("leaveScheduleFields");
+                const hint = document.getElementById("leaveScheduleHint");
+                const saveButton = document.getElementById("leaveSaveButton");
+                const saveLabel = saveButton.querySelector("span");
+                const footerHint = document.getElementById("leaveFooterHint");
+                const title = document.getElementById("scheduleLeaveTitle");
+                const heading = document.getElementById("leaveFormHeading");
+                const weekdays = ["MINGGU", "SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU"];
+                const doctorPicker = window.jQuery?.fn?.select2 ? window.jQuery(doctor).select2({
+                    theme: "bootstrap4",
+                    width: "100%",
+                    dropdownParent: window.jQuery(leaveModalElement),
+                    placeholder: "Cari nama atau kode dokter...",
+                    allowClear: true,
+                    minimumResultsForSearch: 0,
+                    language: {
+                        noResults: () => "Dokter tidak ditemukan.",
+                    },
+                }) : null;
+
+                doctorPicker?.on("select2:open", () => {
+                    const search = leaveModalElement.querySelector(".select2-search__field");
+                    if (search) {
+                        search.placeholder = "Ketik nama atau kode dokter";
+                        search.setAttribute("aria-label", "Cari nama atau kode dokter");
+                        search.focus();
+                    }
+                });
+
+                const clearLeaveErrors = () => {
+                    leaveForm.querySelectorAll(".is-invalid").forEach((field) => field.classList.remove("is-invalid"));
+                    leaveForm.querySelectorAll(".schedule-editor-feedback").forEach((feedback) => feedback.remove());
+                };
+
+                const refreshMode = () => {
+                    const editing = originalDate.value !== "";
+                    doctor.disabled = editing;
+                    doctorPicker?.trigger("change.select2");
+                    title.textContent = editing ? "Edit Libur Dokter" : "Atur Libur Dokter";
+                    heading.textContent = editing ? "Ubah tanggal libur tersimpan" : "Pilih dokter dan tanggal libur";
+                    saveLabel.textContent = editing ? "Simpan Perubahan" : "Simpan Tanggal Libur";
+                    footerHint.textContent = editing ? "Pilih tanggal pengganti untuk jadwal ini." : "Lengkapi dokter dan tanggal libur.";
+                };
+
+                const selectSchedule = () => {
+                    const selected = scheduleSelect.value === "" ? null : choices[Number(scheduleSelect.value)];
+                    originalDay.value = selected?.day || "";
+                    originalStart.value = selected?.start_time || "";
+                    originalDoctor.value = doctor.value;
+                    saveButton.disabled = !selected;
+                    if (selected) {
+                        hint.textContent = `${selected.clinic_name} · ${selected.day_label}, ${selected.time_label}`;
+                        footerHint.textContent = "Tanggal libur siap disimpan.";
+                    }
+                };
+
+                const refreshSchedules = (preserveSelection = false) => {
+                    refreshMode();
+                    if (originalDate.value !== "") {
+                        const schedule = choices.find((candidate) => candidate.doctor_code === originalDoctor.value
+                            && candidate.day === originalDay.value && candidate.start_time === originalStart.value);
+                        scheduleFields.hidden = true;
+                        scheduleSelect.disabled = true;
+                        scheduleSelect.required = false;
+                        const weekday = weekdays[new Date(`${date.value}T12:00:00`).getDay()];
+                        saveButton.disabled = !schedule || !date.value || date.value < date.min
+                            || weekday !== schedule.day || date.value === originalDate.value;
+                        if (schedule) {
+                            hint.textContent = `${schedule.clinic_name} · ${schedule.day_label}, ${schedule.time_label}`;
+                            if (date.value && weekday !== schedule.day) {
+                                hint.textContent += `. Pilih tanggal ${schedule.day_label} sesuai jadwal praktik ini.`;
+                            }
+                        } else {
+                            hint.textContent = "Jadwal tidak tersedia. Tutup modal dan muat ulang halaman.";
+                        }
+                        if (!saveButton.disabled) {
+                            footerHint.textContent = "Perubahan tanggal siap disimpan.";
+                        }
+                        return;
+                    }
+                    const previousDay = originalDay.value;
+                    const previousStart = originalStart.value;
+                    originalDay.value = "";
+                    originalStart.value = "";
+                    scheduleSelect.replaceChildren();
+                    scheduleSelect.disabled = true;
+                    scheduleSelect.required = false;
+                    scheduleFields.hidden = true;
+                    saveButton.disabled = true;
+                    hint.textContent = "Pilih dokter dan tanggal untuk melihat jadwal praktiknya.";
+                    if (!doctor.value || !date.value) {
+                        return;
+                    }
+                    const weekday = weekdays[new Date(`${date.value}T12:00:00`).getDay()];
+                    const matches = choices.map((schedule, index) => ({ schedule, index }))
+                        .filter(({ schedule }) => schedule.doctor_code === doctor.value && schedule.day === weekday);
+                    if (!matches.length) {
+                        hint.textContent = "Dokter tidak memiliki jadwal praktik pada tanggal ini. Pilih tanggal lain.";
+                        return;
+                    }
+                    if (matches.length > 1) {
+                        const placeholder = document.createElement("option");
+                        placeholder.value = "";
+                        placeholder.textContent = "Pilih jam dan poliklinik";
+                        scheduleSelect.append(placeholder);
+                        scheduleFields.hidden = false;
+                        scheduleSelect.required = true;
+                        hint.textContent = "Pilih jam dan poliklinik yang diliburkan pada tanggal ini.";
+                    }
+                    matches.forEach(({ schedule, index }) => {
+                        const option = document.createElement("option");
+                        option.value = String(index);
+                        option.textContent = `${schedule.clinic_name} · ${schedule.time_label}`;
+                        scheduleSelect.append(option);
+                    });
+                    scheduleSelect.disabled = false;
+                    const previous = preserveSelection ? matches.find(({ schedule }) => (
+                        schedule.day === previousDay && schedule.start_time === previousStart
+                    )) : null;
+                    scheduleSelect.value = matches.length === 1 ? String(matches[0].index) : (previous ? String(previous.index) : "");
+                    selectSchedule();
+                };
+
+                document.getElementById("openDoctorLeave").addEventListener("click", () => {
+                    doctor.value = "";
+                    date.value = "";
+                    originalDoctor.value = "";
+                    originalDate.value = "";
+                    leaveForm.dataset.submitting = "false";
+                    clearLeaveErrors();
+                    refreshSchedules();
+                });
+                document.querySelectorAll(".js-edit-doctor-leave").forEach((button) => {
+                    button.addEventListener("click", () => {
+                        originalDoctor.value = button.dataset.doctorCode;
+                        doctor.value = button.dataset.doctorCode;
+                        originalDay.value = button.dataset.day;
+                        originalStart.value = button.dataset.startTime;
+                        originalDate.value = button.dataset.leaveDate;
+                        date.value = button.dataset.leaveDate;
+                        leaveForm.dataset.submitting = "false";
+                        clearLeaveErrors();
+                        refreshSchedules(true);
+                        leaveModal.show();
+                    });
+                });
+                const doctorChanged = () => {
+                    clearLeaveErrors();
+                    refreshSchedules();
+                };
+                if (doctorPicker) {
+                    doctorPicker.on("change.doctorLeave", doctorChanged);
+                } else {
+                    doctor.addEventListener("change", doctorChanged);
+                }
+                date.addEventListener("change", () => {
+                    clearLeaveErrors();
+                    refreshSchedules();
+                });
+                scheduleSelect.addEventListener("change", () => {
+                    hint.textContent = "Pilih jam dan poliklinik yang diliburkan pada tanggal ini.";
+                    selectSchedule();
+                });
+                refreshSchedules(true);
+                if (leaveForm.dataset.reopen === "true") {
+                    leaveModal.show();
+                }
+            }
 
             const form = document.getElementById("scheduleEditorForm");
             const modalElement = document.getElementById("scheduleEditorModal");

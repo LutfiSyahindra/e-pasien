@@ -1396,3 +1396,15 @@
     background: #fff7ed;
     color: #9a3412;
 }
+
+.doctor-schedule-leave-dates {
+    align-items: flex-start;
+    background: #fff7ed;
+    border-radius: 10px;
+    color: #9a3412;
+    display: flex;
+    font-size: .72rem;
+    gap: 8px;
+    margin: 0 0 12px;
+    padding: 10px 12px;
+}

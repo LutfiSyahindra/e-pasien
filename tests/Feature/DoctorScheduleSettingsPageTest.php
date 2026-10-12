@@ -35,6 +35,7 @@ class DoctorScheduleSettingsPageTest extends TestCase
             'time_label' => '12.00 – 13.00 WIB',
             'quota' => 50,
             'quota_label' => '50 pasien',
+            'leave_dates' => ['2026-10-20', '2026-10-27'],
         ]], 1, 15));
 
         $this->mock(DoctorScheduleService::class, function (MockInterface $mock) use ($page): void {
@@ -64,8 +65,20 @@ class DoctorScheduleSettingsPageTest extends TestCase
             ->assertSeeText('Poliklinik Anak')
             ->assertSeeText('12.00 – 13.00 WIB')
             ->assertSee('data-doctor-code="dryunus"', false)
-            ->assertSee('role="switch"', false)
-            ->assertSee('aria-checked="false"', false)
+            ->assertSeeText('Atur Libur')
+            ->assertSee('type="date" name="leave_date"', false)
+            ->assertSee('id="scheduleLeaveModal"', false)
+            ->assertSee('id="openDoctorLeave"', false)
+            ->assertSee('name="doctor_code" id="leaveDoctorCode"', false)
+            ->assertSee('form="scheduleLeaveForm" id="leaveSaveButton"', false)
+            ->assertSee('modal-dialog-scrollable', false)
+            ->assertSeeText('Daftar Dokter Libur')
+            ->assertSee('class="schedule-leave-edit js-edit-doctor-leave"', false)
+            ->assertSee('<option value="dryunus"', false)
+            ->assertSee('value="2026-10-20"', false)
+            ->assertSee('value="2026-10-27"', false)
+            ->assertSeeText('20/10/2026')
+            ->assertSeeText('Batalkan')
             ->assertSee(route('doctorScheduleSettings.updateLeave'), false)
             ->assertSee('doctor-schedule-settings.css');
     }
@@ -114,6 +127,35 @@ class DoctorScheduleSettingsPageTest extends TestCase
                 'status',
                 'Jadwal dokter berhasil diperbarui dan langsung tersinkron ke menu Jadwal Dokter.'
             );
+    }
+
+    public function test_invalid_leave_date_reopens_the_picker_and_preserves_the_selected_schedule(): void
+    {
+        $this->travelTo(now('Asia/Jakarta')->setDate(2026, 10, 12)->setTime(8, 0));
+        $page = $this->pageData(new LengthAwarePaginator([[
+            'doctor_code' => 'dryunus', 'doctor_name' => 'dr. Achmad Yunus, Sp.A',
+            'clinic_code' => 'ANA', 'clinic_name' => 'Poliklinik Anak',
+            'day' => 'SELASA', 'day_label' => 'Selasa', 'start_time' => '12:00', 'end_time' => '13:00',
+            'time_label' => '12.00 - 13.00 WIB', 'quota' => 50, 'quota_label' => '50 pasien',
+        ]], 1, 15));
+        $this->mock(DoctorScheduleService::class, function (MockInterface $mock) use ($page): void {
+            $mock->shouldNotReceive('setOnLeave');
+            $mock->shouldReceive('emptyPage')->once()->andReturn($page);
+            $mock->shouldReceive('page')->once()->andReturn($page);
+        });
+
+        $this->actingAs($this->authorizedStaff())
+            ->from(route('doctorScheduleSettings.index'))
+            ->patch(route('doctorScheduleSettings.updateLeave'), [
+                'original_doctor_code' => 'dryunus', 'original_day' => 'SELASA', 'original_start_time' => '12:00',
+                '_method' => 'PATCH', 'is_on_leave' => 1, 'leave_date' => '2026-10-06',
+            ])->assertSessionHasErrors('leave_date')->assertSessionHasInput('leave_date', '2026-10-06');
+
+        $this->get(route('doctorScheduleSettings.index'))->assertOk()
+            ->assertSee('id="scheduleLeaveForm" class="schedule-leave-form"', false)
+            ->assertSee('data-reopen="true"', false)
+            ->assertSee('type="date" name="leave_date" value="2026-10-06"', false)
+            ->assertSeeText('Tanggal libur tidak boleh sebelum hari ini.');
     }
 
     public function test_schedule_update_rejects_an_invalid_time_range(): void
@@ -179,6 +221,7 @@ class DoctorScheduleSettingsPageTest extends TestCase
                 'RABU' => 'Rabu',
             ],
             'schedules' => $schedules,
+            'leaveSchedules' => $schedules->getCollection(),
             'clinics' => [[
                 'code' => 'ANA',
                 'name' => 'Poliklinik Anak',

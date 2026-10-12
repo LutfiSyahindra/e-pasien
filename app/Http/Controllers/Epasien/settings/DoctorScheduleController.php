@@ -10,6 +10,7 @@ use App\Http\Requests\Epasien\Settings\UpdateDoctorScheduleRequest;
 use App\Services\epasien\settings\DoctorScheduleService;
 use App\Support\Epasien\DoctorScheduleDay;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -181,9 +182,11 @@ class DoctorScheduleController extends Controller
             'start_time' => $validated['original_start_time'],
         ];
         $isOnLeave = $request->boolean('is_on_leave');
+        $date = $validated['leave_date'];
+        $originalDate = $validated['original_leave_date'] ?? null;
 
         try {
-            $this->doctorScheduleService->setOnLeave($original, $isOnLeave);
+            $this->doctorScheduleService->setOnLeave($original, $isOnLeave, $date, $originalDate);
         } catch (ValidationException $exception) {
             throw $exception;
         } catch (Throwable $exception) {
@@ -195,13 +198,15 @@ class DoctorScheduleController extends Controller
 
             return back()->withErrors([
                 'schedule' => 'Status libur belum dapat disimpan. Silakan coba kembali.',
-            ]);
+            ])->withInput();
         }
 
         Log::info('Status libur jadwal dokter diperbarui melalui E-Pasien.', [
             'user_id' => $request->user()?->id,
             ...$original,
             'is_on_leave' => $isOnLeave,
+            'leave_date' => $date,
+            'original_leave_date' => $originalDate,
         ]);
 
         return redirect()->route('doctorScheduleSettings.index', array_filter([
@@ -210,8 +215,10 @@ class DoctorScheduleController extends Controller
             'poli' => $validated['filter_clinic'] ?? null,
             'page' => $validated['filter_page'] ?? null,
         ], fn (mixed $value): bool => $value !== null && $value !== ''))
-            ->with('status', $isOnLeave
-                ? 'Dokter diliburkan pada jadwal yang dipilih. Matikan toggle Libur untuk mengaktifkannya kembali.'
-                : 'Jadwal dokter kembali aktif. Hari, jam, dan kuota tetap tersimpan.');
+            ->with('status', $originalDate !== null
+                ? 'Tanggal libur dokter berhasil diubah dari '.Carbon::parse($originalDate)->format('d/m/Y').' menjadi '.Carbon::parse($date)->format('d/m/Y').'.'
+                : ($isOnLeave
+                ? 'Dokter libur pada tanggal '.Carbon::parse($date)->format('d/m/Y').' untuk jam dan poliklinik yang dipilih.'
+                : 'Libur dokter pada tanggal '.Carbon::parse($date)->format('d/m/Y').' berhasil dibatalkan.'));
     }
 }

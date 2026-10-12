@@ -1,7 +1,7 @@
 <head>
     @php
         $usesDataTables = request()->routeIs("users.*", "roles.*", "permissions.*");
-        $usesSelect2 = request()->routeIs("users.*", "roles.*", "roleConfiguration.*", "daftarOnline.index");
+        $usesSelect2 = request()->routeIs("users.*", "roles.*", "roleConfiguration.*", "daftarOnline.index", "doctorScheduleSettings.index");
         $usesAccessControl = request()->routeIs("users.*", "roles.*", "permissions.*", "roleConfiguration.*");
         $usesSweetAlert = request()->routeIs("profile.*", "users.*", "roles.*", "permissions.*", "daftarOnline.*");
     @endphp

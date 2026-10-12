@@ -1105,12 +1105,15 @@ class DaftarOnlineServiceTest extends TestCase
         $repository->method('previewNextRegistrationNumber')->willReturn('001');
         $service = new DaftarOnlineService($repository);
         $leaves = app(DoctorScheduleLeaveRepository::class);
-        $leaves->setOnLeave($schedule, true);
+        $leaves->setOnLeave($schedule, true, '2026-07-27');
+        $leaves->setOnLeave($schedule, true, '2026-08-03');
 
         $this->assertSame([], $service->availableSchedules('2026-07-27')['schedules']);
-        $this->assertSame([], $service->alternativeSchedules('2026-07-27', 'D001', 'POL01')['schedules']);
+        $this->assertCount(1, $service->availableSchedules('2026-08-10')['schedules']);
+        $alternatives = $service->alternativeSchedules('2026-07-27', 'D001', 'POL01')['schedules'];
+        $this->assertSame(['2026-08-10', '2026-08-17', '2026-08-24'], array_column($alternatives, 'tanggal'));
 
-        $leaves->setOnLeave($schedule, false);
+        $leaves->setOnLeave($schedule, false, '2026-07-27');
         $this->assertCount(1, $service->availableSchedules('2026-07-27')['schedules']);
         $this->assertNotEmpty($service->alternativeSchedules('2026-07-27', 'D001', 'POL01')['schedules']);
     }

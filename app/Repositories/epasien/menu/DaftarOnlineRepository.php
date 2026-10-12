@@ -373,7 +373,8 @@ class DaftarOnlineRepository
     public function findSchedule(
         string $doctorCode,
         string $clinicCode,
-        array $workdayAliases
+        array $workdayAliases,
+        ?string $date = null
     ): ?object {
         $schedules = $this->scheduleQuery()
             ->where('jadwal.kd_dokter', $doctorCode)
@@ -382,7 +383,7 @@ class DaftarOnlineRepository
             ->orderBy('jadwal.jam_mulai')
             ->get();
 
-        return app(DoctorScheduleLeaveRepository::class)->available($schedules)->first()
+        return ($date === null ? $schedules : app(DoctorScheduleLeaveRepository::class)->available($schedules, $date))->first()
             ?? $schedules->first();
     }
 
@@ -572,12 +573,12 @@ class DaftarOnlineRepository
             ->orderBy('jam_mulai')
             ->lockForUpdate()
             ->get();
-        $schedule = app(DoctorScheduleLeaveRepository::class)->available($schedules)->first()
+        $schedule = app(DoctorScheduleLeaveRepository::class)->available($schedules, $date)->first()
             ?? $schedules->first();
         $quota = max(0, (int) ($schedule->kuota ?? 0));
 
         if ($schedule !== null) {
-            app(DoctorScheduleLeaveRepository::class)->ensureAvailable($schedule);
+            app(DoctorScheduleLeaveRepository::class)->ensureAvailable($schedule, $date);
         }
 
         // A locking read sees the latest registrations before allocating the last slot.

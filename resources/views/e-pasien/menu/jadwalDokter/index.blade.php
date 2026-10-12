@@ -290,9 +290,18 @@
                                 </div>
                             </div>
 
+                            @if ($schedule["leave_dates"] ?? [])
+                                <p class="doctor-schedule-leave-dates">
+                                    <i class="bi bi-calendar2-x" aria-hidden="true"></i>
+                                    <span>Libur:
+                                        {{ collect($schedule["leave_dates"])->map(fn ($date) => \Illuminate\Support\Carbon::parse($date)->format("d/m/Y"))->implode(", ") }}
+                                    </span>
+                                </p>
+                            @endif
+
                             @if ($schedule["is_on_leave"] ?? false)
                                 <div class="doctor-schedule-register is-on-leave" role="status">
-                                    <span><small>Jadwal sementara diliburkan</small>Silakan pilih jadwal lain</span>
+                                    <span><small>Dokter libur hari ini</small>Silakan pilih jadwal lain</span>
                                     <i class="bi bi-calendar2-x"></i>
                                 </div>
                             @else
