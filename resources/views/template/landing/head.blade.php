@@ -1,10 +1,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" type="image/png" href="{{ asset("landing/assets/imagesArsy/logoarsy.png") }}">
-    <title>RS ARSY | Pelayanan Kesehatan</title>
+    <link rel="shortcut icon" type="image/png" href="{{ $landingImages['logo'] }}">
+    <title>{{ $landingContent['identity']['page_title'] }}</title>
     <meta name="description"
-        content="Informasi layanan, poli spesialis, jadwal dokter, dan kontak resmi RS Abdurrahman Syamsuri.">
+        content="{{ $landingContent['identity']['meta_description'] }}">
     <meta name="theme-color" content="#087b3f">
     <link rel="manifest" href="{{ asset("manifest.webmanifest") }}">
     <link rel="apple-touch-icon" href="{{ asset("epasien/assets/images/pwa-icon-180.png") }}">

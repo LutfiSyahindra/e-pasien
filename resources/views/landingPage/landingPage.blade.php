@@ -6,28 +6,27 @@
         <div class="container-full-header">
             <div class="row">
                 <div class="col-lg-12">
-                    <div class="banner-area-one premium-hero rts-section-gap bg_image">
+                    <div class="banner-area-one premium-hero rts-section-gap bg_image" style="background-image: url('{{ $landingImages['hero'] }}')">
                         <div class="banner-content-area premium-hero__content">
                             <div class="pre-title premium-hero__eyebrow wow fadeInUp" data-wow-delay=".0s"
                                 data-wow-duration=".8s">
                                 <span class="premium-hero__eyebrow-icon" aria-hidden="true">
                                     <i class="fa-regular fa-hospital"></i>
                                 </span>
-                                <span>RS ABDURRAHMAN SYAMSURI</span>
+                                <span>{{ $landingContent['hero']['eyebrow'] }}</span>
                             </div>
                             <h1 class="title wow fadeInUp" data-wow-delay=".2s" data-wow-duration=".8s">
-                                Kesehatan Anda,<br>
-                                <span>Prioritas Kami.</span>
+                                {{ $landingContent['hero']['title'] }}<br>
+                                <span>{{ $landingContent['hero']['highlight'] }}</span>
                             </h1>
                             <p class="disc wow fadeInUp" data-wow-delay=".4s" data-wow-duration=".8s">
-                                Pelayanan kesehatan yang Islami, bermanfaat, akurat, dan nyaman dengan tenaga medis
-                                profesional yang siap mendampingi Anda dan keluarga.
+                                {{ $landingContent['hero']['description'] }}
                             </p>
 
                             <div class="premium-hero__actions wow fadeInUp" data-wow-delay=".55s"
                                 data-wow-duration=".8s">
                                 <a href="{{ route("login") }}" class="rts-btn btn-primary premium-hero__primary">
-                                    Masuk ke E-Pasien
+                                    {{ $landingContent['hero']['primary_label'] }}
                                     <img src="{{ asset("landing/assets/images/banner/icons/arrow--up-right.svg") }}"
                                         alt="" aria-hidden="true">
                                 </a>
@@ -43,22 +42,22 @@
                                 <div class="premium-hero__fact">
                                     <i class="fa-regular fa-clock" aria-hidden="true"></i>
                                     <div>
-                                        <strong>24 Jam</strong>
-                                        <span>Layanan IGD</span>
+                                        <strong>{{ $landingContent['hero']['fact_one_title'] }}</strong>
+                                        <span>{{ $landingContent['hero']['fact_one_description'] }}</span>
                                     </div>
                                 </div>
                                 <div class="premium-hero__fact">
                                     <i class="fa-regular fa-user-doctor" aria-hidden="true"></i>
                                     <div>
-                                        <strong>Profesional</strong>
-                                        <span>Tenaga medis</span>
+                                        <strong>{{ $landingContent['hero']['fact_two_title'] }}</strong>
+                                        <span>{{ $landingContent['hero']['fact_two_description'] }}</span>
                                     </div>
                                 </div>
                                 <div class="premium-hero__fact">
                                     <i class="fa-regular fa-heart" aria-hidden="true"></i>
                                     <div>
-                                        <strong>Nyaman</strong>
-                                        <span>Sepenuh hati</span>
+                                        <strong>{{ $landingContent['hero']['fact_three_title'] }}</strong>
+                                        <span>{{ $landingContent['hero']['fact_three_description'] }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -70,8 +69,8 @@
                                 <i class="fa-solid fa-plus"></i>
                             </span>
                             <div>
-                                <span>Siap melayani Anda</span>
-                                <strong>IGD 24 Jam</strong>
+                                <span>{{ $landingContent['hero']['emergency_caption'] }}</span>
+                                <strong>{{ $landingContent['hero']['emergency_title'] }}</strong>
                             </div>
                         </div>
                     </div>
@@ -90,11 +89,10 @@
                     <div class="landing-pwa__copy wow fadeInLeft" data-wow-duration=".8s">
                         <span class="landing-pwa__eyebrow">
                             <i class="fa-regular fa-mobile-screen-button" aria-hidden="true"></i>
-                            Aplikasi pasien RS ARSY
+                            {{ $landingContent['pwa']['eyebrow'] }}
                         </span>
-                        <h2 id="landing-pwa-title">RS ARSY kini lebih dekat, <span>langsung dari layar utama.</span></h2>
-                        <p>Pasang E-Pasien di ponsel atau komputer untuk membuka jadwal dokter, pendaftaran, antrean,
-                            dan informasi layanan dengan lebih cepat.</p>
+                        <h2 id="landing-pwa-title">{{ $landingContent['pwa']['title'] }} <span>{{ $landingContent['pwa']['highlight'] }}</span></h2>
+                        <p>{{ $landingContent['pwa']['description'] }}</p>
 
                         <ul class="landing-pwa__benefits" aria-label="Keunggulan aplikasi E-Pasien">
                             <li><i class="fa-solid fa-bolt" aria-hidden="true"></i><span><strong>Cepat</strong>Tanpa ketik alamat</span></li>
@@ -132,7 +130,7 @@
                                     <div class="landing-pwa-mobile__brand">
                                         <span><img src="{{ asset("epasien/assets/images/pwa-icon-192.png") }}" alt=""
                                                 width="42" height="42"></span>
-                                        <div><small>RS ARSY</small><strong>E-Pasien</strong></div>
+                                        <div><small>{{ $landingContent['identity']['short_name'] }}</small><strong>E-Pasien</strong></div>
                                     </div>
                                     <span class="landing-pwa-mobile__bell"><i class="fa-regular fa-bell"></i><em></em></span>
                                 </header>
@@ -221,14 +219,13 @@
                 <div class="patient-login-cta__content wow fadeInLeft" data-wow-duration=".8s">
                     <span class="patient-login-cta__eyebrow">
                         <i class="fa-solid fa-sparkles" aria-hidden="true"></i>
-                        Layanan digital khusus pasien
+                        {{ $landingContent['patient']['eyebrow'] }}
                     </span>
                     <h2 id="patient-login-cta-title">
-                        Seluruh layanan E-Pasien, <span>cukup satu kali login.</span>
+                        {{ $landingContent['patient']['title'] }} <span>{{ $landingContent['patient']['highlight'] }}</span>
                     </h2>
                     <p>
-                        Masuk dengan akun pasien Anda untuk mengurus kebutuhan kesehatan dengan lebih cepat,
-                        aman, dan praktis dari mana saja.
+                        {{ $landingContent['patient']['description'] }}
                     </p>
 
                     <ul class="patient-login-cta__services" aria-label="Layanan yang tersedia setelah login">
@@ -265,18 +262,18 @@
                             <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                         </a>
                     @else
-                        <span class="patient-login-cta__action-label">Sudah menjadi pasien RS ARSY?</span>
-                        <h3>Masuk dan nikmati semua layanan</h3>
-                        <p>Siapkan email atau nomor rekam medis Anda untuk melanjutkan.</p>
+                        <span class="patient-login-cta__action-label">{{ $landingContent['patient']['guest_label'] }}</span>
+                        <h3>{{ $landingContent['patient']['guest_title'] }}</h3>
+                        <p>{{ $landingContent['patient']['guest_description'] }}</p>
                         <a href="{{ route("login") }}" class="patient-login-cta__button">
-                            <span>Masuk ke E-Pasien</span>
+                            <span>{{ $landingContent['hero']['primary_label'] }}</span>
                             <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                         </a>
                     @endauth
 
                     <small class="patient-login-cta__privacy">
                         <i class="fa-solid fa-shield-check" aria-hidden="true"></i>
-                        Akses pribadi untuk menjaga keamanan data kesehatan Anda.
+                        {{ $landingContent['patient']['privacy'] }}
                     </small>
                 </aside>
             </div>
@@ -285,144 +282,7 @@
     <!-- patient login call-to-action end -->
 
     <!-- hospital services area start -->
-    @php
-        $hospitalServices = [
-            ["name" => "Instalasi Gawat Darurat (IGD)", "category" => "Layanan 24 Jam", "icon" => "fa-truck-medical"],
-            ["name" => "Kamar Operasi", "category" => "Tindakan Medis", "icon" => "fa-kit-medical"],
-            ["name" => "Rawat Inap", "category" => "Perawatan", "icon" => "fa-bed-pulse"],
-            ["name" => "Kamar Bersalin", "category" => "Ibu & Anak", "icon" => "fa-heart"],
-            ["name" => "Rawat Jalan / Poli Spesialis", "category" => "Poli Spesialis", "icon" => "fa-user-doctor"],
-            ["name" => "Radiologi", "category" => "Penunjang Medis", "icon" => "fa-x-ray"],
-            ["name" => "Laboratorium", "category" => "Penunjang Medis", "icon" => "fa-flask"],
-            ["name" => "Farmasi", "category" => "Obat & Konsultasi", "icon" => "fa-capsules"],
-            ["name" => "Ambulance", "category" => "Layanan 24 Jam", "icon" => "fa-truck-medical"],
-            ["name" => "Instalasi Gizi", "category" => "Nutrisi", "icon" => "fa-utensils"],
-            ["name" => "Rehabilitasi Medik / Fisioterapi", "category" => "Pemulihan", "icon" => "fa-person-walking"],
-            ["name" => "Persalinan Metode ERACS", "category" => "Ibu & Anak", "icon" => "fa-baby"],
-        ];
 
-        $otherServices = [
-            [
-                "name" => "Medical Check-Up",
-                "description" => "Pemeriksaan kesehatan menyeluruh meliputi pemeriksaan umum, rontgen, dan laboratorium untuk individu, perusahaan, dan instansi.",
-                "icon" => "fa-clipboard-check",
-            ],
-            [
-                "name" => "Mitra Event Kesehatan",
-                "description" => "Dukungan tenaga medis untuk berbagai event kesehatan seperti seminar, bakti sosial, pengobatan gratis, khitan massal, dan lainnya.",
-                "icon" => "fa-users",
-            ],
-            [
-                "name" => "Vaksinasi",
-                "description" => "Layanan imunisasi anak dan dewasa sesuai kebutuhan.",
-                "icon" => "fa-syringe",
-            ],
-            [
-                "name" => "Nacehat",
-                "description" => "Layanan antar obat langsung ke rumah dengan mudah dan cepat.",
-                "icon" => "fa-motorcycle",
-            ],
-            [
-                "name" => "Home Care & On Site",
-                "description" => "Pelayanan medis di rumah maupun di lokasi sesuai kebutuhan pasien.",
-                "icon" => "fa-house",
-            ],
-            [
-                "name" => "USG 4D",
-                "description" => "Visualisasi janin yang lebih nyata untuk membantu memantau tumbuh kembangnya.",
-                "icon" => "fa-baby",
-            ],
-        ];
-
-        $specialistClinics = [
-            [
-                "name" => "Poli Anak",
-                "focus" => "Kesehatan Anak",
-                "description" => "Pendampingan kesehatan, pertumbuhan, dan perkembangan anak sejak dini.",
-                "icon" => "fa-child-reaching",
-                "custom_icon" => "child",
-                "group" => "family",
-            ],
-            [
-                "name" => "Poli Bedah",
-                "focus" => "Konsultasi Bedah",
-                "description" => "Pemeriksaan dan konsultasi untuk kondisi yang membutuhkan tindakan bedah.",
-                "icon" => "fa-bandage",
-                "group" => "surgery",
-            ],
-            [
-                "name" => "Poli Kandungan",
-                "focus" => "Ibu & Kehamilan",
-                "description" => "Layanan kesehatan reproduksi, kehamilan, dan persiapan persalinan.",
-                "icon" => "fa-person-pregnant",
-                "custom_icon" => "maternity",
-                "group" => "family",
-            ],
-            [
-                "name" => "Poli Kulit & Kelamin",
-                "focus" => "Kulit & Kelamin",
-                "description" => "Diagnosis dan perawatan berbagai keluhan kesehatan kulit dan kelamin.",
-                "icon" => "fa-hand-dots",
-                "group" => "sensory",
-            ],
-            [
-                "name" => "Poli Mata",
-                "focus" => "Kesehatan Mata",
-                "description" => "Pemeriksaan penglihatan dan penanganan gangguan kesehatan mata.",
-                "icon" => "fa-eye",
-                "group" => "sensory",
-            ],
-            [
-                "name" => "Poli Orthopedi",
-                "focus" => "Tulang & Sendi",
-                "description" => "Penanganan keluhan pada tulang, sendi, otot, dan sistem gerak.",
-                "icon" => "fa-bone",
-                "group" => "surgery",
-            ],
-            [
-                "name" => "Poli Paru",
-                "focus" => "Pernapasan",
-                "description" => "Pemeriksaan dan perawatan gangguan paru serta sistem pernapasan.",
-                "icon" => "fa-lungs",
-                "group" => "internal",
-            ],
-            [
-                "name" => "Poli Penyakit Dalam",
-                "focus" => "Penyakit Dalam",
-                "description" => "Konsultasi menyeluruh untuk berbagai keluhan kesehatan organ dalam.",
-                "icon" => "fa-stethoscope",
-                "group" => "internal",
-            ],
-            [
-                "name" => "Poli Rehab Medis",
-                "focus" => "Pemulihan Fungsi",
-                "description" => "Program pemulihan untuk membantu fungsi gerak dan aktivitas sehari-hari.",
-                "icon" => "fa-person-walking",
-                "group" => "surgery",
-            ],
-            [
-                "name" => "Poli Syaraf",
-                "focus" => "Sistem Saraf",
-                "description" => "Penanganan keluhan yang berkaitan dengan otak, saraf, dan tulang belakang.",
-                "icon" => "fa-brain",
-                "group" => "sensory",
-            ],
-            [
-                "name" => "Poli THT",
-                "focus" => "Telinga, Hidung & Tenggorokan",
-                "description" => "Pemeriksaan kesehatan telinga, hidung, tenggorokan, kepala, dan leher.",
-                "icon" => "fa-ear-listen",
-                "group" => "sensory",
-            ],
-            [
-                "name" => "Poli Urologi",
-                "focus" => "Saluran Kemih",
-                "description" => "Konsultasi gangguan saluran kemih serta sistem reproduksi pria.",
-                "icon" => "fa-droplet",
-                "group" => "internal",
-            ],
-        ];
-    @endphp
 
     <section id="layanan" class="hospital-services" aria-labelledby="hospital-services-title">
         <span class="hospital-services__decoration hospital-services__decoration--one" aria-hidden="true"></span>
@@ -433,11 +293,10 @@
                 <header class="hospital-services__header wow fadeInLeft" data-wow-duration=".8s">
                     <span class="hospital-services__eyebrow">
                         <i class="fa-solid fa-heart-pulse" aria-hidden="true"></i>
-                        Layanan Kami
+                        {{ $landingContent['service_intro']['eyebrow'] }}
                     </span>
-                    <h2 id="hospital-services-title">Pelayanan lengkap, <span>untuk setiap langkah.</span></h2>
-                    <p>Dari kondisi darurat hingga pemulihan, tim kami siap mendampingi Anda dan keluarga melalui
-                        pelayanan kesehatan yang terintegrasi.</p>
+                    <h2 id="hospital-services-title">{{ $landingContent['service_intro']['title'] }} <span>{{ $landingContent['service_intro']['highlight'] }}</span></h2>
+                    <p>{{ $landingContent['service_intro']['description'] }}</p>
 
                     <div class="hospital-services__intro-footer">
                         <div class="hospital-services__summary" aria-label="Ringkasan layanan">
@@ -452,8 +311,8 @@
                 </header>
 
                 <div class="hospital-services__visual wow fadeInRight" data-wow-duration=".8s">
-                    <img src="{{ asset("landing/assets/imagesArsy/rs.jpeg") }}"
-                        alt="Gedung RS Abdurrahman Syamsuri dengan layanan IGD 24 jam">
+                    <img src="{{ $landingImages['building'] }}"
+                        alt="{{ $landingContent['service_intro']['building_alt'] }}">
                     <span class="hospital-services__visual-shade" aria-hidden="true"></span>
 
                     <div class="hospital-services__visual-brand">
@@ -462,7 +321,7 @@
                         </span>
                         <div>
                             <small>Pelayanan terpadu</small>
-                            <strong>RS ARSY</strong>
+                            <strong>{{ $landingContent['identity']['short_name'] }}</strong>
                         </div>
                     </div>
 
@@ -470,7 +329,7 @@
                         <span class="hospital-services__visual-pulse" aria-hidden="true"></span>
                         <div>
                             <small>Siap melayani</small>
-                            <strong>IGD 24 Jam</strong>
+                            <strong>{{ $landingContent['hero']['emergency_title'] }}</strong>
                         </div>
                     </div>
                 </div>
@@ -479,10 +338,9 @@
             <div id="daftar-layanan" class="hospital-services__list-heading wow fadeInUp" data-wow-duration=".8s">
                 <div>
                     <span>Pelayanan utama</span>
-                    <h2>Semua kebutuhan kesehatan dalam satu tempat</h2>
+                    <h2>{{ $landingContent['service_intro']['main_title'] }}</h2>
                 </div>
-                <p><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Ditangani oleh tenaga medis
-                    profesional dan berpengalaman.</p>
+                <p><i class="fa-solid fa-circle-check" aria-hidden="true"></i> {{ $landingContent['service_intro']['main_description'] }}</p>
             </div>
 
             <ul class="hospital-services__grid" aria-label="Daftar pelayanan rumah sakit">
@@ -504,9 +362,8 @@
             <div class="hospital-services__other">
                 <div class="hospital-services__other-heading wow fadeInUp" data-wow-duration=".8s">
                     <span>Layanan Lain</span>
-                    <h2>Lebih dekat, lebih lengkap</h2>
-                    <p>Solusi kesehatan tambahan yang dapat disesuaikan dengan kebutuhan personal, keluarga,
-                        perusahaan, maupun instansi.</p>
+                    <h2>{{ $landingContent['service_intro']['other_title'] }}</h2>
+                    <p>{{ $landingContent['service_intro']['other_description'] }}</p>
                 </div>
 
                 <div class="hospital-services__other-grid">
@@ -516,7 +373,7 @@
                                 <i class="fa-solid {{ $service["icon"] }}"></i>
                             </span>
                             <div class="other-service-card__content">
-                                <span class="other-service-card__number">0{{ $index + 1 }}</span>
+                                <span class="other-service-card__number">{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</span>
                                 <h3>{{ $service["name"] }}</h3>
                                 <p>{{ $service["description"] }}</p>
                             </div>
@@ -531,7 +388,7 @@
                         </span>
                         <div>
                             <small>Akses pelayanan lebih mudah</small>
-                            <h3>Siap merencanakan kunjungan Anda?</h3>
+                            <h3>{{ $landingContent['service_intro']['cta_title'] }}</h3>
                         </div>
                     </div>
                     <div class="hospital-services__cta-actions">
@@ -539,7 +396,7 @@
                             <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
                             Jadwal Dokter
                         </a>
-                        <a href="/login" class="hospital-services__cta-primary">
+                        <a href="{{ route('login') }}" class="hospital-services__cta-primary">
                             Buat Janji Temu
                             <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                         </a>
@@ -560,14 +417,13 @@
                 <div class="specialist-clinics__heading wow fadeInLeft" data-wow-duration=".8s">
                     <span class="specialist-clinics__eyebrow">
                         <i class="fa-solid fa-user-doctor" aria-hidden="true"></i>
-                        Poli Spesialis RS ARSY
+                        {{ $landingContent['clinic_intro']['eyebrow'] }}
                     </span>
-                    <h2 id="specialist-clinics-title">Perawatan tepat bersama <span>dokter yang tepat.</span></h2>
+                    <h2 id="specialist-clinics-title">{{ $landingContent['clinic_intro']['title'] }} <span>{{ $landingContent['clinic_intro']['highlight'] }}</span></h2>
                 </div>
 
                 <div class="specialist-clinics__lead wow fadeInRight" data-wow-duration=".8s">
-                    <p>Pilih layanan spesialis sesuai kebutuhan Anda. Setiap poli didukung tenaga medis profesional
-                        untuk memberikan pemeriksaan dan rencana perawatan yang menyeluruh.</p>
+                    <p>{{ $landingContent['clinic_intro']['description'] }}</p>
                     <div class="specialist-clinics__meta" aria-label="Ringkasan poli spesialis">
                         <span class="specialist-clinics__count">{{ count($specialistClinics) }}</span>
                         <span>pilihan poli<br>spesialis</span>
@@ -601,23 +457,23 @@
                 <div class="specialist-clinics__filters" aria-label="Filter kategori poli spesialis">
                     <button type="button" class="specialist-clinics__filter is-active" data-specialist-filter="all"
                         aria-pressed="true">
-                        Semua Poli <span>12</span>
+                        Semua Poli <span>{{ count($specialistClinics) }}</span>
                     </button>
                     <button type="button" class="specialist-clinics__filter" data-specialist-filter="family"
                         aria-pressed="false">
-                        Ibu & Anak <span>2</span>
+                        Ibu & Anak <span>{{ collect($specialistClinics)->where("group", "family")->count() }}</span>
                     </button>
                     <button type="button" class="specialist-clinics__filter" data-specialist-filter="surgery"
                         aria-pressed="false">
-                        Bedah & Rehabilitasi <span>3</span>
+                        Bedah & Rehabilitasi <span>{{ collect($specialistClinics)->where("group", "surgery")->count() }}</span>
                     </button>
                     <button type="button" class="specialist-clinics__filter" data-specialist-filter="internal"
                         aria-pressed="false">
-                        Organ Dalam <span>3</span>
+                        Organ Dalam <span>{{ collect($specialistClinics)->where("group", "internal")->count() }}</span>
                     </button>
                     <button type="button" class="specialist-clinics__filter" data-specialist-filter="sensory"
                         aria-pressed="false">
-                        Indra & Saraf <span>4</span>
+                        Indra & Saraf <span>{{ collect($specialistClinics)->where("group", "sensory")->count() }}</span>
                     </button>
                 </div>
 
@@ -648,7 +504,7 @@
                             {{ str_pad($index + 1, 2, "0", STR_PAD_LEFT) }}
                         </span>
                         <span class="specialist-clinic-card__icon" aria-hidden="true">
-                            @if (($clinic["custom_icon"] ?? null) === "child")
+                            @if ($clinic["icon"] === "fa-child-reaching")
                                 <svg class="specialist-clinic-card__svg" viewBox="0 0 64 64" fill="none"
                                     xmlns="http://www.w3.org/2000/svg">
                                     <path d="M27 15c0-5 4-8 9-8 4 0 7 2 8 5-1 4-4 7-8 7"
@@ -662,7 +518,7 @@
                                     <path d="M26 43c2 2 4 3 6 3s4-1 6-3" stroke="currentColor" stroke-width="3"
                                         stroke-linecap="round" />
                                 </svg>
-                            @elseif (($clinic["custom_icon"] ?? null) === "maternity")
+                            @elseif ($clinic["icon"] === "fa-person-pregnant")
                                 <svg class="specialist-clinic-card__svg" viewBox="0 0 64 64" fill="none"
                                     xmlns="http://www.w3.org/2000/svg">
                                     <circle cx="25" cy="12" r="6" stroke="currentColor" stroke-width="3.5" />
@@ -707,9 +563,9 @@
                         <i class="fa-solid fa-heart-pulse"></i>
                     </span>
                     <div>
-                        <small>RS Abdurrahman Syamsuri</small>
-                        <h3>Belum yakin harus memilih poli yang mana?</h3>
-                        <p>Lihat jadwal dokter atau mulai pendaftaran untuk merencanakan kunjungan Anda.</p>
+                        <small>{{ $landingContent['identity']['full_name'] }}</small>
+                        <h3>{{ $landingContent['clinic_intro']['cta_title'] }}</h3>
+                        <p>{{ $landingContent['clinic_intro']['cta_description'] }}</p>
                     </div>
                 </div>
                 <div class="specialist-clinics__cta-actions">
@@ -717,7 +573,7 @@
                         <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
                         Jadwal Dokter
                     </a>
-                    <a href="/login" class="specialist-clinics__appointment">
+                    <a href="{{ route('login') }}" class="specialist-clinics__appointment">
                         Daftar Sekarang
                         <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
                     </a>
@@ -818,11 +674,10 @@
                 <div class="landing-doctor-schedule__heading wow fadeInLeft" data-wow-duration=".8s">
                     <span class="landing-doctor-schedule__eyebrow">
                         <i class="fa-regular fa-calendar-check" aria-hidden="true"></i>
-                        Jadwal Praktik
+                        {{ $landingContent['schedule_intro']['eyebrow'] }}
                     </span>
-                    <h2 id="landing-doctor-schedule-title">Temukan dokter yang <span>praktik {{ $landingScheduleLabel }}.</span></h2>
-                    <p>Lihat jadwal dokter dan jam pelayanan sebelum merencanakan kunjungan Anda ke RS Abdurrahman
-                        Syamsuri.</p>
+                    <h2 id="landing-doctor-schedule-title">{{ $landingContent['schedule_intro']['title'] }} <span>{{ $landingContent['schedule_intro']['highlight'] }} {{ $landingScheduleLabel }}.</span></h2>
+                    <p>{{ $landingContent['schedule_intro']['description'] }}</p>
                 </div>
 
                 <div class="landing-doctor-schedule__summary wow fadeInRight" data-wow-duration=".8s">
@@ -1023,52 +878,7 @@
     <!-- doctor schedule area end -->
 
     <!-- information and contact area start -->
-    @php
-        $hospitalLocation = [
-            "name" => "RS KH. Abdurrahman Syamsuri (RS ARSY)",
-            "address" => "Jl. Raya Deandles KM 74, Paciran, Kabupaten Lamongan, Jawa Timur 62264",
-            "embed_url" => "https://www.google.com/maps?q=RS%20KH.%20Abdurrahman%20Syamsuri%20RS%20ARSY%20Paciran%20Lamongan&z=17&output=embed",
-            "directions_url" => "https://www.google.com/maps/dir/?api=1&destination=RS%20KH.%20Abdurrahman%20Syamsuri%20RS%20ARSY%2C%20Paciran%2C%20Lamongan&destination_place_id=ChIJyevd-PLBdy4R2DwQysLmRDM&travelmode=driving",
-        ];
 
-        $hospitalContacts = [
-            [
-                "label" => "Call Centre",
-                "number" => "081232870119",
-                "href" => "tel:+6281232870119",
-                "icon" => "fa-headset",
-                "tone" => "primary",
-            ],
-            [
-                "label" => "IGD",
-                "number" => "081358292709",
-                "href" => "tel:+6281358292709",
-                "icon" => "fa-truck-medical",
-                "tone" => "emergency",
-            ],
-            [
-                "label" => "Pendaftaran",
-                "number" => "088297178737",
-                "href" => "tel:+6288297178737",
-                "icon" => "fa-calendar-check",
-                "tone" => "registration",
-            ],
-            [
-                "label" => "Ruang Bersalin",
-                "number" => "081359666323",
-                "href" => "tel:+6281359666323",
-                "icon" => "fa-baby-carriage",
-                "tone" => "maternity",
-            ],
-            [
-                "label" => "Marketing",
-                "number" => "081232310793",
-                "href" => "tel:+6281232310793",
-                "icon" => "fa-bullhorn",
-                "tone" => "marketing",
-            ],
-        ];
-    @endphp
 
     <section id="informasi-kontak" class="landing-contact" aria-labelledby="landing-contact-title">
         <span class="landing-contact__shape landing-contact__shape--one" aria-hidden="true"></span>
@@ -1079,11 +889,10 @@
                 <header class="landing-contact__intro wow fadeInLeft" data-wow-duration=".8s">
                     <span class="landing-contact__eyebrow">
                         <i class="fa-regular fa-comments" aria-hidden="true"></i>
-                        Informasi &amp; Kontak
+                        {{ $landingContent['contact']['eyebrow'] }}
                     </span>
-                    <h2 id="landing-contact-title">Kami selalu <span>dekat dengan Anda.</span></h2>
-                    <p>Hubungi unit layanan yang Anda butuhkan. Tim RS Abdurrahman Syamsuri siap memberikan informasi
-                        dan membantu kebutuhan Anda.</p>
+                    <h2 id="landing-contact-title">{{ $landingContent['contact']['title'] }} <span>{{ $landingContent['contact']['highlight'] }}</span></h2>
+                    <p>{{ $landingContent['contact']['description'] }}</p>
 
                     <div class="landing-contact__urgent">
                         <span class="landing-contact__urgent-icon" aria-hidden="true">
@@ -1091,9 +900,9 @@
                         </span>
                         <div>
                             <small>Kondisi darurat?</small>
-                            <strong>IGD siap melayani 24 jam</strong>
-                            <a href="tel:+6281358292709" aria-label="Hubungi IGD di 081358292709">
-                                081358292709
+                            <strong>{{ $landingContent['contact']['emergency_title'] }}</strong>
+                            <a href="{{ $hospitalContacts[1]['href'] }}" aria-label="Hubungi {{ $hospitalContacts[1]['label'] }} di {{ $hospitalContacts[1]['number'] }}">
+                                {{ $hospitalContacts[1]['number'] }}
                                 <i class="fa-solid fa-arrow-up-right" aria-hidden="true"></i>
                             </a>
                         </div>
@@ -1102,8 +911,8 @@
                     <div class="landing-contact__availability" aria-label="Layanan informasi tersedia setiap hari">
                         <span aria-hidden="true"><i class="fa-regular fa-clock"></i></span>
                         <div>
-                            <strong>Informasi setiap hari</strong>
-                            <small>Pilih kontak sesuai kebutuhan layanan Anda.</small>
+                            <strong>{{ $landingContent['contact']['availability_title'] }}</strong>
+                            <small>{{ $landingContent['contact']['availability_description'] }}</small>
                         </div>
                     </div>
                 </header>
@@ -1112,9 +921,9 @@
                     <div class="landing-contact__directory-heading">
                         <div>
                             <span>Direktori layanan</span>
-                            <h3>Terhubung dengan cepat</h3>
+                            <h3>{{ $landingContent['contact']['directory_title'] }}</h3>
                         </div>
-                        <span class="landing-contact__directory-count">06</span>
+                        <span class="landing-contact__directory-count">{{ str_pad(count($hospitalContacts) + 1, 2, "0", STR_PAD_LEFT) }}</span>
                     </div>
 
                     <div class="landing-contact__grid">
@@ -1139,21 +948,21 @@
                             </a>
                         @endforeach
 
-                        <a href="https://www.instagram.com/rsarsy_official/" target="_blank" rel="noopener noreferrer"
+                        <a href="{{ $landingContent['contact']['social_url'] }}" target="_blank" rel="noopener noreferrer"
                             class="landing-contact-card is-instagram"
-                            aria-label="Kunjungi Instagram RS Arsy di rsarsy_official">
+                            aria-label="Kunjungi {{ $landingContent['contact']['social_label'] }} {{ $landingContent['contact']['social_handle'] }}">
                             <span class="landing-contact-card__top">
                                 <span class="landing-contact-card__icon" aria-hidden="true">
                                     <i class="fa-brands fa-instagram"></i>
                                 </span>
-                                <small>06</small>
+                                <small>{{ str_pad(count($hospitalContacts) + 1, 2, "0", STR_PAD_LEFT) }}</small>
                             </span>
                             <span class="landing-contact-card__body">
                                 <small>Media sosial</small>
-                                <strong>Instagram</strong>
+                                <strong>{{ $landingContent['contact']['social_label'] }}</strong>
                             </span>
                             <span class="landing-contact-card__action">
-                                <strong>@rsarsy_official</strong>
+                                <strong>{{ $landingContent['contact']['social_handle'] }}</strong>
                                 <span aria-hidden="true"><i class="fa-solid fa-arrow-up-right"></i></span>
                             </span>
                         </a>
@@ -1166,10 +975,10 @@
                 <div class="landing-contact__location-copy">
                     <span class="landing-contact__location-eyebrow">
                         <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
-                        Lokasi RS ARSY
+                        {{ $landingContent['location']['eyebrow'] }}
                     </span>
-                    <h3 id="hospital-location-title">Datang dengan rute yang <span>lebih mudah.</span></h3>
-                    <p>Temukan lokasi rumah sakit dan mulai navigasi dari posisi Anda melalui Google Maps.</p>
+                    <h3 id="hospital-location-title">{{ $landingContent['location']['title'] }} <span>{{ $landingContent['location']['highlight'] }}</span></h3>
+                    <p>{{ $landingContent['location']['description'] }}</p>
 
                     <address class="landing-contact__address">
                         <span aria-hidden="true"><i class="fa-solid fa-hospital"></i></span>
@@ -1181,7 +990,7 @@
 
                     <div class="landing-contact__location-meta" aria-label="Informasi lokasi">
                         <span><i class="fa-solid fa-road" aria-hidden="true"></i> Akses Jalan Raya</span>
-                        <span><i class="fa-regular fa-clock" aria-hidden="true"></i> IGD 24 Jam</span>
+                        <span><i class="fa-regular fa-clock" aria-hidden="true"></i> {{ $landingContent['hero']['emergency_title'] }}</span>
                     </div>
 
                     <a href="{{ $hospitalLocation["directions_url"] }}" target="_blank" rel="noopener noreferrer"
@@ -1189,7 +998,7 @@
                         aria-label="Buka navigasi menuju RS ARSY di Google Maps">
                         <span aria-hidden="true"><i class="fa-solid fa-diamond-turn-right"></i></span>
                         <strong>
-                            Navigasi ke RS ARSY
+                            {{ $landingContent['location']['navigation_label'] }}
                             <small>Buka rute di Google Maps</small>
                         </strong>
                         <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
@@ -1198,13 +1007,13 @@
 
                 <div class="landing-contact__map">
                     <iframe src="{{ $hospitalLocation["embed_url"] }}"
-                        title="Peta lokasi RS KH. Abdurrahman Syamsuri"
+                        title="{{ $landingContent['location']['map_title'] }}"
                         loading="lazy"
                         referrerpolicy="no-referrer-when-downgrade"
                         allowfullscreen></iframe>
                     <span class="landing-contact__map-pin" aria-hidden="true">
                         <i class="fa-solid fa-location-dot"></i>
-                        <strong>RS ARSY</strong>
+                        <strong>{{ $landingContent['identity']['short_name'] }}</strong>
                     </span>
                 </div>
             </div>
@@ -1259,14 +1068,13 @@
                 <div class="landing-specialists__heading wow fadeInLeft" data-wow-duration=".8s">
                     <span class="landing-specialists__eyebrow">
                         <i class="fa-regular fa-user-doctor" aria-hidden="true"></i>
-                        Dokter Spesialis RS ARSY
+                        {{ $landingContent['doctor_intro']['eyebrow'] }}
                     </span>
-                    <h2 id="landing-specialists-title">Tenaga ahli untuk <span>setiap langkah pemulihan.</span></h2>
+                    <h2 id="landing-specialists-title">{{ $landingContent['doctor_intro']['title'] }} <span>{{ $landingContent['doctor_intro']['highlight'] }}</span></h2>
                 </div>
 
                 <div class="landing-specialists__intro wow fadeInRight" data-wow-duration=".8s">
-                    <p>Kenali dokter spesialis kami dan temukan jadwal praktik yang paling sesuai dengan kebutuhan
-                        kesehatan Anda dan keluarga.</p>
+                    <p>{{ $landingContent['doctor_intro']['description'] }}</p>
                     <div class="landing-specialists__intro-actions">
                         <a href="{{ route("landingPage.index", ["hari" => "SEMUA"]) }}#jadwal-praktik" class="landing-specialists__all">
                             Lihat semua dokter

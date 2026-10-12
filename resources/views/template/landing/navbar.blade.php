@@ -4,13 +4,13 @@
         <div class="header-wrapper-1 premium-navbar__surface">
             <div class="logo-area-start premium-navbar__left">
                 <a href="{{ route('landingPage.index') }}" class="logo premium-navbar__brand"
-                    aria-label="Beranda RS ARSY">
+                    aria-label="Beranda {{ $landingContent['identity']['short_name'] }}">
                     <span class="premium-navbar__brand-mark">
-                        <img src="{{ asset('landing/assets/imagesArsy/logoarsy.png') }}" alt="" width="56">
+                        <img src="{{ $landingImages['logo'] }}" alt="" width="56">
                     </span>
                     <span class="premium-navbar__brand-copy">
-                        <strong>RS ARSY</strong>
-                        <small>Pelayanan Kesehatan</small>
+                        <strong>{{ $landingContent['identity']['short_name'] }}</strong>
+                        <small>{{ $landingContent['identity']['tagline'] }}</small>
                     </span>
                 </a>
 

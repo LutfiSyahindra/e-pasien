@@ -2,13 +2,13 @@
 <aside id="side-bar" class="side-bar header-two premium-mobile-nav" aria-label="Navigasi seluler"
     aria-hidden="true" inert>
     <div class="premium-mobile-nav__header">
-        <a href="{{ route('landingPage.index') }}" class="premium-mobile-nav__brand" aria-label="Beranda RS ARSY">
+        <a href="{{ route('landingPage.index') }}" class="premium-mobile-nav__brand" aria-label="Beranda {{ $landingContent['identity']['short_name'] }}">
             <span class="premium-mobile-nav__brand-mark">
-                <img src="{{ asset('landing/assets/imagesArsy/logoarsy.png') }}" alt="" width="48">
+                <img src="{{ $landingImages['logo'] }}" alt="" width="48">
             </span>
             <span>
-                <strong>RS ARSY</strong>
-                <small>Pelayanan Kesehatan</small>
+                <strong>{{ $landingContent['identity']['short_name'] }}</strong>
+                <small>{{ $landingContent['identity']['tagline'] }}</small>
             </span>
         </a>
 
@@ -20,7 +20,7 @@
     <div class="mobile-menu-main premium-mobile-nav__body">
         <div class="premium-mobile-nav__intro">
             <span>MENU UTAMA</span>
-            <p>Akses cepat layanan dan informasi RS ARSY.</p>
+            <p>Akses cepat layanan dan informasi {{ $landingContent['identity']['short_name'] }}.</p>
         </div>
 
         <nav class="nav-main mainmenu-nav onepage" aria-label="Navigasi utama seluler">

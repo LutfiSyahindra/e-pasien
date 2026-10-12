@@ -5,6 +5,7 @@ namespace App\Http\Controllers\LandingPage;
 use App\Http\Controllers\Controller;
 use App\Services\epasien\menu\JadwalDokterService;
 use App\Services\LandingPage\LandingDoctorService;
+use App\Services\LandingPage\LandingPageContentService;
 use App\Support\Epasien\DoctorScheduleDay;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -16,7 +17,8 @@ class LandingPageController extends Controller
 {
     public function __construct(
         private readonly LandingDoctorService $landingDoctorService,
-        private readonly JadwalDokterService $jadwalDokterService
+        private readonly JadwalDokterService $jadwalDokterService,
+        private readonly LandingPageContentService $contentService
     ) {}
 
     public function index(Request $request)
@@ -74,6 +76,7 @@ class LandingPageController extends Controller
         });
 
         return view('landingPage.landingPage', [
+            ...$this->contentService->current(),
             'landingDoctors' => $landingDoctors,
             'landingSchedules' => $landingSchedules,
             'landingScheduleError' => $landingScheduleError,

@@ -26,6 +26,7 @@ use App\Http\Controllers\Epasien\settings\auth\rolesController;
 use App\Http\Controllers\Epasien\settings\auth\usersController;
 use App\Http\Controllers\Epasien\settings\DoctorPhotoController;
 use App\Http\Controllers\Epasien\settings\DoctorScheduleController;
+use App\Http\Controllers\Epasien\settings\LandingPageSettingController;
 use App\Http\Controllers\Epasien\settings\PatientGuarantorConfigurationController;
 use App\Http\Controllers\Epasien\settings\RoleConfigurationController;
 use App\Http\Controllers\Epasien\settings\UserAccessMonitoringController;
@@ -129,6 +130,13 @@ Route::middleware('auth')->group(function () {
                 ->name('patientGuarantorSettings.update');
 
             // Landing Page & Data
+            Route::middleware('permission:EPASIEN.SETTINGS.LANDING_PAGE')->group(function () {
+                Route::get('/landing-page-data/informasi', [LandingPageSettingController::class, 'edit'])
+                    ->name('landingPageSettings.edit');
+                Route::put('/landing-page-data/informasi', [LandingPageSettingController::class, 'update'])
+                    ->name('landingPageSettings.update');
+            });
+
             Route::middleware('permission:EPASIEN.SETTINGS.JADWAL_DOKTER')->group(function () {
                 Route::get('/jadwal-dokter', [DoctorScheduleController::class, 'index'])
                     ->name('doctorScheduleSettings.index');
