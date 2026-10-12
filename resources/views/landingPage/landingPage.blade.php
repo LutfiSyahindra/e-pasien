@@ -31,7 +31,7 @@
                                     <img src="{{ asset("landing/assets/images/banner/icons/arrow--up-right.svg") }}"
                                         alt="" aria-hidden="true">
                                 </a>
-                                <a href="{{ route("jadwalDokter.index") }}"
+                                <a href="{{ route("landingPage.index", ["hari" => "SEMUA"]) }}#jadwal-praktik"
                                     class="rts-btn premium-hero__secondary">
                                     <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
                                     Jadwal Dokter
@@ -535,7 +535,7 @@
                         </div>
                     </div>
                     <div class="hospital-services__cta-actions">
-                        <a href="{{ route("jadwalDokter.index") }}" class="hospital-services__cta-secondary">
+                        <a href="{{ route("landingPage.index", ["hari" => "SEMUA"]) }}#jadwal-praktik" class="hospital-services__cta-secondary">
                             <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
                             Jadwal Dokter
                         </a>
@@ -639,7 +639,7 @@
 
             <div class="specialist-clinics__grid" aria-label="Daftar poli spesialis">
                 @foreach ($specialistClinics as $index => $clinic)
-                    <a href="{{ route("jadwalDokter.index") }}" class="specialist-clinic-card wow fadeInUp"
+                    <a href="{{ route("landingPage.index", ["hari" => "SEMUA"]) }}#jadwal-praktik" class="specialist-clinic-card wow fadeInUp"
                         data-wow-delay="{{ number_format(($index % 4) * 0.08, 2) }}s" data-wow-duration=".8s"
                         data-specialist-card data-group="{{ $clinic["group"] }}"
                         data-search="{{ Str::lower($clinic["name"] . " " . $clinic["focus"] . " " . $clinic["description"]) }}"
@@ -713,7 +713,7 @@
                     </div>
                 </div>
                 <div class="specialist-clinics__cta-actions">
-                    <a href="{{ route("jadwalDokter.index") }}" class="specialist-clinics__schedule">
+                    <a href="{{ route("landingPage.index", ["hari" => "SEMUA"]) }}#jadwal-praktik" class="specialist-clinics__schedule">
                         <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
                         Jadwal Dokter
                     </a>
@@ -820,7 +820,7 @@
                         <i class="fa-regular fa-calendar-check" aria-hidden="true"></i>
                         Jadwal Praktik
                     </span>
-                    <h2 id="landing-doctor-schedule-title">Temukan dokter yang <span>praktik hari ini.</span></h2>
+                    <h2 id="landing-doctor-schedule-title">Temukan dokter yang <span>praktik {{ $landingScheduleLabel }}.</span></h2>
                     <p>Lihat jadwal dokter dan jam pelayanan sebelum merencanakan kunjungan Anda ke RS Abdurrahman
                         Syamsuri.</p>
                 </div>
@@ -830,7 +830,7 @@
                         <i class="fa-regular fa-calendar-days"></i>
                     </span>
                     <div>
-                        <small>Jadwal hari ini</small>
+                        <small>Jadwal {{ $landingScheduleLabel }}</small>
                         <strong>{{ $landingScheduleDate }}</strong>
                         <span>{{ $landingSchedules->count() }} jadwal ditampilkan</span>
                     </div>
@@ -848,10 +848,10 @@
                 </div>
                 <div class="landing-doctor-schedule__days">
                     @foreach ($landingScheduleDays as $scheduleDay)
-                        <a href="{{ route("jadwalDokter.index", ["hari" => $scheduleDay["key"]]) }}"
-                            class="landing-doctor-schedule__day {{ $scheduleDay["is_today"] ? "is-today" : "" }}"
+                        <a href="{{ route("landingPage.index", ["hari" => $scheduleDay["key"]]) }}#jadwal-praktik"
+                            class="landing-doctor-schedule__day {{ $scheduleDay["is_selected"] ? "is-selected" : "" }}"
                             aria-label="Lihat jadwal hari {{ $scheduleDay["full_label"] }}"
-                            @if ($scheduleDay["is_today"]) aria-current="date" @endif>
+                            @if ($scheduleDay["is_selected"]) aria-current="true" @endif>
                             <small>{{ $scheduleDay["label"] }}</small>
                             <strong>{{ $scheduleDay["date"] }}</strong>
                             <span>{{ $scheduleDay["is_today"] ? "Hari ini" : $scheduleDay["month"] }}</span>
@@ -879,7 +879,7 @@
                         <div class="landing-schedule-feature__top">
                             <span class="landing-schedule-feature__badge">
                                 <i class="fa-solid fa-sparkles" aria-hidden="true"></i>
-                                Sorotan jadwal hari ini
+                                Sorotan jadwal {{ $landingScheduleLabel }}
                             </span>
                             <span class="landing-schedule-feature__number" aria-hidden="true">01</span>
                         </div>
@@ -905,7 +905,7 @@
                             <div>
                                 <span aria-hidden="true"><i class="fa-regular fa-clock"></i></span>
                                 <div>
-                                    <small>Jam praktik</small>
+                                    <small>Jam praktik {{ $featuredSchedule["day_label"] }}</small>
                                     <strong>{{ ($featuredSchedule["is_on_leave"] ?? false) ? "Dokter libur" : $featuredSchedule["time_label"] }}</strong>
                                 </div>
                             </div>
@@ -918,7 +918,7 @@
                             </div>
                         </div>
 
-                        <a href="{{ route("jadwalDokter.index", ["hari" => $featuredSchedule["day"], "q" => $featuredSchedule["doctor_name"]]) }}"
+                        <a href="{{ route("landingPage.index", ["hari" => $featuredSchedule["day"], "q" => $featuredSchedule["doctor_name"]]) }}#jadwal-praktik"
                             class="landing-schedule-feature__action"
                             aria-label="Lihat jadwal {{ $featuredSchedule["doctor_name"] }}">
                             <span>
@@ -964,7 +964,7 @@
                                     <div class="landing-schedule-mini__meta">
                                         <div>
                                             <i class="fa-regular fa-clock" aria-hidden="true"></i>
-                                            <span><small>Jam praktik</small>{{ ($schedule["is_on_leave"] ?? false) ? "Dokter libur" : $schedule["time_label"] }}</span>
+                                            <span><small>Jam praktik {{ $schedule["day_label"] }}</small>{{ ($schedule["is_on_leave"] ?? false) ? "Dokter libur" : $schedule["time_label"] }}</span>
                                         </div>
                                         <div>
                                             <i class="fa-regular fa-users" aria-hidden="true"></i>
@@ -972,7 +972,7 @@
                                         </div>
                                     </div>
 
-                                    <a href="{{ route("jadwalDokter.index", ["hari" => $schedule["day"], "q" => $schedule["doctor_name"]]) }}"
+                                    <a href="{{ route("landingPage.index", ["hari" => $schedule["day"], "q" => $schedule["doctor_name"]]) }}#jadwal-praktik"
                                         class="landing-schedule-mini__action"
                                         aria-label="Lihat jadwal {{ $schedule["doctor_name"] }}">
                                         <span>Lihat jadwal</span>
@@ -989,10 +989,22 @@
                         <i class="fa-regular {{ $landingScheduleError ? "fa-cloud-slash" : "fa-calendar-xmark" }}"></i>
                     </span>
                     <div>
-                        <h3>{{ $landingScheduleError ? "Jadwal belum dapat dimuat" : "Belum ada jadwal praktik hari ini" }}</h3>
+                        <h3>{{ $landingScheduleError ? "Jadwal belum dapat dimuat" : "Belum ada jadwal praktik ".$landingScheduleLabel }}</h3>
                         <p>{{ $landingScheduleError ? "Koneksi data rumah sakit sedang diperbarui. Silakan coba kembali beberapa saat lagi." : "Lihat jadwal hari lainnya untuk menemukan dokter yang Anda butuhkan." }}</p>
                     </div>
                 </div>
+            @endif
+
+            @if ($landingSchedulePaginator->hasPages())
+                <nav class="landing-doctor-schedule__pagination" aria-label="Halaman jadwal dokter">
+                    @if (! $landingSchedulePaginator->onFirstPage())
+                        <a href="{{ $landingSchedulePaginator->previousPageUrl() }}" rel="prev">Jadwal sebelumnya</a>
+                    @endif
+                    <span>Halaman {{ $landingSchedulePaginator->currentPage() }} dari {{ $landingSchedulePaginator->lastPage() }}</span>
+                    @if ($landingSchedulePaginator->hasMorePages())
+                        <a href="{{ $landingSchedulePaginator->nextPageUrl() }}" rel="next">Jadwal berikutnya</a>
+                    @endif
+                </nav>
             @endif
 
             <footer class="landing-doctor-schedule__footer wow fadeInUp" data-wow-duration=".8s">
@@ -1001,7 +1013,7 @@
                     <p><strong>Perlu diperhatikan</strong> Jadwal dapat berubah mengikuti kondisi pelayanan dokter dan
                         rumah sakit.</p>
                 </div>
-                <a href="{{ route("jadwalDokter.index") }}">
+                <a href="{{ route("landingPage.index", ["hari" => "SEMUA"]) }}#jadwal-praktik">
                     Lihat semua jadwal
                     <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
                 </a>
@@ -1256,7 +1268,7 @@
                     <p>Kenali dokter spesialis kami dan temukan jadwal praktik yang paling sesuai dengan kebutuhan
                         kesehatan Anda dan keluarga.</p>
                     <div class="landing-specialists__intro-actions">
-                        <a href="{{ route("jadwalDokter.index") }}" class="landing-specialists__all">
+                        <a href="{{ route("landingPage.index", ["hari" => "SEMUA"]) }}#jadwal-praktik" class="landing-specialists__all">
                             Lihat semua dokter
                             <i class="fa-solid fa-arrow-up-right" aria-hidden="true"></i>
                         </a>
@@ -1282,9 +1294,10 @@
                         <div class="swiper-wrapper">
                             @foreach ($displayDoctors as $doctor)
                                 @php
-                                    $doctorScheduleUrl = route("jadwalDokter.index", [
+                                    $doctorScheduleUrl = route("landingPage.index", [
+                                        "hari" => "SEMUA",
                                         "q" => $doctor["doctor_name"],
-                                    ]);
+                                    ])."#jadwal-praktik";
                                 @endphp
                                 <div class="swiper-slide">
                                     <article class="landing-specialist-card is-tone-{{ ($loop->index % 4) + 1 }}">
@@ -1343,9 +1356,9 @@
                     <span aria-hidden="true"><i class="fa-regular fa-user-doctor"></i></span>
                     <div>
                         <h3>Profil dokter sedang diperbarui</h3>
-                        <p>Daftar lengkap beserta jadwal praktik tetap dapat dilihat pada halaman jadwal dokter.</p>
+                        <p>Daftar lengkap beserta jadwal praktik tetap dapat dilihat pada bagian jadwal dokter.</p>
                     </div>
-                    <a href="{{ route("jadwalDokter.index") }}">Buka jadwal dokter</a>
+                    <a href="{{ route("landingPage.index", ["hari" => "SEMUA"]) }}#jadwal-praktik">Buka jadwal dokter</a>
                 </div>
             @endif
         </div>

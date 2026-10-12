@@ -23334,14 +23334,14 @@ li.has-dropdown:hover .submenu {
     transform: translateY(-2px);
 }
 
-.landing-doctor-schedule__day.is-today {
+.landing-doctor-schedule__day.is-selected {
     border-color: #fff;
     background: #fff;
     color: #087b3f;
     box-shadow: 0 12px 25px rgba(0, 0, 0, .16);
 }
 
-.landing-doctor-schedule__day.is-today::before {
+.landing-doctor-schedule__day.is-selected::before {
     content: "";
     position: absolute;
     top: -18px;
@@ -23352,14 +23352,38 @@ li.has-dropdown:hover .submenu {
     background: #dff5e9;
 }
 
-.landing-doctor-schedule__day.is-today small,
-.landing-doctor-schedule__day.is-today span {
+.landing-doctor-schedule__day.is-selected small,
+.landing-doctor-schedule__day.is-selected span {
     color: #079447;
 }
 
 .landing-doctor-schedule__day:focus-visible {
     outline: 3px solid rgba(142, 232, 180, .45);
     outline-offset: 3px;
+}
+
+.landing-doctor-schedule__pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 24px;
+    color: #fff;
+    font-size: 13px;
+}
+
+.landing-doctor-schedule__pagination a {
+    padding: 10px 16px;
+    border: 1px solid rgba(255, 255, 255, .3);
+    border-radius: 12px;
+    color: #fff;
+}
+
+.landing-doctor-schedule__pagination a:hover,
+.landing-doctor-schedule__pagination a:focus-visible {
+    background: #fff;
+    color: #087b3f;
 }
 
 .landing-doctor-schedule__showcase {
